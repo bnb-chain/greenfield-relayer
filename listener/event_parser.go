@@ -28,7 +28,6 @@ func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64) (*model.B
 	p.ChannelId = uint8(big.NewInt(0).SetBytes(log.Topics[3].Bytes()).Uint64())
 	p.TxHash = log.TxHash.String()
 	p.TxIndex = log.TxIndex
-	p.BlockHash = log.BlockHash.Hex()
 	p.TxTime = int64(timestamp)
 	p.UpdatedTime = int64(timestamp)
 	p.Height = log.BlockNumber

@@ -190,6 +190,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.Ins
 				continue
 			}
 
+			// it is local vote
 			if bytes.Equal(v.PubKey[:], p.blsPublicKey) {
 				isLocalVoteIncluded = true
 				validVotesCountPerReq--
@@ -213,6 +214,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.Ins
 		}
 
 		validVotesTotalCount += validVotesCountPerReq
+
 		if validVotesTotalCount < len(validators)*2/3 {
 			if !isLocalVoteIncluded {
 				err := p.votePoolExecutor.BroadcastVote(localVote)

@@ -10,7 +10,6 @@ import (
 	"inscription-relayer/executor"
 )
 
-// when query vote, do we need to connect to all rpc endpoint
 type VotePoolExecutor struct {
 	client              *client.Client
 	config              *config.Config
@@ -18,7 +17,7 @@ type VotePoolExecutor struct {
 }
 
 func NewVotePoolExecutor(cfg *config.Config, inscriptionExecutor *executor.InscriptionExecutor) *VotePoolExecutor {
-	cli, err := client.New("http://127.0.0.1:26657")
+	cli, err := client.New(cfg.VotePoolConfig.RPCAddr)
 	if err != nil {
 		panic(err)
 	}
@@ -52,18 +51,6 @@ func (e *VotePoolExecutor) BroadcastVote(v *votepool.Vote) error {
 	}
 
 	return nil
-}
-
-func (e *VotePoolExecutor) GetValidatorsAddresses() ([]string, error) {
-	validators, err := e.inscriptionExecutor.QueryLatestValidators()
-	if err != nil {
-		return nil, err
-	}
-	var addresses []string
-	for _, v := range validators {
-		addresses = append(addresses, v.RelayerAddress)
-	}
-	return addresses, nil
 }
 
 func (e *VotePoolExecutor) GetValidatorsBlsPublicKey() ([]string, error) {

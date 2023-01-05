@@ -2,6 +2,7 @@ package executor
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -9,6 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
+	ethHd "github.com/evmos/ethermint/crypto/hd"
 	"inscription-relayer/common"
 )
 
@@ -18,6 +20,13 @@ func BuildChannelSequenceKey(destChainId common.ChainId, chanelId common.Channel
 	binary.BigEndian.PutUint16(key[prefixLength:prefixLength+destChainIDLength], uint16(destChainId))
 	copy(key[prefixLength+destChainIDLength:], []byte{byte(chanelId)})
 	return key
+}
+func HexToEthSecp256k1PrivKey(hexString string) (*ethsecp256k1.PrivKey, error) {
+	bz, err := hex.DecodeString(hexString)
+	if err != nil {
+		return nil, err
+	}
+	return ethHd.EthSecp256k1.Generate()(bz).(*ethsecp256k1.PrivKey), nil
 }
 
 func isHeaderNonExistingErr(err error) bool {

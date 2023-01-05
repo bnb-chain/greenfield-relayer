@@ -74,6 +74,13 @@ func (d *InscriptionDao) UpdateTxStatus(id int64, status model.InternalStatus) e
 	return err
 }
 
+func (d *InscriptionDao) UpdateTxStatusAndClaimTxHash(id int64, status model.InternalStatus, claimTxHash string) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		return dbTx.Model(model.InscriptionRelayTransaction{}).Where("id = ?", id).Updates(
+			model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
+	})
+}
+
 func (d *InscriptionDao) GetTransactionByChannelIdAndSequence(channelId relayercommon.ChannelId, sequence uint64) (*model.InscriptionRelayTransaction, error) {
 	tx := model.InscriptionRelayTransaction{}
 	err := d.DB.Where("channel_id = ? and sequence = ?", channelId, sequence).Find(&tx).Error

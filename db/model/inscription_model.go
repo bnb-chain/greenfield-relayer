@@ -28,11 +28,7 @@ type InscriptionRelayTransaction struct {
 	PayLoad    string `gorm:"type:text"`
 	RelayerFee string `gorm:"NOT NULL"`
 
-	//TxGasPrice uint64
-	//TxGasLimit uint64
-	//TxUsedGas  uint64
-	//TxFee      uint64
-
+	ClaimTxHash string
 	Status      InternalStatus `gorm:"NOT NULL"`
 	TxTime      int64          `gorm:"NOT NULL"`
 	UpdatedTime int64          `gorm:"NOT NULL"`

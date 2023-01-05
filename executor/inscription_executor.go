@@ -7,7 +7,10 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"google.golang.org/grpc"
 	relayercommon "inscription-relayer/common"
 	"inscription-relayer/config"
@@ -15,8 +18,10 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	clitx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bts "github.com/tendermint/tendermint/libs/bytes"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -42,7 +47,8 @@ type InscriptionExecutor struct {
 	clientIdx          int
 	inscriptionClients []*InscriptionClient
 	config             *config.Config
-	privateKey         *secp256k1.PrivKey
+	privateKey         *ethsecp256k1.PrivKey
+	address            string
 }
 
 func grpcConn(addr string) (*grpc.ClientConn, error) {
@@ -68,7 +74,7 @@ func NewRpcClient(addr string) (*rpchttp.HTTP, error) {
 	return rpcClient, nil
 }
 
-func getInscriptionPrivateKey(cfg *config.InscriptionConfig) (*secp256k1.PrivKey, error) {
+func getInscriptionPrivateKey(cfg *config.InscriptionConfig) (*ethsecp256k1.PrivKey, error) {
 	var privateKey string
 	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
 		result, err := config.GetSecret(cfg.AWSSecretName, cfg.AWSRegion)
@@ -87,8 +93,11 @@ func getInscriptionPrivateKey(cfg *config.InscriptionConfig) (*secp256k1.PrivKey
 	} else {
 		privateKey = cfg.PrivateKey
 	}
-	privKey := secp256k1.PrivKey{Key: []byte(privateKey)}
-	return &privKey, nil
+	privKey, err := HexToEthSecp256k1PrivKey(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	return privKey, nil
 }
 
 func initInscriptionClients(rpcAddrs, grpcAddrs []string) []*InscriptionClient {
@@ -126,6 +135,7 @@ func NewInscriptionExecutor(cfg *config.Config) (*InscriptionExecutor, error) {
 		clientIdx:          0,
 		inscriptionClients: initInscriptionClients(cfg.InscriptionConfig.RPCAddrs, cfg.InscriptionConfig.GRPCAddrs),
 		privateKey:         privKey,
+		address:            privKey.PubKey().Address().String(),
 		config:             cfg,
 	}, nil
 }
@@ -347,4 +357,103 @@ func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, er
 		return nil, err
 	}
 	return account, nil
+}
+
+func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte,
+	aggregatedSig []byte,
+	VoteAddressSet []uint64) (string, error) {
+
+	txConfig := authtx.NewTxConfig(Cdc(), authtx.DefaultSignModes)
+	txBuilder := txConfig.NewTxBuilder()
+
+	//Todo fix
+	oracleSeq, err := e.GetNextOracleSequence()
+	if err != nil {
+		return "", nil
+	}
+
+	msgClaim := &oracletypes.MsgClaim{}
+	msgClaim.FromAddress = e.address
+	msgClaim.Payload = payloadBts
+	msgClaim.VoteAddressSet = VoteAddressSet
+	msgClaim.Sequence = oracleSeq
+	msgClaim.AggSignature = aggregatedSig
+	msgClaim.DestChainId = uint32(e.config.BSCConfig.ChainId)
+	msgClaim.SrcChainId = uint32(e.config.InscriptionConfig.ChainId)
+	msgClaim.Timestamp = uint64(time.Now().Unix())
+	err = txBuilder.SetMsgs(msgClaim)
+
+	fmt.Println(msgClaim.String())
+
+	if err != nil {
+		return "", err
+	}
+	txBuilder.SetGasLimit(210000)
+
+	acct, err := e.GetAccount(e.address)
+	if err != nil {
+		return "", err
+	}
+	accountNum := acct.GetAccountNumber()
+	accountSeq := acct.GetSequence()
+
+	// First round: we gather all the signer infos. We use the "set empty
+	// signature" hack to do that.
+	sig := signing.SignatureV2{
+		PubKey: e.privateKey.PubKey(),
+		Data: &signing.SingleSignatureData{
+			SignMode:  signing.SignMode_SIGN_MODE_EIP_712,
+			Signature: nil,
+		},
+		Sequence: accountSeq,
+	}
+
+	err = txBuilder.SetSignatures(sig)
+	if err != nil {
+		return "", err
+	}
+
+	// Second round: all signer infos are set, so each signer can sign.
+	sig = signing.SignatureV2{}
+
+	signerData := xauthsigning.SignerData{
+		ChainID:       "inscription_9000-1",
+		AccountNumber: accountNum,
+		Sequence:      accountSeq,
+	}
+
+	sig, err = clitx.SignWithPrivKey(signing.SignMode_SIGN_MODE_EIP_712,
+		signerData,
+		txBuilder,
+		e.privateKey,
+		txConfig,
+		accountSeq,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	err = txBuilder.SetSignatures(sig)
+	if err != nil {
+		return "", err
+	}
+
+	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return "", err
+	}
+	//Broadcast transaction
+	txRes, err := e.getTxClient().BroadcastTx(
+		context.Background(),
+		&tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes, // Proto-binary of the signed transaction, see previous step.
+		})
+	if err != nil {
+		return "", err
+	}
+	if txRes.TxResponse.Code != 0 {
+		return "", fmt.Errorf("claim error, code=%d, log=%s", txRes.TxResponse.Code, txRes.TxResponse.RawLog)
+	}
+	return txRes.TxResponse.TxHash, nil
 }

@@ -62,6 +62,13 @@ func (d *BSCDao) UpdateBatchPackagesStatus(txIds []int64, status model.InternalS
 	})
 }
 
+func (d *BSCDao) UpdateBatchPackagesStatusAndClaimTxHash(txIds []int64, status model.InternalStatus, claimTxHash string) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
+			model.BscRelayPackage{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
+	})
+}
+
 func (d *BSCDao) GetAllVotedPackages(channelId relayercommon.ChannelId, sequence uint64) ([]*model.BscRelayPackage, error) {
 	pkgs := make([]*model.BscRelayPackage, 0)
 	err := d.DB.Where("channel_id = ? and oracle_sequence = ? and status = ? ", channelId, sequence, model.VOTED_ALL).Find(&pkgs).Error

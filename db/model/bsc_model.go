@@ -25,8 +25,8 @@ type BscRelayPackage struct {
 	PackageSequence uint64 `gorm:"NOT NULL"`
 	PayLoad         string `gorm:"type:text"`
 	TxIndex         uint
+	ClaimTxHash     string
 	Status          InternalStatus `gorm:"NOT NULL"`
-	BlockHash       string         `gorm:"NOT NULL"`
 	Height          uint64         `gorm:"NOT NULL"`
 	TxTime          int64          `gorm:"NOT NULL"`
 	UpdatedTime     int64          `gorm:"NOT NULL"`
