@@ -12,7 +12,7 @@ import (
 type Config struct {
 	InscriptionConfig InscriptionConfig `json:"inscription_config"`
 	BSCConfig         BSCConfig         `json:"bsc_config"`
-	VotePoolConfig    VotePoolConfig    `json:"votepool_config"`
+	VotePoolConfig    VotePoolConfig    `json:"vote_pool_config"`
 	LogConfig         LogConfig         `json:"log_config"`
 	AdminConfig       AdminConfig       `json:"admin_config"`
 	AlertConfig       AlertConfig       `json:"alert_config"`
@@ -31,7 +31,6 @@ func (cfg *AdminConfig) Validate() {
 
 type VotePoolConfig struct {
 	RPCAddr       string `json:"rpc_addr"`
-	BlsPublicKey  string `json:"bls_public_key"`
 	BlsPrivateKey string `json:"bls_private_key"`
 }
 
@@ -40,12 +39,12 @@ type InscriptionConfig struct {
 	AWSRegion                 string   `json:"aws_region"`
 	AWSSecretName             string   `json:"aws_secret_name"`
 	RPCAddrs                  []string `json:"rpc_addrs"`
+	GRPCAddrs                 []string `json:"grpc_addrs"`
 	PrivateKey                string   `json:"private_key"`
-	AccountNum                uint64   `json:"account_num"`
-	AccountSequence           uint64   `json:"account_sequence"`
 	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
 	ChainId                   uint16   `json:"chain_id"`
 	StartHeight               uint64   `json:"start_height"`
+	MonitorChannelList        []uint8  `json:"monitor_channel_list"`
 }
 
 type BSCConfig struct {
@@ -179,11 +178,13 @@ func ParseConfigFromJson(content string) *Config {
 func ParseConfigFromFile(filePath string) *Config {
 	bz, err := os.ReadFile(filePath)
 	if err != nil {
+		fmt.Println("------")
 		panic(err)
 	}
 
 	var config Config
 	if err := json.Unmarshal(bz, &config); err != nil {
+		fmt.Println("----jhgkjkgk--")
 		panic(err)
 	}
 

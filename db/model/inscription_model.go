@@ -17,24 +17,25 @@ func (*InscriptionBlock) TableName() string {
 }
 
 type InscriptionRelayTransaction struct {
-	Id        int64
-	TxHash    string `gorm:"NOT NULL"`
-	Type      string `gorm:"NOT NULL"`
-	TxStatus  string `gorm:"NOT NULL"`
+	Id     int64
+	TxHash string `gorm:"NOT NULL"`
+	Type   string `gorm:"NOT NULL"`
+	//TxStatus  string `gorm:"NOT NULL"`
 	ChannelId uint8  `gorm:"NOT NULL"`
 	Sequence  uint64 `gorm:"NOT NULL"`
 	Height    uint64 `gorm:"NOT NULL"`
 
-	PayLoad string `gorm:"type:text"`
+	PayLoad    string `gorm:"type:text"`
+	RelayerFee string `gorm:"NOT NULL"`
 
-	TxGasPrice uint64
-	TxGasLimit uint64
-	TxUsedGas  uint64
-	TxFee      uint64
+	//TxGasPrice uint64
+	//TxGasLimit uint64
+	//TxUsedGas  uint64
+	//TxFee      uint64
 
-	Status    int   `gorm:"NOT NULL"`
-	CreatedAt int64 `gorm:"NOT NULL"`
-	UpdatedAt int64
+	Status      InternalStatus `gorm:"NOT NULL"`
+	TxTime      int64          `gorm:"NOT NULL"`
+	UpdatedTime int64          `gorm:"NOT NULL"`
 }
 
 func (*InscriptionRelayTransaction) TableName() string {

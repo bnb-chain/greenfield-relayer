@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/jinzhu/gorm"
-	"inscription-relayer/vote"
 )
 
 type BscBlock struct {
@@ -26,11 +25,11 @@ type BscRelayPackage struct {
 	PackageSequence uint64 `gorm:"NOT NULL"`
 	PayLoad         string `gorm:"type:text"`
 	TxIndex         uint
-	Status          vote.InternalStatus `gorm:"NOT NULL"`
-	BlockHash       string              `gorm:"NOT NULL"`
-	Height          uint64              `gorm:"NOT NULL"`
-	CreatedAt       int64               `gorm:"NOT NULL"`
-	UpdatedAt       int64
+	Status          InternalStatus `gorm:"NOT NULL"`
+	BlockHash       string         `gorm:"NOT NULL"`
+	Height          uint64         `gorm:"NOT NULL"`
+	TxTime          int64          `gorm:"NOT NULL"`
+	UpdatedTime     int64          `gorm:"NOT NULL"`
 }
 
 func (l *BscRelayPackage) TableName() string {
@@ -41,7 +40,7 @@ func InitBSCTables(db *gorm.DB) {
 	if !db.HasTable(&BscBlock{}) {
 		db.CreateTable(&BscBlock{})
 		db.Model(&BscBlock{}).AddUniqueIndex("idx_bsc_block_height", "height")
-		db.Model(&BscBlock{}).AddIndex("idx_bsc_block_created_at", "block_time")
+		db.Model(&BscBlock{}).AddIndex("idx_bsc_block_block_time", "block_time")
 	}
 
 	if !db.HasTable(&BscRelayPackage{}) {

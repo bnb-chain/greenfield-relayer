@@ -5,8 +5,13 @@ import tmtypes "github.com/tendermint/tendermint/types"
 type ChannelId uint8
 type ChainId uint16
 
+const (
+	OracleChannelId ChannelId = 0
+)
+
 type Header struct {
-	tmtypes.SignedHeader
-	ValidatorSet     *tmtypes.ValidatorSet `json:"validator_set"`
-	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set"`
+	SignedHeader tmtypes.SignedHeader
+	Height       uint64
+	BlsPubKeys   []byte
+	Relayers     []string
 }

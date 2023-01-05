@@ -1,16 +1,13 @@
 package assembler
 
-import relayercommon "inscription-relayer/common"
-
 var (
-	RelayingWindowInSecond     = int64(15)
-	InscriptionMonitorChannels = [3]relayercommon.ChannelId{1, 2, 3}
-	BSCMonitorChannels         = [3]relayercommon.ChannelId{1, 2, 3}
+	RelayingWindowInSecond = int64(15)
 )
 
 type MsgClaim struct {
 	FromAddress    string
-	ChainId        uint16
+	SrcChainId     uint32
+	DestChainId    uint32
 	Sequence       uint64
 	TimeStamp      uint64
 	Payload        []byte

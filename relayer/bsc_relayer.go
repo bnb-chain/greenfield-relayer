@@ -1,8 +1,8 @@
 package relayer
 
 import (
+	"fmt"
 	"inscription-relayer/assembler"
-	"inscription-relayer/common"
 	"inscription-relayer/executor"
 	"inscription-relayer/listener"
 	"inscription-relayer/vote"
@@ -12,13 +12,13 @@ type BSCRelayer struct {
 	listener            *listener.BSCListener
 	inscriptionExecutor *executor.InscriptionExecutor
 	bscExecutor         *executor.BSCExecutor
-	votePoolExecutor    *executor.VotePoolExecutor
-	voteProcessor       *vote.InscriptionVoteProcessor
+	votePoolExecutor    *vote.VotePoolExecutor
+	voteProcessor       *vote.BSCVoteProcessor
 	bscAssembler        *assembler.BSCAssembler
 }
 
 func NewBSCRelayer(listener *listener.BSCListener, inscriptionExecutor *executor.InscriptionExecutor, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *executor.VotePoolExecutor, voteProcessor *vote.InscriptionVoteProcessor, bscAssembler *assembler.BSCAssembler) *BSCRelayer {
+	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.BSCVoteProcessor, bscAssembler *assembler.BSCAssembler) *BSCRelayer {
 	return &BSCRelayer{
 		listener:            listener,
 		inscriptionExecutor: inscriptionExecutor,
@@ -44,21 +44,17 @@ func (r *BSCRelayer) monitorCrossChainEvents() {
 func (r *BSCRelayer) signAndBroadcast() {
 	err := r.voteProcessor.SignAndBroadcast()
 	if err != nil {
-		return
+		panic(fmt.Sprintf("Entering err when signAndBroadcast, err %s ", err))
 	}
 }
 
 func (r *BSCRelayer) collectVotes() {
 	err := r.voteProcessor.CollectVotes()
 	if err != nil {
-		return
+		panic(fmt.Sprintf("Entering err when collectVotes, err %s ", err))
 	}
 }
 
 func (r *BSCRelayer) assemblePackages() {
-	err := r.bscAssembler.AssemblePackagesAndClaim()
-	if err != nil {
-		common.Logger.Errorf("Entering err when assemblePackages, err %s ", err)
-		return
-	}
+	r.bscAssembler.AssemblePackagesAndClaim()
 }

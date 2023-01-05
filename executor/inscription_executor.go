@@ -7,18 +7,17 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"google.golang.org/grpc"
-	"inscription-relayer/assembler"
 	relayercommon "inscription-relayer/common"
 	"inscription-relayer/config"
-	"inscription-relayer/db/dao"
 	"sync"
 	"time"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	chantypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bts "github.com/tendermint/tendermint/libs/bytes"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -28,18 +27,18 @@ import (
 )
 
 type InscriptionClient struct {
-	rpcClient    rpcclient.Client
-	grpcTxClient tx.ServiceClient
-	chanClient   chantypes.QueryClient
-	Provider     string
-	Height       uint64
-	UpdatedAt    time.Time
+	rpcClient          rpcclient.Client
+	txClient           tx.ServiceClient
+	stakingQueryClient stakingtypes.QueryClient
+	authClient         authtypes.QueryClient
+	Provider           string
+	Height             uint64
+	UpdatedAt          time.Time
 }
 
 type InscriptionExecutor struct {
 	mutex              sync.RWMutex
-	daoManager         *dao.DaoManager
-	BSCExecutor        *BSCExecutor
+	BscExecutor        *BSCExecutor
 	clientIdx          int
 	inscriptionClients []*InscriptionClient
 	config             *config.Config
@@ -92,97 +91,103 @@ func getInscriptionPrivateKey(cfg *config.InscriptionConfig) (*secp256k1.PrivKey
 	return &privKey, nil
 }
 
-func initInscriptionClients(providers []string) []*InscriptionClient {
+func initInscriptionClients(rpcAddrs, grpcAddrs []string) []*InscriptionClient {
 	inscriptionClients := make([]*InscriptionClient, 0)
-	for _, provider := range providers {
-		rpcClient, err := NewRpcClient(provider)
+
+	for i := 0; i < len(rpcAddrs); i++ {
+		rpcClient, err := NewRpcClient(rpcAddrs[i])
 		if err != nil {
-			panic("new RPC client error")
+			panic(err)
 		}
-		conn, err := grpcConn(provider)
+		conn, err := grpcConn(grpcAddrs[i])
 		if err != nil {
-			panic("new GRPC connection error")
+			panic(err)
 		}
-		grpcTxClient := tx.NewServiceClient(conn)
-		chanClient := chantypes.NewQueryClient(conn)
 
 		inscriptionClients = append(inscriptionClients, &InscriptionClient{
-			grpcTxClient: grpcTxClient,
-			chanClient:   chanClient,
-			rpcClient:    rpcClient,
-			Provider:     provider,
-			UpdatedAt:    time.Now(),
+			txClient:           tx.NewServiceClient(conn),
+			stakingQueryClient: stakingtypes.NewQueryClient(conn),
+			authClient:         authtypes.NewQueryClient(conn),
+			rpcClient:          rpcClient,
+			Provider:           rpcAddrs[i],
+			UpdatedAt:          time.Now(),
 		})
 	}
+
 	return inscriptionClients
 }
 
-func NewInscriptionExecutor(cfg *config.Config, dao *dao.DaoManager) (*InscriptionExecutor, error) {
+func NewInscriptionExecutor(cfg *config.Config) (*InscriptionExecutor, error) {
 	privKey, err := getInscriptionPrivateKey(&cfg.InscriptionConfig)
 	if err != nil {
 		return nil, err
 	}
 	return &InscriptionExecutor{
-		daoManager:         dao,
 		clientIdx:          0,
-		inscriptionClients: initInscriptionClients(cfg.InscriptionConfig.RPCAddrs),
+		inscriptionClients: initInscriptionClients(cfg.InscriptionConfig.RPCAddrs, cfg.InscriptionConfig.GRPCAddrs),
 		privateKey:         privKey,
 		config:             cfg,
 	}, nil
 }
 
-func (executor *InscriptionExecutor) SetBSCExecutor(bscExecutor *BSCExecutor) {
-	executor.BSCExecutor = bscExecutor
+func (e *InscriptionExecutor) SetBSCExecutor(bscE *BSCExecutor) {
+	e.BscExecutor = bscE
 }
 
-func (executor *InscriptionExecutor) GetRpcClient() rpcclient.Client {
-	executor.mutex.RLock()
-	defer executor.mutex.RUnlock()
-	return executor.inscriptionClients[executor.clientIdx].rpcClient
+func (e *InscriptionExecutor) getRpcClient() rpcclient.Client {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.inscriptionClients[e.clientIdx].rpcClient
 }
 
-func (executor *InscriptionExecutor) GetGrpcTxClient() tx.ServiceClient {
-	executor.mutex.RLock()
-	defer executor.mutex.RUnlock()
-	return executor.inscriptionClients[executor.clientIdx].grpcTxClient
+func (e *InscriptionExecutor) getTxClient() tx.ServiceClient {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.inscriptionClients[e.clientIdx].txClient
 }
 
-func (executor *InscriptionExecutor) GetChanClient() chantypes.QueryClient {
-	executor.mutex.RLock()
-	defer executor.mutex.RUnlock()
-	return executor.inscriptionClients[executor.clientIdx].chanClient
+func (e *InscriptionExecutor) getStakingClient() stakingtypes.QueryClient {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.inscriptionClients[e.clientIdx].stakingQueryClient
 }
 
-func (executor *InscriptionExecutor) GetBlockResultAtHeight(height int64) (*ctypes.ResultBlockResults, error) {
+func (e *InscriptionExecutor) getAuthClient() authtypes.QueryClient {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.inscriptionClients[e.clientIdx].authClient
+}
+
+func (e *InscriptionExecutor) GetBlockResultAtHeight(height int64) (*ctypes.ResultBlockResults, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	blockResults, err := executor.GetRpcClient().BlockResults(ctx, &height)
+	blockResults, err := e.getRpcClient().BlockResults(ctx, &height)
 	if err != nil {
 		return nil, err
 	}
 	return blockResults, nil
 }
 
-func (executor *InscriptionExecutor) GetBlockAtHeight(height int64) (*tmtypes.Block, error) {
+func (e *InscriptionExecutor) GetBlockAtHeight(height int64) (*tmtypes.Block, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	block, err := executor.GetRpcClient().Block(ctx, &height)
+	block, err := e.getRpcClient().Block(ctx, &height)
 	if err != nil {
 		return nil, err
 	}
 	return block.Block, nil
 }
 
-func (executor *InscriptionExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
-	return executor.getLatestBlockHeightWithRetry(executor.GetRpcClient())
+func (e *InscriptionExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
+	return e.getLatestBlockHeightWithRetry(e.getRpcClient())
 }
 
-func (executor *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpcclient.Client) (latestHeight uint64, err error) {
+func (e *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpcclient.Client) (latestHeight uint64, err error) {
 	return latestHeight, retry.Do(func() error {
 		latestHeightQueryCtx, cancelLatestHeightQueryCtx := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelLatestHeightQueryCtx()
 		var err error
-		latestHeight, err = executor.GetLatestBlockHeight(latestHeightQueryCtx, client)
+		latestHeight, err = e.GetLatestBlockHeight(latestHeightQueryCtx, client)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -192,7 +197,7 @@ func (executor *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpccli
 		}))
 }
 
-func (executor *InscriptionExecutor) GetLatestBlockHeight(ctx context.Context, client rpcclient.Client) (uint64, error) {
+func (e *InscriptionExecutor) GetLatestBlockHeight(ctx context.Context, client rpcclient.Client) (uint64, error) {
 	status, err := client.Status(ctx)
 	if err != nil {
 		return 0, err
@@ -200,17 +205,17 @@ func (executor *InscriptionExecutor) GetLatestBlockHeight(ctx context.Context, c
 	return uint64(status.SyncInfo.LatestBlockHeight), nil
 }
 
-func (executor *InscriptionExecutor) UpdateClients() {
+func (e *InscriptionExecutor) UpdateClients() {
 	for {
 		relayercommon.Logger.Infof("Start to monitor inscription data-seeds healthy")
-		for _, inscriptionClient := range executor.inscriptionClients {
+		for _, inscriptionClient := range e.inscriptionClients {
 			if time.Since(inscriptionClient.UpdatedAt).Seconds() > DataSeedDenyServiceThreshold {
 				msg := fmt.Sprintf("data seed %s is not accessable", inscriptionClient.Provider)
 				relayercommon.Logger.Error(msg)
-				config.SendTelegramMessage(executor.config.AlertConfig.Identity, executor.config.AlertConfig.TelegramBotId,
-					executor.config.AlertConfig.TelegramChatId, msg)
+				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
+					e.config.AlertConfig.TelegramChatId, msg)
 			}
-			height, err := executor.getLatestBlockHeightWithRetry(inscriptionClient.rpcClient)
+			height, err := e.getLatestBlockHeightWithRetry(inscriptionClient.rpcClient)
 			if err != nil {
 				relayercommon.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue
@@ -221,26 +226,26 @@ func (executor *InscriptionExecutor) UpdateClients() {
 
 		highestHeight := uint64(0)
 		highestIdx := 0
-		for idx := 0; idx < len(executor.inscriptionClients); idx++ {
-			if executor.inscriptionClients[idx].Height > highestHeight {
-				highestHeight = executor.inscriptionClients[idx].Height
+		for idx := 0; idx < len(e.inscriptionClients); idx++ {
+			if e.inscriptionClients[idx].Height > highestHeight {
+				highestHeight = e.inscriptionClients[idx].Height
 				highestIdx = idx
 			}
 		}
 		// current InscriptionClient block sync is fall behind, switch to the InscriptionClient with highest block height
-		if executor.inscriptionClients[executor.clientIdx].Height+FallBehindThreshold < highestHeight {
-			executor.mutex.Lock()
-			executor.clientIdx = highestIdx
-			executor.mutex.Unlock()
+		if e.inscriptionClients[e.clientIdx].Height+FallBehindThreshold < highestHeight {
+			e.mutex.Lock()
+			e.clientIdx = highestIdx
+			e.mutex.Unlock()
 		}
 		time.Sleep(SleepSecondForUpdateClient * time.Second)
 	}
 }
 
-func (executor *InscriptionExecutor) MonitorValidatorSetChange(height int64, preValidatorsHash bts.HexBytes) (bool, bts.HexBytes, error) {
+func (e *InscriptionExecutor) MonitorValidatorSetChange(height int64, preValidatorsHash bts.HexBytes) (bool, bts.HexBytes, error) {
 	validatorSetChanged := false
 
-	block, err := executor.GetRpcClient().Block(context.Background(), &height)
+	block, err := e.getRpcClient().Block(context.Background(), &height)
 	if err != nil {
 		return false, nil, err
 	}
@@ -259,46 +264,48 @@ func (executor *InscriptionExecutor) MonitorValidatorSetChange(height int64, pre
 	return validatorSetChanged, curValidatorsHash, nil
 }
 
-func (executor *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommon.Header, error) {
-	nextHeight := height + 1
+func (e *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommon.Header, error) {
 
-	commit, err := executor.GetRpcClient().Commit(context.Background(), &height)
+	commit, err := e.getRpcClient().Commit(context.Background(), &height)
 	if err != nil {
 		return nil, err
 	}
 
-	validators, err := executor.GetRpcClient().Validators(context.Background(), &height, nil, nil)
+	validators, err := e.QueryLatestValidators()
 	if err != nil {
 		return nil, err
 	}
 
-	nextvalidators, err := executor.GetRpcClient().Validators(context.Background(), &nextHeight, nil, nil)
-	if err != nil {
-		return nil, err
+	var blsPubKeysBts []byte
+	var relayerAddrs []string
+	for _, v := range validators {
+		blsPubKeysBts = append(blsPubKeysBts, v.RelayerBlsKey...)
+		relayerAddrs = append(relayerAddrs, v.RelayerAddress)
 	}
 
 	header := &relayercommon.Header{
-		SignedHeader:     commit.SignedHeader,
-		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
+		SignedHeader: commit.SignedHeader,
+		Height:       uint64(height),
+		BlsPubKeys:   blsPubKeysBts,
+		Relayers:     relayerAddrs,
 	}
 
 	return header, nil
 }
 
 // GetNextDeliverySequenceForChannel call dest chain(BSC) to return a sequence# which should be used.
-func (executor *InscriptionExecutor) GetNextDeliverySequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
-	sequence, err := executor.BSCExecutor.GetNextSequence(channelID)
+func (e *InscriptionExecutor) GetNextDeliverySequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
+	sequence, err := e.BscExecutor.GetNextSequence(channelID)
 	if err != nil {
 		return 0, err
 	}
 	return sequence, nil
 }
 
-func (executor *InscriptionExecutor) GetNextSequence(channelId relayercommon.ChannelId) (uint64, error) {
+func (e *InscriptionExecutor) GetNextOracleSequence() (uint64, error) {
 	path := fmt.Sprintf("/store/%s/%s", SequenceStoreName, "key")
-	key := BuildChannelSequenceKey(relayercommon.ChainId(executor.config.InscriptionConfig.ChainId), channelId)
-	response, err := executor.GetRpcClient().ABCIQuery(context.Background(), path, key)
+	key := BuildChannelSequenceKey(relayercommon.ChainId(e.config.BSCConfig.ChainId), 0x00)
+	response, err := e.getRpcClient().ABCIQuery(context.Background(), path, key)
 	if err != nil {
 		return 0, err
 	}
@@ -308,74 +315,36 @@ func (executor *InscriptionExecutor) GetNextSequence(channelId relayercommon.Cha
 	return binary.BigEndian.Uint64(response.Response.Value), nil
 }
 
-// ClaimPackages TODO use inscription-cosmos-sdk to claim a transaction
-func (executor *InscriptionExecutor) ClaimPackages(m *assembler.MsgClaim) (*assembler.MsgClaimResponse, error) {
-	//
-	//interfaceRegistry := cdctypes.NewInterfaceRegistry()
-	//cdc := codec.NewProtoCodec(interfaceRegistry)
-	//txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-	//txBuilder := txConfig.NewTxBuilder()
-	//
-	//privKey := executor.privateKey
-	//
-	//txBuilder.SetMsgs()
-	//
-	//err := txBuilder.SetMsgs(msg)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//var sigsV2 []signing.SignatureV2
-	//accountNum := executor.config.InscriptionConfig.AccountNum
-	//accountSeq := executor.config.InscriptionConfig.AccountSequence
-	//
-	//// First round: we gather all the signer infos. We use the "set empty
-	//// signature" hack to do that.
-	//sigV2 := signing.SignatureV2{
-	//	PubKey: privKey.PubKey(),
-	//	Data: &signing.SingleSignatureData{
-	//		SignMode:  txConfig.SignModeHandler().DefaultMode(),
-	//		Signature: nil,
-	//	},
-	//	Sequence: accountSeq,
-	//}
-	//sigsV2 = append(sigsV2, sigV2)
-	//
-	//err = txBuilder.SetSignatures(sigsV2...)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//// Second round: all signer infos are set, so each signer can sign.
-	//sigsV2 = []signing.SignatureV2{}
-	//
-	//signerData := xauthsigning.SignerData{
-	//	ChainID:       strconv.Itoa(int(executor.config.InscriptionConfig.ChainId)),
-	//	AccountNumber: accountNum,
-	//	Sequence:      accountSeq,
-	//}
-	//
-	//sigV2, err = clitx.SignWithPrivKey(txConfig.SignModeHandler().DefaultMode(), signerData, txBuilder, privKey, txConfig, accountSeq)
-	//
-	//sigsV2 = append(sigsV2, sigV2)
-	//
-	//err = txBuilder.SetSignatures(sigsV2...)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	////
-	//txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
-	//
-	////Broadcast transaction
-	//txRes, err := executor.GetGrpcTxClient().BroadcastTx(
-	//	context.Background(),
-	//	&tx.BroadcastTxRequest{
-	//		Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
-	//		TxBytes: txBytes, // Proto-binary of the signed transaction, see previous step.
-	//	})
-	//if err != nil {
-	//	return nil, err
-	//}
-	return nil, nil
+func (e *InscriptionExecutor) QueryLatestValidators() ([]stakingtypes.Validator, error) {
+	height, err := e.GetLatestBlockHeightWithRetry()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := e.QueryValidatorsAtHeight(height)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (e *InscriptionExecutor) QueryValidatorsAtHeight(height uint64) ([]stakingtypes.Validator, error) {
+	result, err := e.getStakingClient().HistoricalInfo(context.Background(), &stakingtypes.QueryHistoricalInfoRequest{Height: int64(height)})
+	if err != nil {
+		return nil, err
+	}
+	hist := result.Hist
+	return hist.Valset, nil
+}
+
+func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, error) {
+	authRes, err := e.getAuthClient().Account(context.Background(), &authtypes.QueryAccountRequest{Address: address})
+	if err != nil {
+		return nil, err
+	}
+	var account authtypes.AccountI
+	if err := Cdc().InterfaceRegistry().UnpackAny(authRes.Account, &account); err != nil {
+		return nil, err
+	}
+	return account, nil
 }

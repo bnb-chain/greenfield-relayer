@@ -1,7 +1,11 @@
 package listener
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/binary"
+	"encoding/hex"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	relayercommon "inscription-relayer/common"
 	"inscription-relayer/config"
 	"inscription-relayer/db"
@@ -26,7 +30,7 @@ func NewInscriptionListener(cfg *config.Config, executor *executor.InscriptionEx
 }
 
 func (l *InscriptionListener) Start() {
-	go l.poll(l.config.InscriptionConfig.StartHeight)
+	l.poll(l.config.InscriptionConfig.StartHeight)
 }
 
 func (l *InscriptionListener) poll(startHeight uint64) {
@@ -37,34 +41,38 @@ func (l *InscriptionListener) poll(startHeight uint64) {
 			time.Sleep(db.QueryDBRetryInterval)
 			continue
 		}
-		nextBlockHeight := startHeight
-
 		latestPolledBlockHeight := latestPolledBlock.Height
 		if startHeight != 0 && startHeight <= latestPolledBlockHeight {
-			relayercommon.Logger.Infof("block at height %d has been polled, current DB block height %d", startHeight, latestPolledBlockHeight)
-			nextBlockHeight = latestPolledBlockHeight + 1
+			startHeight = latestPolledBlockHeight + 1
 		}
-
-		relayercommon.Logger.Infof("start from height %s ", nextBlockHeight)
 
 		latestBlockHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
 		if err != nil {
 			relayercommon.Logger.Errorf("Failed to get latest block height, error: %s", err.Error())
-			time.Sleep(GetBlockHeightRetryInterval)
 			continue
 		}
 
-		if latestPolledBlockHeight == latestBlockHeight-1 {
-			relayercommon.Logger.Infof("Pause polling Block, current block height in db : %d, block height is: %d", latestPolledBlock, latestBlockHeight)
-			time.Sleep(GetBlockHeightRetryInterval)
+		if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
 			continue
 		}
-		nextBlockHeight = latestPolledBlockHeight + 1
-		err = l.monitorCrossChainPkgAtBlockHeight(nextBlockHeight)
+		blockRes, block, err := l.getBlockAndBlockResult(startHeight)
 		if err != nil {
-			relayercommon.Logger.Errorf("Encounter error when monitorCrossChainPkgAtBlockHeight, err=%s", err.Error())
-			time.Sleep(db.QueryDBRetryInterval)
+			relayercommon.Logger.Errorf("encounter error when retrieve block and block result at height %d, err=%s", startHeight, err.Error())
+			continue
 		}
+
+		err = l.monitorCrossChainEvent(blockRes, block)
+		if err != nil {
+			relayercommon.Logger.Errorf("encounter error when monitor events at block %d, err=%s", startHeight, err.Error())
+			continue
+		}
+		go func() {
+			err := l.monitorValidators(startHeight)
+			if err != nil {
+				relayercommon.Logger.Errorf("encounter error when monitor validators at block %d, err=%s", startHeight, err.Error())
+				return
+			}
+		}()
 	}
 }
 
@@ -76,50 +84,50 @@ func (l *InscriptionListener) getLatestPolledBlock() (*model.InscriptionBlock, e
 	return block, nil
 }
 
-func (l *InscriptionListener) monitorCrossChainPkgAtBlockHeight(height uint64) error {
-	relayercommon.Logger.Infof("Retrieve block at height=%d", height)
+func (l *InscriptionListener) getBlockAndBlockResult(height uint64) (*ctypes.ResultBlockResults, *tmtypes.Block, error) {
+	relayercommon.Logger.Infof("retrieve inscription block at height=%d", height)
 	blockResults, err := l.inscriptionExecutor.GetBlockResultAtHeight(int64(height))
+	if err != nil {
+		return nil, nil, err
+	}
 	block, err := l.inscriptionExecutor.GetBlockAtHeight(int64(height))
 	if err != nil {
-		return fmt.Errorf("failed to get block at height, height=%d, err=%s", height, err.Error())
+		return nil, nil, err
 	}
+	return blockResults, block, nil
+}
 
-	//TODO clarify the event type, attr k-v.
+func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
 	txs := make([]*model.InscriptionRelayTransaction, 0)
 	for _, event := range blockResults.EndBlockEvents {
-		//- events:
-		//  - attributes:
-		//    - key: amount
-		//      value: '{"denom":"stake","amount":"1"}'
-		//    - key: expire_time
-		//      value: '"1671989649"'
-		//    - key: from
-		//      value: '"cosmos13nhu9fn4yj6r4aqxhqr322k0q26y2m8agvram9"'
-		//    - key: relayer_fee
-		//      value: '{"denom":"stake","amount":"1"}'
-		//    - key: sequence
-		//      value: '"1"'
-		//    - key: to
-		//      value: '"0x72b61c6014342d914470eC7aC2975bE345796c2b"'
-		//    type: bnbchain.bfs.bridge.EventCrossTransferOut
-
-		if event.Type == EventTypeCrossChainPackage {
+		tx := model.InscriptionRelayTransaction{}
+		if event.Type == EventTypeCrossChain {
 			for _, attr := range event.Attributes {
-				if string(attr.Key) != EventAttributeKeyCrossChainPackage {
+				switch string(attr.Key) {
+				case "channel_id":
+					tx.ChannelId = uint8(binary.BigEndian.Uint16(attr.Value))
+				case "src_chain_id":
 					continue
+				case "dest_chain_id":
+					continue
+				case "package_load":
+					tx.PayLoad = hex.EncodeToString(attr.Value)
+				case "sequence":
+					tx.Sequence = binary.BigEndian.Uint64(attr.Value)
+				case "package_type":
+					tx.Type = string(attr.Value)
+				case "timestamp":
+					tx.TxTime = int64(binary.BigEndian.Uint64(attr.Value))
+				case "relayer_fee":
+					tx.RelayerFee = string(attr.Value)
+				default:
+					relayercommon.Logger.Errorf("unexpected attr, key is %s", attr.Key)
 				}
 			}
-			// TODO Convert a event to a transaction model
-			tx := model.InscriptionRelayTransaction{}
+			tx.Status = model.SAVED
+			tx.Height = uint64(block.Height)
 			txs = append(txs, &tx)
 		}
-	}
-
-	dbTx := l.daoManager.InscriptionDao.DB.Begin()
-	err = l.daoManager.InscriptionDao.SaveBatchTransactions(txs)
-	if err != nil {
-		dbTx.Rollback()
-		return err
 	}
 
 	b := &model.InscriptionBlock{
@@ -128,10 +136,83 @@ func (l *InscriptionListener) monitorCrossChainPkgAtBlockHeight(height uint64) e
 		Height:    uint64(block.Height),
 		BlockTime: block.Time.Unix(),
 	}
-	err = l.daoManager.InscriptionDao.SaveBlock(b)
+	return l.daoManager.InscriptionDao.SaveBlockAndBatchTransactions(b, txs)
+}
+
+//
+//func (l *InscriptionListener) monitorValidators(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
+//	validatorsHash := block.ValidatorsHash
+//	nextValidatorsHash := block.NextValidatorsHash
+//
+//	needSyncHeader := false
+//
+//	if !bytes.Equal(validatorsHash, nextValidatorsHash) {
+//		updates := blockResults.ValidatorUpdates
+//		validators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(uint64(block.Height))
+//		if err != nil {
+//			return err
+//		}
+//		// for each updated validator, check against validators list if is new created, voting power change, bls key change
+//		for _, vUpdate := range updates {
+//			pubKeyBts, err := vUpdate.PubKey.Marshal()
+//			if err != nil {
+//				return nil
+//			}
+//
+//			onlyPowerUpdate := false
+//			for _, v := range validators {
+//				//if bytes.Equal(pubKeyBts, v.RelayerBlsKey) && vUpdate.Power != v.po {
+//				if bytes.Equal(pubKeyBts, v.RelayerBlsKey) {
+//					relayercommon.Logger.Infof("Only power is update for validator %s", vUpdate.PubKey.String())
+//					onlyPowerUpdate = true
+//				}
+//			}
+//
+//			if !onlyPowerUpdate {
+//				needSyncHeader = true
+//				break
+//			}
+//		}
+//	}
+//	if needSyncHeader {
+//		relayercommon.Logger.Errorf("need to sync tendermint header at height : %d", block.Height)
+//		//l.inscriptionExecutor.bscExecutor.SyncTendermintLightClientHeader(height)
+//	}
+//	return nil
+//}
+
+func (l *InscriptionListener) monitorValidators(height uint64) error {
+	if height == 1 {
+		return nil
+	}
+
+	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(height)
 	if err != nil {
-		dbTx.Rollback()
 		return err
 	}
-	return dbTx.Commit().Error
+
+	prevValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(height - 1)
+	if err != nil {
+		return err
+	}
+
+	if len(curValidators) != len(prevValidators) {
+		//sync header
+		//l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader()
+	}
+
+	for idx, curVal := range curValidators {
+		prevVal := prevValidators[idx]
+
+		// validators should follow same order if there is no change to existing validators
+		if curVal.OperatorAddress != prevVal.OperatorAddress ||
+			!bytes.Equal(curVal.ConsensusPubkey.Value, prevVal.ConsensusPubkey.Value) ||
+			bytes.Equal(curVal.RelayerBlsKey, prevVal.RelayerBlsKey) ||
+			curVal.RelayerAddress != prevVal.RelayerAddress {
+			relayercommon.Logger.Infof("Syncing tendermint header at height %d", height)
+			//l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader()
+			return nil
+		}
+	}
+	return nil
 }

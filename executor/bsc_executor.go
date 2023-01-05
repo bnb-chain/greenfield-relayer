@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/avast/retry-go/v4"
-	"github.com/ethereum/go-ethereum"
-	ethereumcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	relayercommon "inscription-relayer/common"
 	"inscription-relayer/config"
 	"inscription-relayer/db/dao"
+	"inscription-relayer/executor/crosschain"
 	"math/big"
 	"sync"
 	"time"
@@ -29,14 +29,16 @@ type BSCClient struct {
 }
 
 type BSCExecutor struct {
+	gasPriceMutex       sync.RWMutex
 	mutex               sync.RWMutex
-	daoManager          *dao.DaoManager
 	InscriptionExecutor *InscriptionExecutor
+	daoManager          *dao.DaoManager
 	clientIdx           int
 	bscClients          []*BSCClient
 	config              *config.Config
 	privateKey          *ecdsa.PrivateKey
 	TxSender            common.Address
+	gasPrice            *big.Int
 }
 
 func initBSCClients(providers []string) []*BSCClient {
@@ -95,63 +97,51 @@ func NewBSCExecutor(cfg *config.Config, dao *dao.DaoManager) (*BSCExecutor, erro
 	}
 	txSender := crypto.PubkeyToAddress(*publicKeyECDSA)
 
+	var initGasPrice *big.Int
+	if cfg.BSCConfig.GasPrice == 0 {
+		initGasPrice = big.NewInt(DefaultGasPrice)
+	} else {
+		initGasPrice = big.NewInt(int64(cfg.BSCConfig.GasPrice))
+	}
+
 	return &BSCExecutor{
 		daoManager: dao,
 		clientIdx:  0,
 		bscClients: initBSCClients(cfg.BSCConfig.RPCAddrs),
-
 		privateKey: privKey,
 		TxSender:   txSender,
 		config:     cfg,
+		gasPrice:   initGasPrice,
 	}, nil
 }
 
-func (executor *BSCExecutor) SetInscriptionExecutor(e *InscriptionExecutor) {
-	executor.InscriptionExecutor = e
+func (e *BSCExecutor) SetInscriptionExecutor(insE *InscriptionExecutor) {
+	e.InscriptionExecutor = insE
 }
 
-func (executor *BSCExecutor) GetClient() *ethclient.Client {
-	executor.mutex.RLock()
-	defer executor.mutex.RUnlock()
-	return executor.bscClients[executor.clientIdx].BSCClient
+func (e *BSCExecutor) GetClient() *ethclient.Client {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.bscClients[e.clientIdx].BSCClient
 }
 
-func (executor *BSCExecutor) SwitchClient() {
-	executor.mutex.Lock()
-	defer executor.mutex.Unlock()
-	executor.clientIdx++
-	if executor.clientIdx >= len(executor.bscClients) {
-		executor.clientIdx = 0
+func (e *BSCExecutor) SwitchClient() {
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+	e.clientIdx++
+	if e.clientIdx >= len(e.bscClients) {
+		e.clientIdx = 0
 	}
-	relayercommon.Logger.Infof("Switch to provider: %s", executor.config.BSCConfig.RPCAddrs[executor.clientIdx])
+	relayercommon.Logger.Infof("Switch to provider: %s", e.config.BSCConfig.RPCAddrs[e.clientIdx])
 }
 
-func (executor *BSCExecutor) GetLogsFromHeader(header *types.Header) ([]types.Log, error) {
-	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	client := executor.GetClient()
-	topics := [][]ethereumcommon.Hash{{CrossChainPackageEventHash}}
-	blockHash := header.Hash()
-	logs, err := client.FilterLogs(ctxWithTimeout, ethereum.FilterQuery{
-		BlockHash: &blockHash,
-		Topics:    topics,
-		Addresses: []ethereumcommon.Address{executor.config.BSCConfig.BSCCrossChainContractAddress},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return logs, nil
-
+func (e *BSCExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
+	return e.getLatestBlockHeightWithRetry(e.GetClient())
 }
 
-func (executor *BSCExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
-	return executor.getLatestBlockHeightWithRetry(executor.GetClient())
-}
-
-func (executor *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (latestHeight uint64, err error) {
+func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (latestHeight uint64, err error) {
 	return latestHeight, retry.Do(func() error {
-		var err error
-		latestHeight, err = executor.GetLatestBlockHeight(client)
+		latestHeight, err = e.GetLatestBlockHeight(client)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -161,7 +151,7 @@ func (executor *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Cli
 		}))
 }
 
-func (executor *BSCExecutor) GetLatestBlockHeight(client *ethclient.Client) (uint64, error) {
+func (e *BSCExecutor) GetLatestBlockHeight(client *ethclient.Client) (uint64, error) {
 	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -172,17 +162,17 @@ func (executor *BSCExecutor) GetLatestBlockHeight(client *ethclient.Client) (uin
 	return block.Number().Uint64(), nil
 }
 
-func (executor *BSCExecutor) UpdateClients() {
+func (e *BSCExecutor) UpdateClients() {
 	for {
 		relayercommon.Logger.Infof("Start to monitor bsc data-seeds healthy")
-		for _, bscClient := range executor.bscClients {
+		for _, bscClient := range e.bscClients {
 			if time.Since(bscClient.UpdatedAt).Seconds() > DataSeedDenyServiceThreshold {
 				msg := fmt.Sprintf("data seed %s is not accessable", bscClient.Provider)
 				relayercommon.Logger.Error(msg)
-				config.SendTelegramMessage(executor.config.AlertConfig.Identity, executor.config.AlertConfig.TelegramBotId,
-					executor.config.AlertConfig.TelegramChatId, msg)
+				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
+					e.config.AlertConfig.TelegramChatId, msg)
 			}
-			height, err := executor.GetLatestBlockHeight(bscClient.BSCClient)
+			height, err := e.GetLatestBlockHeight(bscClient.BSCClient)
 			if err != nil {
 				relayercommon.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue
@@ -193,52 +183,149 @@ func (executor *BSCExecutor) UpdateClients() {
 
 		highestHeight := uint64(0)
 		highestIdx := 0
-		for idx := 0; idx < len(executor.bscClients); idx++ {
-			if executor.bscClients[idx].Height > highestHeight {
-				highestHeight = executor.bscClients[idx].Height
+		for idx := 0; idx < len(e.bscClients); idx++ {
+			if e.bscClients[idx].Height > highestHeight {
+				highestHeight = e.bscClients[idx].Height
 				highestIdx = idx
 			}
 		}
 		// current client block sync is fall behind, switch to the client with the highest block height
-		if executor.bscClients[executor.clientIdx].Height+FallBehindThreshold < highestHeight {
-			executor.mutex.Lock()
-			executor.clientIdx = highestIdx
-			executor.mutex.Unlock()
+		if e.bscClients[e.clientIdx].Height+FallBehindThreshold < highestHeight {
+			e.mutex.Lock()
+			e.clientIdx = highestIdx
+			e.mutex.Unlock()
 		}
 		time.Sleep(SleepSecondForUpdateClient * time.Second)
 	}
 }
 
-func (executor *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, error) {
+func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, error) {
 	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	header, err := executor.GetClient().HeaderByNumber(ctxWithTimeout, big.NewInt(int64(height)))
+	header, err := e.GetClient().HeaderByNumber(ctxWithTimeout, big.NewInt(int64(height)))
 	if err != nil {
 		return nil, err
 	}
 	return header, nil
 }
 
-// TODO
-func (executor *BSCExecutor) GetNextSequence(channelID relayercommon.ChannelId) (uint64, error) {
-	//crossChainInstance, err := crosschain.NewCrosschain(crossChainContractAddr, executor.GetClient())
-	//if err != nil {
-	//	return 0, err
-	//}
-	//
-	//callOpts, err := executor.getCallOpts()
-	//if err != nil {
-	//	return 0, err
-	//}
-	//
-	//return crossChainInstance.ChannelReceiveSequenceMap(callOpts, uint8(channelID))
-	return 0, nil
+func (e *BSCExecutor) GetNextSequence(channelID relayercommon.ChannelId) (uint64, error) {
+	crossChainInstance, err := crosschain.NewCrosschain(crossChainContractAddr, e.GetClient())
+	if err != nil {
+		return 0, err
+	}
+
+	callOpts, err := e.getCallOpts()
+	if err != nil {
+		return 0, err
+	}
+
+	return crossChainInstance.ChannelReceiveSequenceMap(callOpts, uint8(channelID))
 }
 
-func (executor *BSCExecutor) GetNextDeliverySequenceForChannel(channelId relayercommon.ChannelId) (uint64, error) {
-	sequence, err := executor.InscriptionExecutor.GetNextSequence(channelId)
+func (e *BSCExecutor) GetNextDeliveryOracleSequence() (uint64, error) {
+	sequence, err := e.InscriptionExecutor.GetNextOracleSequence()
 	if err != nil {
 		return 0, err
 	}
 	return sequence, nil
+}
+
+func (e *BSCExecutor) getTransactor(nonce uint64) (*bind.TransactOpts, error) {
+	txOpts := bind.NewKeyedTransactor(e.privateKey)
+	txOpts.Nonce = big.NewInt(int64(nonce))
+	txOpts.Value = big.NewInt(0)
+	txOpts.GasLimit = e.config.BSCConfig.GasLimit
+	txOpts.GasPrice = e.GetGasPrice()
+	return txOpts, nil
+}
+
+func (e *BSCExecutor) GetGasPrice() *big.Int {
+	e.gasPriceMutex.RLock()
+	defer e.gasPriceMutex.RUnlock()
+	return e.gasPrice
+}
+
+func (e *BSCExecutor) getCallOpts() (*bind.CallOpts, error) {
+	callOpts := &bind.CallOpts{
+		Pending: true,
+		Context: context.Background(),
+	}
+	return callOpts, nil
+}
+
+//func (executor *BscExecutor) SyncTendermintLightClientHeader(height uint64) (common.Hash, error) {
+//	nonce, err := executor.GetClient().PendingNonceAt(context.Background(), executor.TxSender)
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//	txOpts, err := executor.getTransactor(nonce)
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//
+//	instance, err := tendermintlightclient.NewTendermintlightclient(tendermintLightClientContractAddr, executor.GetClient())
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//
+//tryAgain:
+//	header, err := executor.InscriptionExecutor.QueryTendermintHeader(int64(height))
+//	if err != nil {
+//		if isHeaderNonExistingErr(err) {
+//			goto tryAgain
+//		} else {
+//			return common.Hash{}, err
+//		}
+//	}
+//
+//	headerBytes, err := header.SignedHeader.ToProto().Marshal()
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//	tx, err := instance.SyncTendermintHeader(txOpts, headerBytes, height, )
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//
+//	syncHeaderTx := &model.InscriptionRelayTransaction{
+//		TxHash:     tx.Hash().String(),
+//		Type:       model.SyncBlockHeader,
+//		ChannelId:  0,
+//		Sequence:   0,
+//		Height:     height,
+//		TxGasPrice: txOpts.GasPrice.Uint64(),
+//		TxGasLimit: txOpts.GasLimit,
+//		TxUsedGas:  0,
+//		TxFee:      0,
+//		TxTime:  time.Now().Unix(),
+//	}
+//
+//	err = executor.daoManager.InscriptionDao.SaveBatchTransaction(syncHeaderTx)
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//
+//	return tx.Hash(), nil
+//}
+
+func (e *BSCExecutor) CallBuildInSystemContract(channelID int8, blsSignature []byte, sequence uint64, validatorSet *big.Int,
+	msgBytes []byte, nonce uint64) (common.Hash, error) {
+
+	txOpts, err := e.getTransactor(nonce)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	crossChainInstance, err := crosschain.NewCrosschain(crossChainContractAddr, e.GetClient())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	tx, err := crossChainInstance.HandlePackage(txOpts, msgBytes, blsSignature, validatorSet, sequence, uint8(channelID))
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	return tx.Hash(), nil
 }

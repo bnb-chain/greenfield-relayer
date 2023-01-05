@@ -20,8 +20,7 @@ const (
 )
 
 var (
-	prefixForCrossChainPackageKey = []byte{0x00}
-	prefixForSequenceKey          = []byte{0xf0}
+	prefixForSequenceKey = []byte{0xf0}
 
 	PureHeaderSyncChannelID common.ChannelId = 1
 

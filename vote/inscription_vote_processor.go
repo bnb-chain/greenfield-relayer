@@ -3,10 +3,14 @@ package vote
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"github.com/avast/retry-go/v4"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jinzhu/gorm"
+	"github.com/tendermint/tendermint/votepool"
 	relayercommon "inscription-relayer/common"
 	"inscription-relayer/config"
 	"inscription-relayer/db"
@@ -14,61 +18,68 @@ import (
 	"inscription-relayer/db/model"
 	"inscription-relayer/executor"
 	"inscription-relayer/listener"
+	"inscription-relayer/util"
 	"time"
 )
 
 type InscriptionVoteProcessor struct {
-	votePoolExecutor    *executor.VotePoolExecutor
+	votePoolExecutor    *VotePoolExecutor
 	daoManager          *dao.DaoManager
 	config              *config.Config
 	signer              *VoteSigner
 	inscriptionExecutor *executor.InscriptionExecutor
+	blsPublicKey        []byte
 }
 
 func NewInscriptionVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, inscriptionExecutor *executor.InscriptionExecutor,
-	votePoolExecutor *executor.VotePoolExecutor) *InscriptionVoteProcessor {
+	votePoolExecutor *VotePoolExecutor) (*InscriptionVoteProcessor, error) {
+	pubKey, err := util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey)
+	if err != nil {
+		return nil, err
+	}
 	return &InscriptionVoteProcessor{
 		config:              cfg,
 		daoManager:          dao,
 		signer:              signer,
 		inscriptionExecutor: inscriptionExecutor,
 		votePoolExecutor:    votePoolExecutor,
-	}
+		blsPublicKey:        pubKey,
+	}, nil
 }
 
 // SignAndBroadcast Will sign using the bls private key, broadcast the vote to votepool
 func (p *InscriptionVoteProcessor) SignAndBroadcast() error {
+
 	for {
 		latestHeight, err := p.inscriptionExecutor.GetLatestBlockHeightWithRetry()
-
 		if err != nil {
-			relayercommon.Logger.Errorf("Failed to get latest block height, error: %s", err.Error())
+			relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 			time.Sleep(listener.GetBlockHeightRetryInterval)
 			continue
 		}
 
-		latestVotedTxHeight, err := p.daoManager.InscriptionDao.GetLatestVotedTransactionHeight()
+		leastSavedTxHeight, err := p.daoManager.InscriptionDao.GetLeastSavedTxHeight()
 		if err != nil {
-			return err
-		}
-		if latestVotedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
 			time.Sleep(2 * time.Second)
 			continue
 		}
-		txs, err := p.daoManager.InscriptionDao.GetUnVotedTransactionsAtHeight(latestVotedTxHeight + 1)
+		if leastSavedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(model.SAVED, leastSavedTxHeight)
 		if err != nil {
-			relayercommon.Logger.Errorf("Failed to get transactions from db, error: %s", err.Error())
+			relayercommon.Logger.Errorf("Failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
 			time.Sleep(db.QueryDBRetryInterval)
 			continue
 		}
 
 		if len(txs) == 0 {
-			relayercommon.Logger.Errorf("Current block txs have been voted, block height: %d", latestVotedTxHeight+1)
 			time.Sleep(2 * time.Second)
 			continue
 		}
 
-		// for every tx, we are going to sign it and broadcast vote of it. 1 tx to 1 vote
+		// for every tx, we are going to sign it and broadcast vote of it.
 		for _, tx := range txs {
 			v, err := p.constructVoteAndSign(tx)
 			if err != nil {
@@ -77,33 +88,30 @@ func (p *InscriptionVoteProcessor) SignAndBroadcast() error {
 
 			//broadcast v
 			if err = retry.Do(func() error {
-				err = p.votePoolExecutor.SubmitVote(v)
+				err = p.votePoolExecutor.BroadcastVote(v)
 				if err != nil {
 					return fmt.Errorf("failed to submit vote for event with txhash: %s", tx.TxHash)
 				}
-				return err
+				return nil
 			}, retry.Context(context.Background()), relayercommon.RtyAttem, relayercommon.RtyDelay, relayercommon.RtyErr); err != nil {
 				return err
 			}
 
 			//After vote submitted to vote pool, persist vote Data and update the status of tx to 'VOTED'.
-			dbTx := p.daoManager.InscriptionDao.DB.Begin()
-
-			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, VOTED)
+			err = p.daoManager.InscriptionDao.DB.Transaction(func(dbTx *gorm.DB) error {
+				err = p.daoManager.InscriptionDao.UpdateTxStatus(tx.Id, model.VOTED)
+				if err != nil {
+					return err
+				}
+				err = p.daoManager.VoteDao.SaveVote(FromEntityToDto(v, tx.ChannelId, tx.Sequence))
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 			if err != nil {
-				dbTx.Rollback()
 				return err
 			}
-			voteData, err := p.constructVoteData(tx)
-			if err != nil {
-				return err
-			}
-			err = p.daoManager.VoteDao.SaveVoteData(voteData.ToDbModel())
-			if err != nil {
-				dbTx.Rollback()
-				return err
-			}
-			return dbTx.Commit().Error
 		}
 	}
 }
@@ -111,163 +119,122 @@ func (p *InscriptionVoteProcessor) SignAndBroadcast() error {
 func (p *InscriptionVoteProcessor) CollectVotes() error {
 
 	for {
-		var err error
-		txs, err := p.daoManager.InscriptionDao.GetVotedTransactions()
+		txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(model.VOTED)
 		if err != nil {
-			relayercommon.Logger.Errorf("Failed to get voted transactions from db, error: %s", err.Error())
+			relayercommon.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
 			time.Sleep(db.QueryDBRetryInterval)
 			continue
 		}
 		for _, tx := range txs {
-			voteData, err := p.daoManager.VoteDao.GetVoteDataByChannelAndSequence(tx.ChannelId, tx.Sequence)
+			err := p.prepareEnoughValidVotesForTx(tx)
 			if err != nil {
 				return err
 			}
-			//this will keep query more 2/3 votes, and verify sig, if verifycation fails, will re-broadcast votes and go over again.
-			//if less than 2/3, will
 
-			var votes []*Vote
-			p.prepareEnoughValidVotesForTransaction(votes, voteData, tx)
-
-			modelVotes := make([]*model.Vote, 0, len(votes))
-
-			for _, v := range votes {
-				modelVote := v.ToDbModel(tx.ChannelId, tx.Sequence)
-				modelVotes = append(modelVotes, modelVote)
-			}
-			dbTx := p.daoManager.VoteDao.DB.Begin()
-
-			//Update tx status in DB to ALL_VOTED
-			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, VOTED_ALL)
+			err = p.daoManager.InscriptionDao.UpdateTxStatus(tx.Id, model.VOTED_ALL)
 			if err != nil {
-				dbTx.Rollback()
 				return err
 			}
-			//Persist votes result for a tx to DB
-			err = p.daoManager.VoteDao.SaveBatchVotes(modelVotes)
-			if err != nil {
-				dbTx.Rollback()
-				return err
-			}
-			return dbTx.Commit().Error
 		}
 	}
 }
 
-// prepareEnoughValidVotesForTransaction will prepare fetch and validate votes result, store in votes
-func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTransaction(votes []*Vote, voteData *model.VoteData, tx *model.InscriptionRelayTransaction) {
+// prepareEnoughValidVotesForTx will prepare fetch and validate votes result, store in votes
+func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.InscriptionRelayTransaction) error {
+
+	validators, err := p.inscriptionExecutor.QueryLatestValidators()
+	if err != nil {
+		return err
+	}
+	//Query from votePool until there are more than 2/3 votes
+	err = p.queryMoreThanTwoThirdVotesForTx(tx, validators)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// queryMoreThanTwoThirdVotesForTx query votes from votePool
+func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.InscriptionRelayTransaction, validators []stakingtypes.Validator) error {
+
+	validVotesTotalCount := 1 // assume local vote is valid
+	channelId := tx.ChannelId
+	seq := tx.Sequence
+	localVote, err := p.constructVoteAndSign(tx)
+	if err != nil {
+		return err
+	}
 	for {
-		validators, _ := p.votePoolExecutor.QueryValidators()
-		validatorsSize := len(validators)
-		//Query from votePool until there are more than 2/3 votes
-		votes, _ = p.queryMoreThanTwoThirdVotesForTransaction(tx, validatorsSize)
-
-		reQueryFromVotePool := false
-		eventHash := voteData.EventHash
-		voteSize := len(votes)
-		relayercommon.Logger.Infof("Query %d votes from votepool for transaciton %s.", voteSize, tx.TxHash)
-		//Verify all votes received,
-		//1 verify sig.
-		//2. verify pub key exists
-		validVotesSize := voteSize
-
-		for _, v := range votes {
-			var err error
-			isValidPubKey := false
-			if err = v.Verify(eventHash); err != nil {
-				relayercommon.Logger.Errorf("failed to verify vote, vote pub key is %s ", v.PubKey)
-				validVotesSize--
-				continue
-			}
-			for _, validator := range validators {
-				// will check current vote pub key belong to any validator, if not found, means current vote is not valid
-				if bytes.Equal(v.PubKey[:], validator.PubKey.Bytes()[:]) {
-					isValidPubKey = true
-				}
-			}
-			if !isValidPubKey {
-				validVotesSize--
-				relayercommon.Logger.Errorf("the vote's pub key '%s' does not belong to any validator", v.PubKey)
-				continue
-			}
-			if validVotesSize < validVotesSize*2/3 {
-				reQueryFromVotePool = true
-				break
-			}
-		}
-		if reQueryFromVotePool {
-			time.Sleep(time.Second * 1)
+		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.ToBscCrossChainEvent)
+		if err != nil {
 			continue
 		}
-		return
-	}
-}
-
-// queryMoreThanTwoThirdVotesForTransaction query votes from votePool
-func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTransaction(tx *model.InscriptionRelayTransaction, validatorsSize int) ([]*Vote, error) {
-	for {
-		var err error
-
-		eventHash, err := p.getEventHash(tx)
-		if err != nil {
-			return nil, err
-		}
-
-		votes, err := p.votePoolExecutor.QueryVotes(eventHash, ToBscCrossChainEvent)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(votes) < validatorsSize*3/2 {
-			//will re-broadcast if queried votes dont include validator's vote
-			validatorVoteExist := false
-
-			//re-broadcast current validator vote if votes result from votePool not exist
-			for _, v := range votes {
-				if bytes.Equal(v.PubKey[:], []byte(p.config.VotePoolConfig.BlsPublicKey)) {
-					validatorVoteExist = true
-					break
-				}
-			}
-			if !validatorVoteExist {
-				v, err := p.constructVoteAndSign(tx)
-				if err != nil {
-					return nil, err
-				}
-				err = p.votePoolExecutor.SubmitVote(v)
-				if err != nil {
-					return nil, err
-				}
-			}
-			time.Sleep(time.Second * 1)
+		validVotesCountPerReq := len(queriedVotes)
+		if validVotesCountPerReq == 0 {
 			continue
 		}
 
-		return votes, nil
+		isLocalVoteIncluded := false
+
+		for _, v := range queriedVotes {
+			if !p.isVotePubKeyValid(v, validators) {
+				relayercommon.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
+				validVotesCountPerReq--
+				continue
+			}
+
+			if err := Verify(v, localVote.EventHash); err != nil {
+				relayercommon.Logger.Errorf("verify vote's signature failed,  err=%s", err)
+				validVotesCountPerReq--
+				continue
+			}
+
+			if bytes.Equal(v.PubKey[:], p.blsPublicKey) {
+				isLocalVoteIncluded = true
+				validVotesCountPerReq--
+				continue
+			}
+
+			// check duplicate, the vote might have been saved in previous request.
+			exist, err := p.daoManager.VoteDao.IsVoteExist(channelId, seq, hex.EncodeToString(v.PubKey[:]))
+			if err != nil {
+				return err
+			}
+			if exist {
+				validVotesCountPerReq--
+				continue
+			}
+			// a vote result persisted into DB should be valid, unique.
+			err = p.daoManager.VoteDao.SaveVote(FromEntityToDto(v, channelId, seq))
+			if err != nil {
+				return err
+			}
+		}
+
+		validVotesTotalCount += validVotesCountPerReq
+		if validVotesTotalCount < len(validators)*2/3 {
+			if !isLocalVoteIncluded {
+				err := p.votePoolExecutor.BroadcastVote(localVote)
+				if err != nil {
+					return err
+				}
+			}
+			continue
+		}
+		return nil
 	}
 }
 
-func (p *InscriptionVoteProcessor) constructVoteAndSign(tx *model.InscriptionRelayTransaction) (*Vote, error) {
-	var v *Vote
-	v.EvenType = ToBscCrossChainEvent
+func (p *InscriptionVoteProcessor) constructVoteAndSign(tx *model.InscriptionRelayTransaction) (*votepool.Vote, error) {
+	var v votepool.Vote
+	v.EventType = votepool.ToBscCrossChainEvent
 	eventHash, err := p.getEventHash(tx)
 	if err != nil {
 		return nil, err
 	}
-	err = p.signer.SignVote(v, eventHash)
-	return v, err
-}
-
-func (p *InscriptionVoteProcessor) constructVoteData(tx *model.InscriptionRelayTransaction) (*VoteData, error) {
-	eventHash, err := p.getEventHash(tx)
-	if err != nil {
-		return nil, err
-	}
-	return &VoteData{
-		EventHash: eventHash,
-		Sequence:  tx.Sequence,
-		ChannelId: tx.ChannelId,
-	}, nil
+	p.signer.SignVote(&v, eventHash)
+	return &v, nil
 }
 
 func (p *InscriptionVoteProcessor) getEventHash(tx *model.InscriptionRelayTransaction) ([]byte, error) {
@@ -276,4 +243,13 @@ func (p *InscriptionVoteProcessor) getEventHash(tx *model.InscriptionRelayTransa
 		return nil, err
 	}
 	return crypto.Keccak256Hash(b).Bytes(), nil
+}
+
+func (p *InscriptionVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []stakingtypes.Validator) bool {
+	for _, validator := range validators {
+		if bytes.Equal(v.PubKey[:], validator.RelayerBlsKey[:]) {
+			return true
+		}
+	}
+	return false
 }

@@ -6,14 +6,10 @@ type DaoManager struct {
 	BSCDao         *BSCDao
 }
 
-func NewDaoManager(inscriptionDao *InscriptionDao, voteDao *VoteDao, bscDao *BSCDao) *DaoManager {
+func NewDaoManager(inscriptionDao *InscriptionDao, bscDao *BSCDao, voteDao *VoteDao) *DaoManager {
 	return &DaoManager{
 		InscriptionDao: inscriptionDao,
 		VoteDao:        voteDao,
 		BSCDao:         bscDao,
 	}
-}
-
-type Result struct {
-	height uint64
 }
