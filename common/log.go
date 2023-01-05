@@ -11,9 +11,7 @@ import (
 
 var (
 	// Logger instance for quick declarative logging levels
-	Logger    = logging.MustGetLogger("replayer")
-	SdkLogger = &sdkLogger{}
-
+	Logger = logging.MustGetLogger("inscription-relayer")
 	// log levels that are available
 	levels = map[string]logging.Level{
 		"CRITICAL": logging.CRITICAL,

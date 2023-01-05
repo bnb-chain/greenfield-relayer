@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"google.golang.org/grpc"
 	relayercommon "inscription-relayer/common"
@@ -287,10 +288,10 @@ func (e *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommo
 	}
 
 	var blsPubKeysBts []byte
-	var relayerAddrs []string
+	var relayerAddrs []common.Address
 	for _, v := range validators {
 		blsPubKeysBts = append(blsPubKeysBts, v.RelayerBlsKey...)
-		relayerAddrs = append(relayerAddrs, v.RelayerAddress)
+		relayerAddrs = append(relayerAddrs, common.HexToAddress(v.RelayerAddress))
 	}
 
 	header := &relayercommon.Header{

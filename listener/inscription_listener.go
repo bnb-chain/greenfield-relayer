@@ -139,48 +139,6 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 	return l.daoManager.InscriptionDao.SaveBlockAndBatchTransactions(b, txs)
 }
 
-//
-//func (l *InscriptionListener) monitorValidators(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
-//	validatorsHash := block.ValidatorsHash
-//	nextValidatorsHash := block.NextValidatorsHash
-//
-//	needSyncHeader := false
-//
-//	if !bytes.Equal(validatorsHash, nextValidatorsHash) {
-//		updates := blockResults.ValidatorUpdates
-//		validators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(uint64(block.Height))
-//		if err != nil {
-//			return err
-//		}
-//		// for each updated validator, check against validators list if is new created, voting power change, bls key change
-//		for _, vUpdate := range updates {
-//			pubKeyBts, err := vUpdate.PubKey.Marshal()
-//			if err != nil {
-//				return nil
-//			}
-//
-//			onlyPowerUpdate := false
-//			for _, v := range validators {
-//				//if bytes.Equal(pubKeyBts, v.RelayerBlsKey) && vUpdate.Power != v.po {
-//				if bytes.Equal(pubKeyBts, v.RelayerBlsKey) {
-//					relayercommon.Logger.Infof("Only power is update for validator %s", vUpdate.PubKey.String())
-//					onlyPowerUpdate = true
-//				}
-//			}
-//
-//			if !onlyPowerUpdate {
-//				needSyncHeader = true
-//				break
-//			}
-//		}
-//	}
-//	if needSyncHeader {
-//		relayercommon.Logger.Errorf("need to sync tendermint header at height : %d", block.Height)
-//		//l.inscriptionExecutor.bscExecutor.SyncTendermintLightClientHeader(height)
-//	}
-//	return nil
-//}
-
 func (l *InscriptionListener) monitorValidators(height uint64) error {
 	if height == 1 {
 		return nil
@@ -197,20 +155,27 @@ func (l *InscriptionListener) monitorValidators(height uint64) error {
 	}
 
 	if len(curValidators) != len(prevValidators) {
-		//sync header
-		//l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader()
+		txHash, err := l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader(height)
+		if err != nil {
+			return err
+		}
+		relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", height, txHash.String())
 	}
 
 	for idx, curVal := range curValidators {
 		prevVal := prevValidators[idx]
 
-		// validators should follow same order if there is no change to existing validators
+		// validators should be in same order if there is no change to existing validators
 		if curVal.OperatorAddress != prevVal.OperatorAddress ||
 			!bytes.Equal(curVal.ConsensusPubkey.Value, prevVal.ConsensusPubkey.Value) ||
 			bytes.Equal(curVal.RelayerBlsKey, prevVal.RelayerBlsKey) ||
 			curVal.RelayerAddress != prevVal.RelayerAddress {
-			relayercommon.Logger.Infof("Syncing tendermint header at height %d", height)
-			//l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader()
+			relayercommon.Logger.Infof("syncing tendermint header at height %d", height)
+			txHash, err := l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader(height)
+			if err != nil {
+				return err
+			}
+			relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", height, txHash.String())
 			return nil
 		}
 	}

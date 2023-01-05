@@ -12,6 +12,7 @@ import (
 	"inscription-relayer/config"
 	"inscription-relayer/db/dao"
 	"inscription-relayer/executor/crosschain"
+	"inscription-relayer/executor/tendermintlightclient"
 	"math/big"
 	"sync"
 	"time"
@@ -254,60 +255,41 @@ func (e *BSCExecutor) getCallOpts() (*bind.CallOpts, error) {
 	return callOpts, nil
 }
 
-//func (executor *BscExecutor) SyncTendermintLightClientHeader(height uint64) (common.Hash, error) {
-//	nonce, err := executor.GetClient().PendingNonceAt(context.Background(), executor.TxSender)
-//	if err != nil {
-//		return common.Hash{}, err
-//	}
-//	txOpts, err := executor.getTransactor(nonce)
-//	if err != nil {
-//		return common.Hash{}, err
-//	}
-//
-//	instance, err := tendermintlightclient.NewTendermintlightclient(tendermintLightClientContractAddr, executor.GetClient())
-//	if err != nil {
-//		return common.Hash{}, err
-//	}
-//
-//tryAgain:
-//	header, err := executor.InscriptionExecutor.QueryTendermintHeader(int64(height))
-//	if err != nil {
-//		if isHeaderNonExistingErr(err) {
-//			goto tryAgain
-//		} else {
-//			return common.Hash{}, err
-//		}
-//	}
-//
-//	headerBytes, err := header.SignedHeader.ToProto().Marshal()
-//	if err != nil {
-//		return common.Hash{}, err
-//	}
-//	tx, err := instance.SyncTendermintHeader(txOpts, headerBytes, height, )
-//	if err != nil {
-//		return common.Hash{}, err
-//	}
-//
-//	syncHeaderTx := &model.InscriptionRelayTransaction{
-//		TxHash:     tx.Hash().String(),
-//		Type:       model.SyncBlockHeader,
-//		ChannelId:  0,
-//		Sequence:   0,
-//		Height:     height,
-//		TxGasPrice: txOpts.GasPrice.Uint64(),
-//		TxGasLimit: txOpts.GasLimit,
-//		TxUsedGas:  0,
-//		TxFee:      0,
-//		TxTime:  time.Now().Unix(),
-//	}
-//
-//	err = executor.daoManager.InscriptionDao.SaveBatchTransaction(syncHeaderTx)
-//	if err != nil {
-//		return common.Hash{}, err
-//	}
-//
-//	return tx.Hash(), nil
-//}
+func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Hash, error) {
+	nonce, err := e.GetClient().PendingNonceAt(context.Background(), e.TxSender)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	txOpts, err := e.getTransactor(nonce)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	instance, err := tendermintlightclient.NewTendermintlightclient(tendermintLightClientContractAddr, e.GetClient())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+tryAgain:
+	header, err := e.InscriptionExecutor.QueryTendermintHeader(int64(height))
+	if err != nil {
+		if isHeaderNonExistingErr(err) {
+			goto tryAgain
+		} else {
+			return common.Hash{}, err
+		}
+	}
+
+	headerBytes, err := header.SignedHeader.ToProto().Marshal()
+	if err != nil {
+		return common.Hash{}, err
+	}
+	tx, err := instance.SyncTendermintHeader(txOpts, headerBytes, height, header.BlsPubKeys, header.Relayers)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	return tx.Hash(), nil
+}
 
 func (e *BSCExecutor) CallBuildInSystemContract(channelID int8, blsSignature []byte, sequence uint64, validatorSet *big.Int,
 	msgBytes []byte, nonce uint64) (common.Hash, error) {

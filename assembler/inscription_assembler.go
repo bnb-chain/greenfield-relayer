@@ -129,7 +129,6 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 	txHash, err := a.bscExecutor.CallBuildInSystemContract(int8(channelId), aggregatedSignature, nextSequence, validatorBitset, ethcommon.Hex2Bytes(tx.PayLoad), nonce)
-
 	if err != nil {
 		return err
 	}
