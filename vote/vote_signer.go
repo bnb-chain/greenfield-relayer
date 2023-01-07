@@ -11,8 +11,8 @@ type VoteSigner struct {
 	pubKey  blscmn.PublicKey
 }
 
-func NewVoteSigner(privkey []byte) (*VoteSigner, error) {
-	privKey, err := blst.SecretKeyFromBytes(privkey)
+func NewVoteSigner(pk []byte) (*VoteSigner, error) {
+	privKey, err := blst.SecretKeyFromBytes(pk)
 	if err != nil {
 		return nil, err
 	}

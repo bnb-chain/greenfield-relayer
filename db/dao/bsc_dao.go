@@ -2,9 +2,9 @@ package dao
 
 import (
 	"database/sql"
-	"github.com/jinzhu/gorm"
-	relayercommon "inscription-relayer/common"
-	"inscription-relayer/db/model"
+	relayercommon "github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func NewBSCDao(db *gorm.DB) *BSCDao {
 
 func (d *BSCDao) GetLatestBlock() (*model.BscBlock, error) {
 	block := model.BscBlock{}
-	err := d.DB.Model(model.BscBlock{}).Order("height desc").First(&block).Error
+	err := d.DB.Model(model.BscBlock{}).Order("height desc").Take(&block).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

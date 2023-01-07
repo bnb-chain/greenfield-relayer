@@ -2,14 +2,13 @@ package assembler
 
 import (
 	"encoding/hex"
-	"github.com/willf/bitset"
-	"inscription-relayer/common"
-	"inscription-relayer/config"
-	"inscription-relayer/db/dao"
-	"inscription-relayer/db/model"
-	"inscription-relayer/executor"
-	"inscription-relayer/util"
-	"inscription-relayer/vote"
+	"github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db/dao"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/inscription-relayer/util"
+	"github.com/bnb-chain/inscription-relayer/vote"
 	"time"
 )
 
@@ -77,8 +76,8 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	aggregatedSignature, votedAddressSet, err := vote.AggregatedSignatureAndValidatorBitSet(votes, validators)
-	valBitset := bitset.From([]uint64{votedAddressSet})
+	aggregatedSignature, valBitSet, err := vote.AggregatedSignatureAndValidatorBitSet(votes, validators)
+
 	if err != nil {
 		return nil
 	}
@@ -88,13 +87,13 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	relayerPubKey, err := util.GetBlsPubKeyFromPrivKeyStr(a.config.VotePoolConfig.BlsPrivateKey)
+	relayerPubKey, err := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	if err != nil {
 		return err
 	}
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
 	inturnRelayerIdx := int(pkgs[0].TxTime) % len(relayerPubKeys)
-	inturnRelayerRelayingTime := pkgs[0].TxTime + RelayingWindowInSecond
+	inturnRelayerRelayingTime := pkgs[0].TxTime + RelayWindowInSecond
 
 	common.Logger.Infof("In-turn relayer relaying time is %d", inturnRelayerRelayingTime)
 
@@ -104,8 +103,8 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	} else {
 		indexDiff = len(relayerPubKeys) - (inturnRelayerIdx - relayerIdx)
 	}
-	curRelayerRelayingTime := inturnRelayerRelayingTime + int64(indexDiff*3)
-	common.Logger.Infof("Current relayer realying time is %d", curRelayerRelayingTime)
+	curRelayerRelayingTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
+	common.Logger.Infof("Current relayer relaying time is %d", curRelayerRelayingTime)
 
 	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
 
@@ -121,7 +120,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		}
 		return nil
 	}
-	txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].EventHash, aggregatedSignature, valBitset.Bytes())
+	txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].EventHash, aggregatedSignature, valBitSet.Bytes())
 	if err != nil {
 		return err
 	}
@@ -146,4 +145,8 @@ func (a *BSCAssembler) validateSequenceFilled(curRelayerRelayingTime int64, sequ
 		}
 	}
 	return false, nil
+}
+
+func (a *BSCAssembler) getBlsPrivateKey() string {
+	return a.config.VotePoolConfig.BlsPrivateKey
 }

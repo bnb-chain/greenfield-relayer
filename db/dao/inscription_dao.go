@@ -2,9 +2,9 @@ package dao
 
 import (
 	"database/sql"
-	"github.com/jinzhu/gorm"
-	relayercommon "inscription-relayer/common"
-	"inscription-relayer/db/model"
+	relayercommon "github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func NewInscriptionDao(db *gorm.DB) *InscriptionDao {
 
 func (d *InscriptionDao) GetLatestBlock() (*model.InscriptionBlock, error) {
 	block := model.InscriptionBlock{}
-	err := d.DB.Model(model.InscriptionBlock{}).Order("height desc").First(&block).Error
+	err := d.DB.Model(model.InscriptionBlock{}).Order("height desc").Take(&block).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

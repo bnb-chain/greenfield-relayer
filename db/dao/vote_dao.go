@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"github.com/jinzhu/gorm"
-	"inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"gorm.io/gorm"
 )
 
 type VoteDao struct {
@@ -34,7 +34,7 @@ func (d *VoteDao) GetVoteByChannelIdAndSequenceAndPubKey(channelId uint8, sequen
 }
 
 func (d *VoteDao) IsVoteExist(channelId uint8, sequence uint64, pubKey string) (bool, error) {
-	var exists bool = false
+	exists := false
 	if err := d.DB.Raw(
 		"SELECT EXISTS(SELECT id FROM vote WHERE channel_id = ? and sequence = ? and pub_key = ?)",
 		channelId, sequence, pubKey).Scan(&exists).Error; err != nil {

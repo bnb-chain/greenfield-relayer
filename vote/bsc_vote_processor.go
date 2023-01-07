@@ -6,19 +6,17 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/avast/retry-go/v4"
+	relayercommon "github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db/dao"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/inscription-relayer/util"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/jinzhu/gorm"
 	"github.com/tendermint/tendermint/votepool"
-	relayercommon "inscription-relayer/common"
-	"inscription-relayer/config"
-	"inscription-relayer/db"
-	"inscription-relayer/db/dao"
-	"inscription-relayer/db/model"
-	"inscription-relayer/executor"
-	"inscription-relayer/listener"
-	"inscription-relayer/util"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -48,138 +46,149 @@ func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSi
 	}, nil
 }
 
-// SignAndBroadcast Will sign using the bls private key, and broadcast the vote to votepool
-func (p *BSCVoteProcessor) SignAndBroadcast() error {
-
+func (p *BSCVoteProcessor) SignAndBroadcast() {
 	for {
-		latestHeight, err := p.bscExecutor.GetLatestBlockHeightWithRetry()
+		err := p.signAndBroadcast()
 		if err != nil {
-			relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-			time.Sleep(listener.GetBlockHeightRetryInterval)
-			continue
-		}
-
-		leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
-		if err != nil {
-			return err
-		}
-
-		if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(model.SAVED, leastSavedPkgHeight)
-
-		if err != nil {
-			relayercommon.Logger.Errorf("Failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
-			time.Sleep(db.QueryDBRetryInterval)
-			continue
-		}
-
-		if len(pkgs) == 0 {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-
-		//For packages with same oracle sequence, aggregate their payload and make single vote to votepool
-		pkgsGroupByOracleSeq := make(map[uint64][]*model.BscRelayPackage)
-		for _, tx := range pkgs {
-			pkgsGroupByOracleSeq[tx.OracleSequence] = append(pkgsGroupByOracleSeq[tx.OracleSequence], tx)
-		}
-
-		for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
-			aggPkgs := make(Packages, 0)
-			var txIds []int64
-
-			for _, pkg := range pkgsForSeq {
-				// aggregate pkgs with same oracle seq
-				payload, err := hex.DecodeString(pkg.PayLoad)
-				if err != nil {
-					return fmt.Errorf("decode payload error, payload=%s", pkg.PayLoad)
-				}
-				newP := Package{
-					ChannelId: pkg.ChannelId,
-					Sequence:  pkg.OracleSequence,
-					Payload:   payload, // aggregate payload to be signed
-				}
-				//voteDataPayloadBytes = append(voteDataPayloadBytes, payload...)
-				aggPkgs = append(aggPkgs, newP)
-				txIds = append(txIds, pkg.Id)
-			}
-
-			encBts, err := rlp.EncodeToBytes(aggPkgs)
-			encodedPackages := crypto.Keccak256Hash(encBts).Bytes()
-
-			if err != nil {
-				return fmt.Errorf("encode packages error, err=%s", err.Error())
-			}
-			channelId := relayercommon.OracleChannelId
-
-			v := p.constructVoteAndSign(encodedPackages)
-
-			//broadcast v
-			if err = retry.Do(func() error {
-				err = p.votePoolExecutor.BroadcastVote(v)
-				if err != nil {
-					return fmt.Errorf("failed to submit vote for events with channel id %d and sequence %d", channelId, seq)
-				}
-				return nil
-			}, retry.Context(context.Background()), relayercommon.RtyAttem, relayercommon.RtyDelay, relayercommon.RtyErr); err != nil {
-				return err
-			}
-
-			err = p.daoManager.BSCDao.DB.Transaction(func(dbTx *gorm.DB) error {
-				err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, model.VOTED)
-				if err != nil {
-					return err
-				}
-				err = p.daoManager.VoteDao.SaveVote(FromEntityToDto(v, uint8(channelId), seq))
-				if err != nil {
-					return err
-				}
-				return nil
-			})
-			if err != nil {
-				return err
-			}
+			time.Sleep(RetryInterval)
 		}
 	}
 }
 
-func (p *BSCVoteProcessor) CollectVotes() error {
+// SignAndBroadcast Will sign using the bls private key, and broadcast the vote to votepool
+func (p *BSCVoteProcessor) signAndBroadcast() error {
 
-	for {
-		pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(model.VOTED)
+	latestHeight, err := p.bscExecutor.GetLatestBlockHeightWithRetry()
+	if err != nil {
+		relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
+		return err
+	}
+
+	leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
+	if err != nil {
+		return err
+	}
+
+	if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
+		return nil
+	}
+	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(model.SAVED, leastSavedPkgHeight)
+
+	if err != nil {
+		relayercommon.Logger.Errorf("Failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
+		return err
+	}
+
+	if len(pkgs) == 0 {
+		time.Sleep(RetryInterval)
+		return nil
+	}
+
+	//For packages with same oracle sequence, aggregate their payload and make single vote to votepool
+	pkgsGroupByOracleSeq := make(map[uint64][]*model.BscRelayPackage)
+	for _, tx := range pkgs {
+		pkgsGroupByOracleSeq[tx.OracleSequence] = append(pkgsGroupByOracleSeq[tx.OracleSequence], tx)
+	}
+
+	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
+		aggPkgs := make(Packages, 0)
+		var txIds []int64
+
+		for _, pkg := range pkgsForSeq {
+			// aggregate pkgs with same oracle seq
+			payload, err := hex.DecodeString(pkg.PayLoad)
+			if err != nil {
+				return fmt.Errorf("decode payload error, payload=%s", pkg.PayLoad)
+			}
+			newP := Package{
+				ChannelId: pkg.ChannelId,
+				Sequence:  pkg.OracleSequence,
+				Payload:   payload, // aggregate payload to be signed
+			}
+			//voteDataPayloadBytes = append(voteDataPayloadBytes, payload...)
+			aggPkgs = append(aggPkgs, newP)
+			txIds = append(txIds, pkg.Id)
+		}
+
+		encBts, err := rlp.EncodeToBytes(aggPkgs)
+		encodedPackages := crypto.Keccak256Hash(encBts).Bytes()
+
 		if err != nil {
-			relayercommon.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
-			time.Sleep(db.QueryDBRetryInterval)
-			continue
+			return fmt.Errorf("encode packages error, err=%s", err.Error())
 		}
+		channelId := relayercommon.OracleChannelId
 
-		pkgsGroupByOracleSeq := make(map[uint64][]*model.BscRelayPackage)
-		for _, pkg := range pkgs {
-			pkgsGroupByOracleSeq[pkg.OracleSequence] = append(pkgsGroupByOracleSeq[pkg.OracleSequence], pkg)
-		}
+		v := p.constructVoteAndSign(encodedPackages)
 
-		for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
-			var txIds []int64
-			oracleChannelId := relayercommon.OracleChannelId
-
-			for _, tx := range pkgsForSeq {
-				txIds = append(txIds, tx.Id)
+		//broadcast v
+		if err = retry.Do(func() error {
+			err = p.votePoolExecutor.BroadcastVote(v)
+			if err != nil {
+				return fmt.Errorf("failed to submit vote for events with channel id %d and sequence %d", channelId, seq)
 			}
+			return nil
+		}, retry.Context(context.Background()), relayercommon.RtyAttem, relayercommon.RtyDelay, relayercommon.RtyErr); err != nil {
+			return err
+		}
 
-			err := p.prepareEnoughValidVotesForPackages(oracleChannelId, seq)
+		err = p.daoManager.BSCDao.DB.Transaction(func(dbTx *gorm.DB) error {
+			err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, model.VOTED)
 			if err != nil {
 				return err
 			}
-
-			err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, model.VOTED_ALL)
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, uint8(channelId), seq))
 			if err != nil {
 				return err
 			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
+	return nil
+}
+
+func (p *BSCVoteProcessor) CollectVotes() {
+	for {
+		err := p.collectVotes()
+		if err != nil {
+			time.Sleep(RetryInterval)
+		}
+	}
+}
+
+func (p *BSCVoteProcessor) collectVotes() error {
+	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(model.VOTED)
+	if err != nil {
+		relayercommon.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
+		return err
+	}
+
+	pkgsGroupByOracleSeq := make(map[uint64][]*model.BscRelayPackage)
+	for _, pkg := range pkgs {
+		pkgsGroupByOracleSeq[pkg.OracleSequence] = append(pkgsGroupByOracleSeq[pkg.OracleSequence], pkg)
+	}
+
+	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
+		var txIds []int64
+		oracleChannelId := relayercommon.OracleChannelId
+
+		for _, tx := range pkgsForSeq {
+			txIds = append(txIds, tx.Id)
+		}
+
+		err := p.prepareEnoughValidVotesForPackages(oracleChannelId, seq)
+		if err != nil {
+			return err
+		}
+
+		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, model.VOTED_ALL)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // prepareEnoughValidVotesForPackages will prepare fetch and validate votes result, store in votes
@@ -247,7 +256,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				validVotesCntPerReq--
 				continue
 			}
-			err = p.daoManager.VoteDao.SaveVote(FromEntityToDto(v, channelId, seq))
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq))
 			if err != nil {
 				return err
 			}

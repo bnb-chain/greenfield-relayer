@@ -1,11 +1,10 @@
 package relayer
 
 import (
-	"fmt"
-	"inscription-relayer/assembler"
-	"inscription-relayer/executor"
-	"inscription-relayer/listener"
-	"inscription-relayer/vote"
+	"github.com/bnb-chain/inscription-relayer/assembler"
+	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/inscription-relayer/listener"
+	"github.com/bnb-chain/inscription-relayer/vote"
 )
 
 type BSCRelayer struct {
@@ -33,7 +32,7 @@ func (r *BSCRelayer) Start() {
 	go r.monitorCrossChainEvents()
 	go r.signAndBroadcast()
 	go r.collectVotes()
-	go r.assemblePackages()
+	//go r.assemblePackages()
 }
 
 // monitorCrossChainEvents will monitor cross chain events for every block and persist into DB
@@ -42,17 +41,13 @@ func (r *BSCRelayer) monitorCrossChainEvents() {
 }
 
 func (r *BSCRelayer) signAndBroadcast() {
-	err := r.voteProcessor.SignAndBroadcast()
-	if err != nil {
-		panic(fmt.Sprintf("Entering err when signAndBroadcast, err %s ", err))
-	}
+	r.voteProcessor.SignAndBroadcast()
+
 }
 
 func (r *BSCRelayer) collectVotes() {
-	err := r.voteProcessor.CollectVotes()
-	if err != nil {
-		panic(fmt.Sprintf("Entering err when collectVotes, err %s ", err))
-	}
+	r.voteProcessor.CollectVotes()
+
 }
 
 func (r *BSCRelayer) assemblePackages() {

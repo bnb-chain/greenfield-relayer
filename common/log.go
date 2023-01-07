@@ -1,7 +1,7 @@
 package common
 
 import (
-	"inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/config"
 	"os"
 
 	"github.com/op/go-logging"

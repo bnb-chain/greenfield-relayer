@@ -4,15 +4,15 @@
     "aws_region": "",
     "aws_secret_name": "",
     "rpc_addrs": [
-      "http://0.0.0.0:26657"
+      "http://0.0.0.0:26750"
     ],
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "18c6687d8bdbdcf9df7cdddc2a49aff15546cb83588c9931951c237657eab8ce",
+    "private_key": "87a6dd8a6da782c1bc124d60f0e2458e4c64af629cb4a7d355007012245e4086",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
-    "start_height": 1,
+    "start_height": 6174,
     "monitor_channel_list": [1]
   },
   "bsc_config": {
@@ -32,8 +32,8 @@
   },
   "vote_pool_config": {
     "rpc_addr":
-      "http://127.0.0.1:26657",
-    "bls_private_key": "38ebe1ea64da024ac6ac7a9b5f484293c6f391b65837c9b5a8b27b47bef96f42"
+      "http://127.0.0.1:26750",
+    "bls_private_key": "22dff30bd5a8374d794151a626442412acefb4b78d94c4712066b7e77e37ea45"
   },
   "log_config": {
     "level": "DEBUG",

@@ -1,8 +1,8 @@
 package executor
 
 import (
+	"github.com/bnb-chain/inscription-relayer/common"
 	ethereumcommon "github.com/ethereum/go-ethereum/common"
-	"inscription-relayer/common"
 )
 
 const (

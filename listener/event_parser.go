@@ -1,7 +1,7 @@
 package listener
 
 import (
-	"inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/db/model"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -11,8 +11,10 @@ import (
 
 var (
 	//TODO to be confirmed
-	CrossChainPackageEventName = "crossChainPackage"
-	CrossChainPackageEventHash = common.HexToHash("0x3a6e0fc61675aa2a100bcba0568368bb92bcec91c97673391074f11138f0cffe")
+	CrossChainPackageEventName = "CrossChainPackage"
+
+	//deploy contract and get address and eventhash
+	CrossChainPackageEventHash = common.HexToHash("")
 )
 
 func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64) (*model.BscRelayPackage, error) {

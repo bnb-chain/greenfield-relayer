@@ -2,12 +2,13 @@ package vote
 
 import (
 	"encoding/hex"
+	"github.com/bnb-chain/inscription-relayer/db/model"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 	"github.com/tendermint/tendermint/votepool"
-	"inscription-relayer/db/model"
+	"github.com/willf/bitset"
 )
 
 // Verify vote
@@ -26,10 +27,10 @@ func Verify(vote *votepool.Vote, eventHash []byte) error {
 	return nil
 }
 
-func AggregatedSignatureAndValidatorBitSet(votes []*model.Vote, validators []stakingtypes.Validator) ([]byte, uint64, error) {
+func AggregatedSignatureAndValidatorBitSet(votes []*model.Vote, validators []stakingtypes.Validator) ([]byte, *bitset.BitSet, error) {
 	signatures := make([][]byte, 0, len(votes))
 	voteAddrSet := make(map[string]struct{}, len(votes))
-	var votedAddressSet uint64
+	valBitSet := bitset.New(256)
 	for _, v := range votes {
 		voteAddrSet[v.PubKey] = struct{}{}
 		signatures = append(signatures, common.Hex2Bytes(v.Signature))
@@ -37,13 +38,13 @@ func AggregatedSignatureAndValidatorBitSet(votes []*model.Vote, validators []sta
 
 	for idx, valInfo := range validators {
 		if _, ok := voteAddrSet[hex.EncodeToString(valInfo.RelayerBlsKey)]; ok {
-			votedAddressSet |= 1 << idx
+			valBitSet.Set(uint(idx))
 		}
 	}
 
 	sigs, err := bls.MultipleSignaturesFromBytes(signatures)
 	if err != nil {
-		return nil, 0, err
+		return nil, valBitSet, err
 	}
-	return bls.AggregateSignatures(sigs).Marshal(), votedAddressSet, nil
+	return bls.AggregateSignatures(sigs).Marshal(), valBitSet, nil
 }

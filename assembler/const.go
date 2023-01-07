@@ -1,7 +1,8 @@
 package assembler
 
 var (
-	RelayingWindowInSecond = int64(15)
+	RelayWindowInSecond                  = int64(15)
+	RelayIntervalBetweenRelayersInSecond = 3
 )
 
 type MsgClaim struct {

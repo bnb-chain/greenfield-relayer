@@ -3,11 +3,11 @@ package vote
 import (
 	"context"
 	"encoding/hex"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/executor"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	"github.com/tendermint/tendermint/votepool"
-	"inscription-relayer/config"
-	"inscription-relayer/executor"
 )
 
 type VotePoolExecutor struct {
@@ -30,10 +30,10 @@ func NewVotePoolExecutor(cfg *config.Config, inscriptionExecutor *executor.Inscr
 
 func (e *VotePoolExecutor) QueryVotes(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
 	queryMap := make(map[string]interface{})
-	queryMap["event_type"] = int(eventType)
-	queryMap["event_hash"] = eventHash
+	queryMap[VotePoolQueryParameterEventType] = int(eventType)
+	queryMap[VotePoolQueryParameterEventHash] = eventHash
 	var queryVote coretypes.ResultQueryVote
-	_, err := e.client.Call(context.Background(), "query_vote", queryMap, &queryVote)
+	_, err := e.client.Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
 	if err != nil {
 		return nil, err
 	}
@@ -42,14 +42,16 @@ func (e *VotePoolExecutor) QueryVotes(eventHash []byte, eventType votepool.Event
 
 func (e *VotePoolExecutor) BroadcastVote(v *votepool.Vote) error {
 	broadcastMap := make(map[string]interface{})
-	broadcastMap["vote"] = *v
+	broadcastMap[VotePoolBroadcastParameterKey] = *v
 	var broadcastVote coretypes.ResultBroadcastVote
 
-	_, err := e.client.Call(context.Background(), "broadcast_vote", broadcastMap, &broadcastVote)
+	_, err := e.client.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &broadcastVote)
 	if err != nil {
 		return err
 	}
 
+	// there are 3 validators, so need 2 votes to be cpllected
+	_, _ = e.client.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &broadcastVote)
 	return nil
 }
 

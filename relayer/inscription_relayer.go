@@ -1,11 +1,10 @@
 package relayer
 
 import (
-	"fmt"
-	"inscription-relayer/assembler"
-	"inscription-relayer/executor"
-	"inscription-relayer/listener"
-	"inscription-relayer/vote"
+	"github.com/bnb-chain/inscription-relayer/assembler"
+	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/inscription-relayer/listener"
+	"github.com/bnb-chain/inscription-relayer/vote"
 )
 
 type InscriptionRelayer struct {
@@ -42,17 +41,11 @@ func (r *InscriptionRelayer) monitorCrossChainEvents() {
 }
 
 func (r *InscriptionRelayer) signAndBroadcast() {
-	err := r.voteProcessor.SignAndBroadcast()
-	if err != nil {
-		panic(fmt.Sprintf("Entering err when signAndBroadcast, err %s ", err))
-	}
+	r.voteProcessor.SignAndBroadcast()
 }
 
 func (r *InscriptionRelayer) collectVotes() {
-	err := r.voteProcessor.CollectVotes()
-	if err != nil {
-		panic(fmt.Sprintf("Entering err when collectVotes, err %s ", err))
-	}
+	r.voteProcessor.CollectVotes()
 }
 
 func (r *InscriptionRelayer) assembleTransactions() {

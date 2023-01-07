@@ -3,6 +3,7 @@ package executor
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -11,7 +12,6 @@ import (
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	ethHd "github.com/evmos/ethermint/crypto/hd"
-	"inscription-relayer/common"
 )
 
 func BuildChannelSequenceKey(destChainId common.ChainId, chanelId common.ChannelId) []byte {

@@ -2,16 +2,17 @@ package listener
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/hex"
+	relayercommon "github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db"
+	"github.com/bnb-chain/inscription-relayer/db/dao"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/inscription-relayer/util"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	relayercommon "inscription-relayer/common"
-	"inscription-relayer/config"
-	"inscription-relayer/db"
-	"inscription-relayer/db/dao"
-	"inscription-relayer/db/model"
-	"inscription-relayer/executor"
+	"strconv"
 	"time"
 )
 
@@ -99,40 +100,60 @@ func (l *InscriptionListener) getBlockAndBlockResult(height uint64) (*ctypes.Res
 
 func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
 	txs := make([]*model.InscriptionRelayTransaction, 0)
-	for _, event := range blockResults.EndBlockEvents {
-		tx := model.InscriptionRelayTransaction{}
-		if event.Type == EventTypeCrossChain {
-			for _, attr := range event.Attributes {
-				switch string(attr.Key) {
-				case "channel_id":
-					tx.ChannelId = uint8(binary.BigEndian.Uint16(attr.Value))
-				case "src_chain_id":
-					continue
-				case "dest_chain_id":
-					continue
-				case "package_load":
-					tx.PayLoad = hex.EncodeToString(attr.Value)
-				case "sequence":
-					tx.Sequence = binary.BigEndian.Uint64(attr.Value)
-				case "package_type":
-					tx.Type = string(attr.Value)
-				case "timestamp":
-					tx.TxTime = int64(binary.BigEndian.Uint64(attr.Value))
-				case "relayer_fee":
-					tx.RelayerFee = string(attr.Value)
-				default:
-					relayercommon.Logger.Errorf("unexpected attr, key is %s", attr.Key)
+
+	for _, tx := range blockResults.TxsResults {
+
+		for _, event := range tx.Events {
+			relayTx := model.InscriptionRelayTransaction{}
+			if event.Type == EventTypeCrossChain {
+				for _, attr := range event.Attributes {
+					switch string(attr.Key) {
+					case "channel_id":
+						chanelId, err := strconv.ParseInt(string(attr.Value), 10, 8)
+						if err != nil {
+							return err
+						}
+						relayTx.ChannelId = uint8(chanelId)
+					case "src_chain_id":
+						continue
+					case "dest_chain_id":
+						continue
+					case "package_load":
+						relayTx.PayLoad = hex.EncodeToString(attr.Value)
+					case "sequence":
+						seq, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
+						if err != nil {
+							return err
+						}
+						relayTx.Sequence = uint64(seq)
+					case "package_type":
+						relayTx.Type = string(attr.Value)
+					case "timestamp":
+						ts, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
+						if err != nil {
+							return err
+						}
+						relayTx.TxTime = ts
+					case "relayer_fee":
+						feeStr, err := strconv.Unquote(string(attr.Value))
+						if err != nil {
+							return err
+						}
+						relayTx.RelayerFee = feeStr
+					default:
+						relayercommon.Logger.Errorf("unexpected attr, key is %s", attr.Key)
+					}
 				}
+				relayTx.Status = model.SAVED
+				relayTx.Height = uint64(block.Height)
+				relayTx.UpdatedTime = time.Now().Unix()
+				txs = append(txs, &relayTx)
 			}
-			tx.Status = model.SAVED
-			tx.Height = uint64(block.Height)
-			txs = append(txs, &tx)
 		}
 	}
 
 	b := &model.InscriptionBlock{
 		Chain:     block.ChainID,
-		BlockHash: block.Hash().String(),
 		Height:    uint64(block.Height),
 		BlockTime: block.Time.Unix(),
 	}
@@ -168,7 +189,7 @@ func (l *InscriptionListener) monitorValidators(height uint64) error {
 		// validators should be in same order if there is no change to existing validators
 		if curVal.OperatorAddress != prevVal.OperatorAddress ||
 			!bytes.Equal(curVal.ConsensusPubkey.Value, prevVal.ConsensusPubkey.Value) ||
-			bytes.Equal(curVal.RelayerBlsKey, prevVal.RelayerBlsKey) ||
+			!bytes.Equal(curVal.RelayerBlsKey, prevVal.RelayerBlsKey) ||
 			curVal.RelayerAddress != prevVal.RelayerAddress {
 			relayercommon.Logger.Infof("syncing tendermint header at height %d", height)
 			txHash, err := l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader(height)

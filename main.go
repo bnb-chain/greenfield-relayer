@@ -3,21 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/assembler"
+	"github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db/dao"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/inscription-relayer/listener"
+	"github.com/bnb-chain/inscription-relayer/relayer"
+	"github.com/bnb-chain/inscription-relayer/vote"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"inscription-relayer/assembler"
-	"inscription-relayer/common"
-	"inscription-relayer/config"
-	"inscription-relayer/db/dao"
-	"inscription-relayer/db/model"
-	"inscription-relayer/executor"
-	"inscription-relayer/listener"
-	"inscription-relayer/relayer"
-	"inscription-relayer/vote"
 )
 
 const (
@@ -48,14 +48,17 @@ func printUsage() {
 
 func main() {
 	initFlags()
-
 	configType := viper.GetString(flagConfigType)
+
+	configType = "local"
+
 	if configType != config.AWSConfig && configType != config.LocalConfig {
 		printUsage()
 		return
 	}
 
 	var cfg *config.Config
+
 	if configType == config.AWSConfig {
 		awsSecretKey := viper.GetString(flagConfigAwsSecretKey)
 		if awsSecretKey == "" {
@@ -96,11 +99,10 @@ func main() {
 	var db *gorm.DB
 	if cfg.DBConfig.DBPath != "" {
 		var err error
-		db, err = gorm.Open(cfg.DBConfig.Dialect, cfg.DBConfig.DBPath)
+		db, err = gorm.Open(mysql.Open(cfg.DBConfig.DBPath), &gorm.Config{})
 		if err != nil {
 			panic(fmt.Sprintf("open db error, err=%s", err.Error()))
 		}
-		defer db.Close()
 		model.InitBSCTables(db)
 		model.InitInscriptionTables(db)
 		model.InitVoteTables(db)

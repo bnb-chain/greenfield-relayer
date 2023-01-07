@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db/dao"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/inscription-relayer/util"
+	"github.com/bnb-chain/inscription-relayer/vote"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"inscription-relayer/common"
-	"inscription-relayer/config"
-	"inscription-relayer/db/dao"
-	"inscription-relayer/db/model"
-	"inscription-relayer/executor"
-	"inscription-relayer/util"
-	"inscription-relayer/vote"
-	"math/big"
 	"time"
 )
 
@@ -61,6 +60,9 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequence(channelId, nextSequence)
+	if (*tx == model.InscriptionRelayTransaction{}) {
+		return nil
+	}
 	if tx.Status != model.VOTED_ALL {
 		common.Logger.Infof("there are not enough votes collected for tx yet. txHash=%s, current status is %d", tx.TxHash, tx.Status)
 		return nil
@@ -81,23 +83,23 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	aggregatedSignature, votedAddressSet, err := vote.AggregatedSignatureAndValidatorBitSet(votes, validators)
+	aggregatedSignature, valBitSet, err := vote.AggregatedSignatureAndValidatorBitSet(votes, validators)
 	if err != nil {
 		return err
 	}
-	validatorBitset := big.NewInt(int64(votedAddressSet))
+
 	relayerBlsPubKeys, err := a.votePoolExecutor.GetValidatorsBlsPublicKey()
 	if err != nil {
 		return err
 	}
 
-	relayerPubKey, err := util.GetBlsPubKeyFromPrivKeyStr(a.config.VotePoolConfig.BlsPrivateKey)
+	relayerPubKey, err := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	if err != nil {
 		return err
 	}
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	inturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
-	inturnRelayerRelayingTime := tx.TxTime + RelayingWindowInSecond
+	inturnRelayerRelayingTime := tx.TxTime + RelayWindowInSecond
 	common.Logger.Infof("In-turn relayer relaying time is %d", inturnRelayerRelayingTime)
 
 	var indexDiff int
@@ -106,7 +108,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	} else {
 		indexDiff = len(relayerBlsPubKeys) - (inturnRelayerIdx - relayerIdx)
 	}
-	curRelayerRelayingTime := inturnRelayerRelayingTime + int64(indexDiff*3)
+	curRelayerRelayingTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
 	common.Logger.Infof("Current relayer relaying time is %d", curRelayerRelayingTime)
 
 	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
@@ -122,13 +124,12 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 		}
 		return nil
 	}
-
 	common.Logger.Infof("relaying transaction %s", tx.TxHash)
 	nonce, err := a.bscExecutor.GetClient().PendingNonceAt(context.Background(), a.bscExecutor.TxSender)
 	if err != nil {
 		return err
 	}
-	txHash, err := a.bscExecutor.CallBuildInSystemContract(int8(channelId), aggregatedSignature, nextSequence, validatorBitset, ethcommon.Hex2Bytes(tx.PayLoad), nonce)
+	txHash, err := a.bscExecutor.CallBuildInSystemContract(int8(channelId), aggregatedSignature, nextSequence, util.BitSetToBigInt(valBitSet), ethcommon.Hex2Bytes(tx.PayLoad), nonce)
 	if err != nil {
 		return err
 	}
@@ -153,4 +154,8 @@ func (a *InscriptionAssembler) validateSequenceFilled(curRelayerRelayingTime int
 		}
 	}
 	return false, nil
+}
+
+func (a *InscriptionAssembler) getBlsPrivateKey() string {
+	return a.config.VotePoolConfig.BlsPrivateKey
 }

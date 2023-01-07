@@ -6,19 +6,19 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/avast/retry-go/v4"
+	relayercommon "github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db/dao"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/inscription-relayer/util"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/jinzhu/gorm"
+	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/tendermint/tendermint/votepool"
-	relayercommon "inscription-relayer/common"
-	"inscription-relayer/config"
-	"inscription-relayer/db"
-	"inscription-relayer/db/dao"
-	"inscription-relayer/db/model"
-	"inscription-relayer/executor"
-	"inscription-relayer/listener"
-	"inscription-relayer/util"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -48,95 +48,121 @@ func NewInscriptionVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer
 }
 
 // SignAndBroadcast Will sign using the bls private key, broadcast the vote to votepool
-func (p *InscriptionVoteProcessor) SignAndBroadcast() error {
-
+func (p *InscriptionVoteProcessor) SignAndBroadcast() {
 	for {
-		latestHeight, err := p.inscriptionExecutor.GetLatestBlockHeightWithRetry()
+		err := p.signAndBroadcast()
 		if err != nil {
-			relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-			time.Sleep(listener.GetBlockHeightRetryInterval)
-			continue
-		}
-
-		leastSavedTxHeight, err := p.daoManager.InscriptionDao.GetLeastSavedTxHeight()
-		if err != nil {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		if leastSavedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(model.SAVED, leastSavedTxHeight)
-		if err != nil {
-			relayercommon.Logger.Errorf("Failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
-			time.Sleep(db.QueryDBRetryInterval)
-			continue
-		}
-
-		if len(txs) == 0 {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-
-		// for every tx, we are going to sign it and broadcast vote of it.
-		for _, tx := range txs {
-			v, err := p.constructVoteAndSign(tx)
-			if err != nil {
-				return err
-			}
-
-			//broadcast v
-			if err = retry.Do(func() error {
-				err = p.votePoolExecutor.BroadcastVote(v)
-				if err != nil {
-					return fmt.Errorf("failed to submit vote for event with txhash: %s", tx.TxHash)
-				}
-				return nil
-			}, retry.Context(context.Background()), relayercommon.RtyAttem, relayercommon.RtyDelay, relayercommon.RtyErr); err != nil {
-				return err
-			}
-
-			//After vote submitted to vote pool, persist vote Data and update the status of tx to 'VOTED'.
-			err = p.daoManager.InscriptionDao.DB.Transaction(func(dbTx *gorm.DB) error {
-				err = p.daoManager.InscriptionDao.UpdateTxStatus(tx.Id, model.VOTED)
-				if err != nil {
-					return err
-				}
-				err = p.daoManager.VoteDao.SaveVote(FromEntityToDto(v, tx.ChannelId, tx.Sequence))
-				if err != nil {
-					return err
-				}
-				return nil
-			})
-			if err != nil {
-				return err
-			}
+			time.Sleep(1 * time.Second)
 		}
 	}
 }
 
-func (p *InscriptionVoteProcessor) CollectVotes() error {
+func (p *InscriptionVoteProcessor) signAndBroadcast() error {
+	latestHeight, err := p.inscriptionExecutor.GetLatestBlockHeightWithRetry()
+	if err != nil {
+		relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
+		return err
+	}
 
-	for {
-		txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(model.VOTED)
+	leastSavedTxHeight, err := p.daoManager.InscriptionDao.GetLeastSavedTxHeight()
+	if err != nil {
+		relayercommon.Logger.Errorf("failed to get least saved tx, error: %s", err.Error())
+		return err
+	}
+	if leastSavedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
+		return nil
+	}
+	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(model.SAVED, leastSavedTxHeight)
+	if err != nil {
+		relayercommon.Logger.Errorf("Failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
+		return err
+	}
+
+	if len(txs) == 0 {
+		time.Sleep(RetryInterval)
+		return nil
+	}
+
+	// for every tx, we are going to sign it and broadcast vote of it.
+	for _, tx := range txs {
+		v, err := p.constructVoteAndSign(tx)
 		if err != nil {
-			relayercommon.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
-			time.Sleep(db.QueryDBRetryInterval)
-			continue
+			return err
 		}
-		for _, tx := range txs {
-			err := p.prepareEnoughValidVotesForTx(tx)
-			if err != nil {
-				return err
-			}
 
-			err = p.daoManager.InscriptionDao.UpdateTxStatus(tx.Id, model.VOTED_ALL)
+		bs2 := common.Hex2Bytes("0f21b70a6506e37a545b5b2cba7ea3d7a598000353b5e81ec7f5308c5e945f18")
+		secretKey2, err := blst.SecretKeyFromBytes(bs2)
+		if err != nil {
+			panic(err)
+		}
+		eh, _ := p.getEventHash(tx)
+		pubKey2 := secretKey2.PublicKey()
+		sign2 := secretKey2.Sign(eh).Marshal()
+
+		mockVoteFromRelayer2 := &votepool.Vote{
+			PubKey:    pubKey2.Marshal(),
+			Signature: sign2,
+			EventType: 1,
+			EventHash: eh,
+		}
+
+		//broadcast v
+		if err = retry.Do(func() error {
+			err = p.votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
+			err = p.votePoolExecutor.BroadcastVote(v)
+			if err != nil {
+				return fmt.Errorf("failed to submit vote for event with txhash: %s", tx.TxHash)
+			}
+			return nil
+		}, retry.Context(context.Background()), relayercommon.RtyAttem, relayercommon.RtyDelay, relayercommon.RtyErr); err != nil {
+			return err
+		}
+
+		//After vote submitted to vote pool, persist vote Data and update the status of tx to 'VOTED'.
+		err = p.daoManager.InscriptionDao.DB.Transaction(func(dbTx *gorm.DB) error {
+			err = p.daoManager.InscriptionDao.UpdateTxStatus(tx.Id, model.VOTED)
 			if err != nil {
 				return err
 			}
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, tx.ChannelId, tx.Sequence))
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
+	return nil
+}
+
+func (p *InscriptionVoteProcessor) CollectVotes() {
+	for {
+		err := p.collectVotes()
+		if err != nil {
+			time.Sleep(RetryInterval)
+		}
+	}
+}
+func (p *InscriptionVoteProcessor) collectVotes() error {
+	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(model.VOTED)
+	if err != nil {
+		relayercommon.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
+		return err
+	}
+	for _, tx := range txs {
+		err := p.prepareEnoughValidVotesForTx(tx)
+		if err != nil {
+			return err
+		}
+
+		err = p.daoManager.InscriptionDao.UpdateTxStatus(tx.Id, model.VOTED_ALL)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // prepareEnoughValidVotesForTx will prepare fetch and validate votes result, store in votes
@@ -207,7 +233,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.Ins
 				continue
 			}
 			// a vote result persisted into DB should be valid, unique.
-			err = p.daoManager.VoteDao.SaveVote(FromEntityToDto(v, channelId, seq))
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq))
 			if err != nil {
 				return err
 			}
