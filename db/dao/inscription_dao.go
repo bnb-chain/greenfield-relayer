@@ -45,7 +45,7 @@ func (d *InscriptionDao) GetTransactionsByStatusAndHeight(status model.InternalS
 	return txs, nil
 }
 
-func (d *InscriptionDao) GetLatestVotedTxHeight() (uint64, error) {
+func (d *InscriptionDao) GetLatestVotedTransactionHeight() (uint64, error) {
 	var result uint64
 	res := d.DB.Table("inscription_relay_transaction").Select("MAX(height)").Where("status = ?", model.VOTED)
 	if res.RowsAffected == 0 {
@@ -58,7 +58,7 @@ func (d *InscriptionDao) GetLatestVotedTxHeight() (uint64, error) {
 	return result, nil
 }
 
-func (d *InscriptionDao) GetLeastSavedTxHeight() (uint64, error) {
+func (d *InscriptionDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	var result sql.NullInt64
 	res := d.DB.Table("inscription_relay_transaction").Select("MIN(height)").Where("status = ?", model.SAVED)
 	err := res.Row().Scan(&result)
@@ -68,31 +68,25 @@ func (d *InscriptionDao) GetLeastSavedTxHeight() (uint64, error) {
 	return uint64(result.Int64), nil
 }
 
-func (d *InscriptionDao) UpdateTxStatus(id int64, status model.InternalStatus) error {
-	err := d.DB.Model(model.InscriptionRelayTransaction{}).Where("id = ?", id).Updates(
-		model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix()}).Error
-	return err
-}
-
-func (d *InscriptionDao) UpdateTxStatusAndClaimTxHash(id int64, status model.InternalStatus, claimTxHash string) error {
-	return d.DB.Transaction(func(dbTx *gorm.DB) error {
-		return dbTx.Model(model.InscriptionRelayTransaction{}).Where("id = ?", id).Updates(
-			model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
-	})
-}
-
-func (d *InscriptionDao) GetTransactionByChannelIdAndSequence(channelId relayercommon.ChannelId, sequence uint64) (*model.InscriptionRelayTransaction, error) {
+func (d *InscriptionDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId relayercommon.ChannelId, sequence uint64, status model.InternalStatus) (*model.InscriptionRelayTransaction, error) {
 	tx := model.InscriptionRelayTransaction{}
-	err := d.DB.Where("channel_id = ? and sequence = ?", channelId, sequence).Find(&tx).Error
+	err := d.DB.Where("channel_id = ? and sequence = ? and status = ?", channelId, sequence, status).Find(&tx).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 	return &tx, nil
 }
 
-func (d *InscriptionDao) SaveBatchTransaction(tx *model.InscriptionRelayTransaction) error {
+func (d *InscriptionDao) UpdateTransactionStatus(id int64, status model.InternalStatus) error {
+	err := d.DB.Model(model.InscriptionRelayTransaction{}).Where("id = ?", id).Updates(
+		model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix()}).Error
+	return err
+}
+
+func (d *InscriptionDao) UpdateTransactionStatusAndClaimTxHash(id int64, status model.InternalStatus, claimTxHash string) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
-		return dbTx.Create(tx).Error
+		return dbTx.Model(model.InscriptionRelayTransaction{}).Where("id = ?", id).Updates(
+			model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
 	})
 }
 

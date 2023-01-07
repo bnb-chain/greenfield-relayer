@@ -64,7 +64,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 		return err
 	}
 
-	leastSavedTxHeight, err := p.daoManager.InscriptionDao.GetLeastSavedTxHeight()
+	leastSavedTxHeight, err := p.daoManager.InscriptionDao.GetLeastSavedTransactionHeight()
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get least saved tx, error: %s", err.Error())
 		return err
@@ -120,7 +120,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 
 		//After vote submitted to vote pool, persist vote Data and update the status of tx to 'VOTED'.
 		err = p.daoManager.InscriptionDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err = p.daoManager.InscriptionDao.UpdateTxStatus(tx.Id, model.VOTED)
+			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, model.VOTED)
 			if err != nil {
 				return err
 			}
@@ -157,7 +157,7 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 			return err
 		}
 
-		err = p.daoManager.InscriptionDao.UpdateTxStatus(tx.Id, model.VOTED_ALL)
+		err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, model.VOTED_ALL)
 		if err != nil {
 			return err
 		}
