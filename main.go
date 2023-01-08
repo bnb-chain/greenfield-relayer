@@ -113,17 +113,9 @@ func main() {
 	voteDao := dao.NewVoteDao(db)
 	daoManager := dao.NewDaoManager(inscriptionDao, bscDao, voteDao)
 
-	inscriptionExecutor, err := executor.NewInscriptionExecutor(cfg)
-	if err != nil {
-		common.Logger.Error(err.Error())
-		return
-	}
+	inscriptionExecutor := executor.NewInscriptionExecutor(cfg)
+	bscExecutor := executor.NewBSCExecutor(cfg, daoManager)
 
-	bscExecutor, err := executor.NewBSCExecutor(cfg, daoManager)
-	if err != nil {
-		common.Logger.Error(err.Error())
-		return
-	}
 	inscriptionExecutor.SetBSCExecutor(bscExecutor)
 	bscExecutor.SetInscriptionExecutor(inscriptionExecutor)
 
@@ -156,11 +148,11 @@ func main() {
 	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, votePoolExecutor, inscriptionExecutor)
 
 	//Relayer
-	insRelayer := relayer.NewInscriptionRelayer(inscriptionListener, inscriptionExecutor, bscExecutor, votePoolExecutor, inscriptionVoteProcessor, inscriptionAssembler)
-	_ = relayer.NewBSCRelayer(bscListener, inscriptionExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
+	_ = relayer.NewInscriptionRelayer(inscriptionListener, inscriptionExecutor, bscExecutor, votePoolExecutor, inscriptionVoteProcessor, inscriptionAssembler)
+	bscRelayer := relayer.NewBSCRelayer(bscListener, inscriptionExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
 
-	go insRelayer.Start()
-	//go bscRelayer.Start()
+	//go insRelayer.Start()
+	go bscRelayer.Start()
 
 	select {}
 }

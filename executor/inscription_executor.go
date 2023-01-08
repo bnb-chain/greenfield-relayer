@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
@@ -24,7 +23,6 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bts "github.com/tendermint/tendermint/libs/bytes"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -52,35 +50,35 @@ type InscriptionExecutor struct {
 	address            string
 }
 
-func grpcConn(addr string) (*grpc.ClientConn, error) {
+func grpcConn(addr string) *grpc.ClientConn {
 	conn, err := grpc.Dial(
 		addr,
 		grpc.WithInsecure(),
 	)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return conn, nil
+	return conn
 }
 
-func NewRpcClient(addr string) (*rpchttp.HTTP, error) {
+func NewRpcClient(addr string) *rpchttp.HTTP {
 	httpClient, err := libclient.DefaultHTTPClient(addr)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	rpcClient, err := rpchttp.NewWithClient(addr, "/websocket", httpClient)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return rpcClient, nil
+	return rpcClient
 }
 
-func getInscriptionPrivateKey(cfg *config.InscriptionConfig) (*ethsecp256k1.PrivKey, error) {
+func getInscriptionPrivateKey(cfg *config.InscriptionConfig) *ethsecp256k1.PrivKey {
 	var privateKey string
 	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
 		result, err := config.GetSecret(cfg.AWSSecretName, cfg.AWSRegion)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 		type AwsPrivateKey struct {
 			PrivateKey string `json:"private_key"`
@@ -88,7 +86,7 @@ func getInscriptionPrivateKey(cfg *config.InscriptionConfig) (*ethsecp256k1.Priv
 		var awsPrivateKey AwsPrivateKey
 		err = json.Unmarshal([]byte(result), &awsPrivateKey)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 		privateKey = awsPrivateKey.PrivateKey
 	} else {
@@ -96,29 +94,21 @@ func getInscriptionPrivateKey(cfg *config.InscriptionConfig) (*ethsecp256k1.Priv
 	}
 	privKey, err := HexToEthSecp256k1PrivKey(privateKey)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return privKey, nil
+	return privKey
 }
 
 func initInscriptionClients(rpcAddrs, grpcAddrs []string) []*InscriptionClient {
 	inscriptionClients := make([]*InscriptionClient, 0)
 
 	for i := 0; i < len(rpcAddrs); i++ {
-		rpcClient, err := NewRpcClient(rpcAddrs[i])
-		if err != nil {
-			panic(err)
-		}
-		conn, err := grpcConn(grpcAddrs[i])
-		if err != nil {
-			panic(err)
-		}
-
+		conn := grpcConn(grpcAddrs[i])
 		inscriptionClients = append(inscriptionClients, &InscriptionClient{
 			txClient:           tx.NewServiceClient(conn),
 			stakingQueryClient: stakingtypes.NewQueryClient(conn),
 			authClient:         authtypes.NewQueryClient(conn),
-			rpcClient:          rpcClient,
+			rpcClient:          NewRpcClient(rpcAddrs[i]),
 			Provider:           rpcAddrs[i],
 			UpdatedAt:          time.Now(),
 		})
@@ -127,18 +117,15 @@ func initInscriptionClients(rpcAddrs, grpcAddrs []string) []*InscriptionClient {
 	return inscriptionClients
 }
 
-func NewInscriptionExecutor(cfg *config.Config) (*InscriptionExecutor, error) {
-	privKey, err := getInscriptionPrivateKey(&cfg.InscriptionConfig)
-	if err != nil {
-		return nil, err
-	}
+func NewInscriptionExecutor(cfg *config.Config) *InscriptionExecutor {
+	privKey := getInscriptionPrivateKey(&cfg.InscriptionConfig)
 	return &InscriptionExecutor{
 		clientIdx:          0,
 		inscriptionClients: initInscriptionClients(cfg.InscriptionConfig.RPCAddrs, cfg.InscriptionConfig.GRPCAddrs),
 		privateKey:         privKey,
 		address:            privKey.PubKey().Address().String(),
 		config:             cfg,
-	}, nil
+	}
 }
 
 func (e *InscriptionExecutor) SetBSCExecutor(bscE *BSCExecutor) {
@@ -234,7 +221,6 @@ func (e *InscriptionExecutor) UpdateClients() {
 			inscriptionClient.Height = height
 			inscriptionClient.UpdatedAt = time.Now()
 		}
-
 		highestHeight := uint64(0)
 		highestIdx := 0
 		for idx := 0; idx < len(e.inscriptionClients); idx++ {
@@ -243,7 +229,7 @@ func (e *InscriptionExecutor) UpdateClients() {
 				highestIdx = idx
 			}
 		}
-		// current InscriptionClient block sync is fall behind, switch to the InscriptionClient with highest block height
+		// current InscriptionClient block sync is fall behind, switch to the InscriptionClient with the highest block height
 		if e.inscriptionClients[e.clientIdx].Height+FallBehindThreshold < highestHeight {
 			e.mutex.Lock()
 			e.clientIdx = highestIdx
@@ -251,28 +237,6 @@ func (e *InscriptionExecutor) UpdateClients() {
 		}
 		time.Sleep(SleepSecondForUpdateClient * time.Second)
 	}
-}
-
-func (e *InscriptionExecutor) MonitorValidatorSetChange(height int64, preValidatorsHash bts.HexBytes) (bool, bts.HexBytes, error) {
-	validatorSetChanged := false
-
-	block, err := e.getRpcClient().Block(context.Background(), &height)
-	if err != nil {
-		return false, nil, err
-	}
-
-	var curValidatorsHash bts.HexBytes
-	if preValidatorsHash != nil {
-		if !bytes.Equal(block.Block.Header.ValidatorsHash, preValidatorsHash) ||
-			!bytes.Equal(block.Block.Header.ValidatorsHash, block.Block.Header.NextValidatorsHash) {
-			validatorSetChanged = true
-			curValidatorsHash = block.Block.Header.ValidatorsHash
-		} else {
-			curValidatorsHash = preValidatorsHash
-		}
-	}
-
-	return validatorSetChanged, curValidatorsHash, nil
 }
 
 func (e *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommon.Header, error) {

@@ -32,17 +32,14 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 
 // AssemblePackagesAndClaim assemble packages and then claim in Inscription
 func (a *BSCAssembler) AssemblePackagesAndClaim() {
-	err := a.assemblePackagesAndClaimForOracleChannel(common.OracleChannelId)
-	if err != nil {
-		panic(err)
-	}
+	a.assemblePackagesAndClaimForOracleChannel(common.OracleChannelId)
 }
 
-func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId common.ChannelId) error {
+func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId common.ChannelId) {
 	for {
 		err := a.process(channelId)
 		if err != nil {
-			time.Sleep(1 * time.Second)
+			time.Sleep(RetryInterval)
 		}
 	}
 }

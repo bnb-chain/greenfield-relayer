@@ -16,10 +16,9 @@ func (*InscriptionBlock) TableName() string {
 }
 
 type InscriptionRelayTransaction struct {
-	Id     int64
-	TxHash string `gorm:"NOT NULL"`
-	Type   string `gorm:"NOT NULL"`
-	//TxStatus  string `gorm:"NOT NULL"`
+	Id        int64
+	TxHash    string `gorm:"NOT NULL"`
+	Type      string `gorm:"NOT NULL"`
 	ChannelId uint8  `gorm:"NOT NULL;index:idx_inscription_relay_transaction_channel_seq_status"`
 	Sequence  uint64 `gorm:"NOT NULL;index:idx_inscription_relay_transaction_channel_seq_status"`
 	Height    uint64 `gorm:"NOT NULL;index:idx_inscription_relay_transaction_height"`

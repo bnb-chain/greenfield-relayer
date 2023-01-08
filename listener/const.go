@@ -3,7 +3,7 @@ package listener
 import "time"
 
 const (
-	GetBlockHeightRetryInterval = 2 * time.Second
+	RetryInterval = 1 * time.Second
 
 	EventTypeCrossChain = "cosmos.crosschain.v1.EventCrossChain"
 )

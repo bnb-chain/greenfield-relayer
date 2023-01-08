@@ -47,7 +47,6 @@ func (r *BSCRelayer) signAndBroadcast() {
 
 func (r *BSCRelayer) collectVotes() {
 	r.voteProcessor.CollectVotes()
-
 }
 
 func (r *BSCRelayer) assemblePackages() {

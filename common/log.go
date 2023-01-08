@@ -2,11 +2,9 @@ package common
 
 import (
 	"github.com/bnb-chain/inscription-relayer/config"
-	"os"
-
 	"github.com/op/go-logging"
-	"github.com/tendermint/tendermint/libs/log"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"os"
 )
 
 var (
@@ -52,23 +50,4 @@ func InitLogger(config *config.LogConfig) {
 	}
 
 	logging.SetBackend(backends...)
-}
-
-type sdkLogger struct {
-}
-
-func (l *sdkLogger) Debug(msg string, keyvals ...interface{}) {
-	Logger.Debug(msg)
-}
-
-func (l *sdkLogger) Info(msg string, keyvals ...interface{}) {
-	Logger.Info(msg)
-}
-
-func (l *sdkLogger) Error(msg string, keyvals ...interface{}) {
-	Logger.Error(msg)
-}
-
-func (l *sdkLogger) With(keyvals ...interface{}) log.Logger {
-	return l
 }

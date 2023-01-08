@@ -183,7 +183,7 @@ func (p *BSCVoteProcessor) collectVotes() error {
 			return err
 		}
 
-		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, model.VOTED_ALL)
+		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, model.VOTED_All)
 		if err != nil {
 			return err
 		}

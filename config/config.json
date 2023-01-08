@@ -12,7 +12,7 @@
     "private_key": "87a6dd8a6da782c1bc124d60f0e2458e4c64af629cb4a7d355007012245e4086",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
-    "start_height": 1,
+    "start_height": 8000,
     "monitor_channel_list": [1]
   },
   "bsc_config": {

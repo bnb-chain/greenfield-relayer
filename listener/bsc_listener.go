@@ -5,7 +5,6 @@ import (
 	"fmt"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
@@ -43,39 +42,46 @@ func NewBSCListener(cfg *config.Config, executor *executor.BSCExecutor, dao *dao
 }
 
 func (l *BSCListener) Start() {
-	go l.poll(l.config.BSCConfig.StartHeight)
+	height := l.config.BSCConfig.StartHeight
+	for {
+		nextHeight, err := l.poll(height)
+		if err != nil {
+			time.Sleep(RetryInterval)
+			continue
+		}
+		height = nextHeight
+	}
 }
 
-func (l *BSCListener) poll(startHeight uint64) {
-	for {
-		latestPolledBlock, err := l.getLatestPolledBlock()
-		if err != nil {
-			relayercommon.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
-			time.Sleep(db.QueryDBRetryInterval)
-			continue
-		}
+func (l *BSCListener) poll(height uint64) (uint64, error) {
 
-		latestPolledBlockHeight := latestPolledBlock.Height
-		if startHeight <= latestPolledBlockHeight {
-			startHeight = latestPolledBlockHeight + 1
-		}
-
-		latestBlockHeight, err := l.bscExecutor.GetLatestBlockHeightWithRetry()
-		if err != nil {
-			relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-			continue
-		}
-
-		if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
-			continue
-		}
-
-		err = l.monitorCrossChainPkgAtBlockHeight(latestPolledBlock, startHeight)
-		if err != nil {
-			relayercommon.Logger.Errorf("Encounter error when monitorCrossChainPkgAtBlockHeight, err=%s", err.Error())
-			time.Sleep(db.QueryDBRetryInterval)
-		}
+	latestPolledBlock, err := l.getLatestPolledBlock()
+	if err != nil {
+		relayercommon.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
+		return 0, err
 	}
+
+	latestPolledBlockHeight := latestPolledBlock.Height
+	if height <= latestPolledBlockHeight {
+		height = latestPolledBlockHeight + 1
+	}
+
+	latestBlockHeight, err := l.bscExecutor.GetLatestBlockHeightWithRetry()
+	if err != nil {
+		relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
+		return 0, err
+	}
+
+	if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
+		return height, nil
+	}
+
+	err = l.monitorCrossChainPkgAtBlockHeight(latestPolledBlock, height)
+	if err != nil {
+		relayercommon.Logger.Errorf("Encounter error when monitorCrossChainPkgAtBlockHeight, err=%s", err.Error())
+		return 0, err
+	}
+	return height + 1, nil
 }
 
 func (l *BSCListener) getLatestPolledBlock() (*model.BscBlock, error) {

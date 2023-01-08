@@ -19,12 +19,11 @@ func (*BscBlock) TableName() string {
 type BscRelayPackage struct {
 	Id              int64
 	TxHash          string `gorm:"NOT NULL"`
-	ChainId         uint16
 	ChannelId       uint8  `gorm:"NOT NULL;index:idx_bsc_relay_package_channel_seq"`
 	OracleSequence  uint64 `gorm:"NOT NULL;index:idx_bsc_relay_package_channel_seq"`
 	PackageSequence uint64 `gorm:"NOT NULL"`
 	PayLoad         string `gorm:"type:text"`
-	TxIndex         uint
+	TxIndex         uint   `gorm:"NOT NULL"`
 	ClaimTxHash     string
 	Status          InternalStatus `gorm:"NOT NULL;index:idx_bsc_relay_package_status"`
 	Height          uint64         `gorm:"NOT NULL;index:idx_bsc_relay_package_height"`

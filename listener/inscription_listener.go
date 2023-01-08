@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
@@ -31,50 +30,65 @@ func NewInscriptionListener(cfg *config.Config, executor *executor.InscriptionEx
 }
 
 func (l *InscriptionListener) Start() {
-	l.poll(l.config.InscriptionConfig.StartHeight)
+	startHeight := l.config.InscriptionConfig.StartHeight
+	go l.poll(startHeight)
+	go l.monitorValidators(startHeight)
 }
 
-func (l *InscriptionListener) poll(startHeight uint64) {
+func (l *InscriptionListener) monitorValidators(height uint64) {
 	for {
-		latestPolledBlock, err := l.getLatestPolledBlock()
+		err := l.monitorValidatorsAtHeight(height)
 		if err != nil {
-			relayercommon.Logger.Errorf("Failed to get latest block from db, error: %s", err.Error())
-			time.Sleep(db.QueryDBRetryInterval)
+			time.Sleep(RetryInterval)
 			continue
 		}
-		latestPolledBlockHeight := latestPolledBlock.Height
-		if startHeight != 0 && startHeight <= latestPolledBlockHeight {
-			startHeight = latestPolledBlockHeight + 1
-		}
-
-		latestBlockHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
-		if err != nil {
-			relayercommon.Logger.Errorf("Failed to get latest block height, error: %s", err.Error())
-			continue
-		}
-
-		if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
-			continue
-		}
-		blockRes, block, err := l.getBlockAndBlockResult(startHeight)
-		if err != nil {
-			relayercommon.Logger.Errorf("encounter error when retrieve block and block result at height %d, err=%s", startHeight, err.Error())
-			continue
-		}
-
-		err = l.monitorCrossChainEvent(blockRes, block)
-		if err != nil {
-			relayercommon.Logger.Errorf("encounter error when monitor events at block %d, err=%s", startHeight, err.Error())
-			continue
-		}
-		go func() {
-			err := l.monitorValidators(startHeight)
-			if err != nil {
-				relayercommon.Logger.Errorf("encounter error when monitor validators at block %d, err=%s", startHeight, err.Error())
-				return
-			}
-		}()
+		height++
 	}
+}
+
+func (l *InscriptionListener) poll(height uint64) {
+	for {
+		nextHeight, err := l.pollHelper(height)
+		if err != nil {
+			time.Sleep(RetryInterval)
+			continue
+		}
+		height = nextHeight
+	}
+}
+
+func (l *InscriptionListener) pollHelper(height uint64) (uint64, error) {
+	latestPolledBlock, err := l.getLatestPolledBlock()
+	if err != nil {
+		relayercommon.Logger.Errorf("Failed to get latest block from db, error: %s", err.Error())
+		return 0, err
+	}
+	latestPolledBlockHeight := latestPolledBlock.Height
+	if height <= latestPolledBlockHeight {
+		height = latestPolledBlockHeight + 1
+	}
+
+	latestBlockHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
+	if err != nil {
+		relayercommon.Logger.Errorf("Failed to get latest block height, error: %s", err.Error())
+		return 0, err
+	}
+
+	if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
+		return height, nil
+	}
+	blockRes, block, err := l.getBlockAndBlockResult(height)
+	if err != nil {
+		relayercommon.Logger.Errorf("encounter error when retrieve block and block result at height %d, err=%s", height, err.Error())
+		return 0, err
+	}
+
+	err = l.monitorCrossChainEvent(blockRes, block)
+	if err != nil {
+		relayercommon.Logger.Errorf("encounter error when monitor events at block %d, err=%s", height, err.Error())
+		return 0, err
+	}
+	return height + 1, nil
 }
 
 func (l *InscriptionListener) getLatestPolledBlock() (*model.InscriptionBlock, error) {
@@ -102,7 +116,6 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 	txs := make([]*model.InscriptionRelayTransaction, 0)
 
 	for _, tx := range blockResults.TxsResults {
-
 		for _, event := range tx.Events {
 			relayTx := model.InscriptionRelayTransaction{}
 			if event.Type == EventTypeCrossChain {
@@ -160,11 +173,9 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 	return l.daoManager.InscriptionDao.SaveBlockAndBatchTransactions(b, txs)
 }
 
-func (l *InscriptionListener) monitorValidators(height uint64) error {
-	if height == 1 {
-		return nil
-	}
+func (l *InscriptionListener) monitorValidatorsAtHeight(height uint64) error {
 
+	relayercommon.Logger.Infof("Monitoring validator at height %d", height)
 	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(height)
 	if err != nil {
 		return err
@@ -181,6 +192,7 @@ func (l *InscriptionListener) monitorValidators(height uint64) error {
 			return err
 		}
 		relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", height, txHash.String())
+		return nil
 	}
 
 	for idx, curVal := range curValidators {
@@ -191,6 +203,7 @@ func (l *InscriptionListener) monitorValidators(height uint64) error {
 			!bytes.Equal(curVal.ConsensusPubkey.Value, prevVal.ConsensusPubkey.Value) ||
 			!bytes.Equal(curVal.RelayerBlsKey, prevVal.RelayerBlsKey) ||
 			curVal.RelayerAddress != prevVal.RelayerAddress {
+
 			relayercommon.Logger.Infof("syncing tendermint header at height %d", height)
 			txHash, err := l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader(height)
 			if err != nil {

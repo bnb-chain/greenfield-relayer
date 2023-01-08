@@ -71,21 +71,21 @@ func (d *BSCDao) UpdateBatchPackagesStatusAndClaimTxHash(txIds []int64, status m
 
 func (d *BSCDao) GetAllVotedPackages(channelId relayercommon.ChannelId, sequence uint64) ([]*model.BscRelayPackage, error) {
 	pkgs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("channel_id = ? and oracle_sequence = ? and status = ? ", channelId, sequence, model.VOTED_ALL).Find(&pkgs).Error
+	err := d.DB.Where("channel_id = ? and oracle_sequence = ? and status = ? ", channelId, sequence, model.VOTED_All).Find(&pkgs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 	return pkgs, nil
 }
 
-func (d *BSCDao) SaveBlockAndBatchPackages(b *model.BscBlock, txs []*model.BscRelayPackage) error {
+func (d *BSCDao) SaveBlockAndBatchPackages(b *model.BscBlock, pkgs []*model.BscRelayPackage) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		err := dbTx.Create(b).Error
 		if err != nil {
 			return err
 		}
-		if len(txs) != 0 {
-			err := dbTx.Create(txs).Error
+		if len(pkgs) != 0 {
+			err := dbTx.Create(pkgs).Error
 			if err != nil {
 				return err
 			}

@@ -9,7 +9,7 @@ type InternalStatus int
 const (
 	SAVED     InternalStatus = 0
 	VOTED     InternalStatus = 1
-	VOTED_ALL InternalStatus = 2
+	VOTED_All InternalStatus = 2
 	FILLED    InternalStatus = 3
 )
 

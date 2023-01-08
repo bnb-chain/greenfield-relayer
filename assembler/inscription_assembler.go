@@ -3,7 +3,6 @@ package assembler
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
@@ -36,20 +35,15 @@ func NewInscriptionAssembler(cfg *config.Config, executor *executor.InscriptionE
 // AssembleTransactionAndSend assemble a tx by gathering votes signature and then call the build-in smart-contract
 func (a *InscriptionAssembler) AssembleTransactionAndSend() {
 	for _, c := range a.config.InscriptionConfig.MonitorChannelList {
-		go func(c common.ChannelId) {
-			err := a.assembleTransactionAndSendForChannel(c)
-			if err != nil {
-				panic(fmt.Sprintf("failed to assembleTransactionAndSendForChannel for channel %d, err %s", c, err.Error()))
-			}
-		}(common.ChannelId(c))
+		go a.assembleTransactionAndSendForChannel(common.ChannelId(c))
 	}
 }
 
-func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId common.ChannelId) error {
+func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId common.ChannelId) {
 	for {
 		err := a.process(channelId)
 		if err != nil {
-			time.Sleep(1 * time.Second)
+			time.Sleep(RetryInterval)
 		}
 	}
 }
@@ -59,7 +53,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, model.VOTED_ALL)
+	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, model.VOTED_All)
 	if err != nil {
 		common.Logger.Errorf("failed to get all voted tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err

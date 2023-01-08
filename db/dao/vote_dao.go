@@ -26,7 +26,7 @@ func (d *VoteDao) GetVotesByChannelIdAndSequence(channelId uint8, sequence uint6
 
 func (d *VoteDao) GetVoteByChannelIdAndSequenceAndPubKey(channelId uint8, sequence uint64, pubKey string) (*model.Vote, error) {
 	vote := model.Vote{}
-	err := d.DB.Model(model.Vote{}).Where("channel_id = ? and sequence = ? and pub_key = ?", channelId, sequence, pubKey).Find(&vote).Error
+	err := d.DB.Model(model.Vote{}).Where("channel_id = ? and sequence = ? and pub_key = ?", channelId, sequence, pubKey).Take(&vote).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

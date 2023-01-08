@@ -90,6 +90,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 			return err
 		}
 
+		//TODO remove testing purpose code
 		bs2 := common.Hex2Bytes("0f21b70a6506e37a545b5b2cba7ea3d7a598000353b5e81ec7f5308c5e945f18")
 		secretKey2, err := blst.SecretKeyFromBytes(bs2)
 		if err != nil {
@@ -157,7 +158,7 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 			return err
 		}
 
-		err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, model.VOTED_ALL)
+		err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, model.VOTED_All)
 		if err != nil {
 			return err
 		}

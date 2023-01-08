@@ -55,16 +55,15 @@ func initBSCClients(providers []string) []*BSCClient {
 			UpdatedAt: time.Now(),
 		})
 	}
-
 	return bscClients
 }
 
-func getBscPrivateKey(cfg *config.BSCConfig) (*ecdsa.PrivateKey, error) {
+func getBscPrivateKey(cfg *config.BSCConfig) *ecdsa.PrivateKey {
 	var privateKey string
 	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
 		result, err := config.GetSecret(cfg.AWSSecretName, cfg.AWSRegion)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 		type AwsPrivateKey struct {
 			PrivateKey string `json:"private_key"`
@@ -72,7 +71,7 @@ func getBscPrivateKey(cfg *config.BSCConfig) (*ecdsa.PrivateKey, error) {
 		var awsPrivateKey AwsPrivateKey
 		err = json.Unmarshal([]byte(result), &awsPrivateKey)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 		privateKey = awsPrivateKey.PrivateKey
 	} else {
@@ -81,30 +80,25 @@ func getBscPrivateKey(cfg *config.BSCConfig) (*ecdsa.PrivateKey, error) {
 
 	privKey, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return privKey, nil
+	return privKey
 }
 
-func NewBSCExecutor(cfg *config.Config, dao *dao.DaoManager) (*BSCExecutor, error) {
-	privKey, err := getBscPrivateKey(&cfg.BSCConfig)
-	if err != nil {
-		return nil, err
-	}
+func NewBSCExecutor(cfg *config.Config, dao *dao.DaoManager) *BSCExecutor {
+	privKey := getBscPrivateKey(&cfg.BSCConfig)
 	publicKey := privKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
-		return nil, fmt.Errorf("get public key error")
+		panic("get public key error")
 	}
 	txSender := crypto.PubkeyToAddress(*publicKeyECDSA)
-
 	var initGasPrice *big.Int
 	if cfg.BSCConfig.GasPrice == 0 {
 		initGasPrice = big.NewInt(DefaultGasPrice)
 	} else {
 		initGasPrice = big.NewInt(int64(cfg.BSCConfig.GasPrice))
 	}
-
 	return &BSCExecutor{
 		daoManager: dao,
 		clientIdx:  0,
@@ -113,7 +107,7 @@ func NewBSCExecutor(cfg *config.Config, dao *dao.DaoManager) (*BSCExecutor, erro
 		TxSender:   txSender,
 		config:     cfg,
 		gasPrice:   initGasPrice,
-	}, nil
+	}
 }
 
 func (e *BSCExecutor) SetInscriptionExecutor(insE *InscriptionExecutor) {
@@ -153,9 +147,8 @@ func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (l
 }
 
 func (e *BSCExecutor) GetLatestBlockHeight(client *ethclient.Client) (uint64, error) {
-	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-
 	block, err := client.BlockByNumber(ctxWithTimeout, nil)
 	if err != nil {
 		return 0, err
@@ -215,12 +208,10 @@ func (e *BSCExecutor) GetNextSequence(channelID relayercommon.ChannelId) (uint64
 	if err != nil {
 		return 0, err
 	}
-
 	callOpts, err := e.getCallOpts()
 	if err != nil {
 		return 0, err
 	}
-
 	return crossChainInstance.ChannelReceiveSequenceMap(callOpts, uint8(channelID))
 }
 
@@ -264,7 +255,6 @@ func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Has
 	if err != nil {
 		return common.Hash{}, err
 	}
-
 	instance, err := tendermintlightclient.NewTendermintlightclient(tendermintLightClientContractAddr, e.GetClient())
 	if err != nil {
 		return common.Hash{}, err
@@ -291,23 +281,19 @@ tryAgain:
 	return tx.Hash(), nil
 }
 
-func (e *BSCExecutor) CallBuildInSystemContract(channelID int8, blsSignature []byte, sequence uint64, validatorSet *big.Int,
-	msgBytes []byte, nonce uint64) (common.Hash, error) {
+func (e *BSCExecutor) CallBuildInSystemContract(channelID int8, blsSignature []byte, sequence uint64, validatorSet *big.Int, msgBytes []byte, nonce uint64) (common.Hash, error) {
 
 	txOpts, err := e.getTransactor(nonce)
 	if err != nil {
 		return common.Hash{}, err
 	}
-
 	crossChainInstance, err := crosschain.NewCrosschain(crossChainContractAddr, e.GetClient())
 	if err != nil {
 		return common.Hash{}, err
 	}
-
 	tx, err := crossChainInstance.HandlePackage(txOpts, msgBytes, blsSignature, validatorSet, sequence, uint8(channelID))
 	if err != nil {
 		return common.Hash{}, err
 	}
-
 	return tx.Hash(), nil
 }
