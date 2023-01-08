@@ -18,12 +18,12 @@ func IndexOf(element string, data []string) int {
 	return -1
 }
 
-func GetBlsPubKeyFromPrivKeyStr(privKeyStr string) ([]byte, error) {
+func GetBlsPubKeyFromPrivKeyStr(privKeyStr string) []byte {
 	privKey, err := blst.SecretKeyFromBytes(common.Hex2Bytes(privKeyStr))
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return privKey.PublicKey().Marshal(), nil
+	return privKey.PublicKey().Marshal()
 }
 
 // QuotedStrToIntWithBitSize convert a QuoteStr ""6""  to int 6

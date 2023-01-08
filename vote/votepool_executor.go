@@ -49,9 +49,6 @@ func (e *VotePoolExecutor) BroadcastVote(v *votepool.Vote) error {
 	if err != nil {
 		return err
 	}
-
-	// there are 3 validators, so need 2 votes to be cpllected
-	_, _ = e.client.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &broadcastVote)
 	return nil
 }
 

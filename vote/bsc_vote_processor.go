@@ -30,20 +30,15 @@ type BSCVoteProcessor struct {
 }
 
 func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *VotePoolExecutor) (*BSCVoteProcessor, error) {
-
-	pubKey, err := util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey)
-	if err != nil {
-		return nil, err
-	}
+	votePoolExecutor *VotePoolExecutor) *BSCVoteProcessor {
 	return &BSCVoteProcessor{
 		config:           cfg,
 		daoManager:       dao,
 		signer:           signer,
 		bscExecutor:      bscExecutor,
 		votePoolExecutor: votePoolExecutor,
-		blsPublicKey:     pubKey,
-	}, nil
+		blsPublicKey:     util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+	}
 }
 
 func (p *BSCVoteProcessor) SignAndBroadcast() {

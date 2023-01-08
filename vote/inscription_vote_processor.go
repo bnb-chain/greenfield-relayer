@@ -32,19 +32,15 @@ type InscriptionVoteProcessor struct {
 }
 
 func NewInscriptionVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, inscriptionExecutor *executor.InscriptionExecutor,
-	votePoolExecutor *VotePoolExecutor) (*InscriptionVoteProcessor, error) {
-	pubKey, err := util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey)
-	if err != nil {
-		return nil, err
-	}
+	votePoolExecutor *VotePoolExecutor) *InscriptionVoteProcessor {
 	return &InscriptionVoteProcessor{
 		config:              cfg,
 		daoManager:          dao,
 		signer:              signer,
 		inscriptionExecutor: inscriptionExecutor,
 		votePoolExecutor:    votePoolExecutor,
-		blsPublicKey:        pubKey,
-	}, nil
+		blsPublicKey:        util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+	}
 }
 
 // SignAndBroadcast Will sign using the bls private key, broadcast the vote to votepool
@@ -52,7 +48,7 @@ func (p *InscriptionVoteProcessor) SignAndBroadcast() {
 	for {
 		err := p.signAndBroadcast()
 		if err != nil {
-			time.Sleep(1 * time.Second)
+			time.Sleep(RetryInterval)
 		}
 	}
 }

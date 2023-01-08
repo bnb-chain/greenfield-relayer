@@ -82,10 +82,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	relayerPubKey, err := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
-	if err != nil {
-		return err
-	}
+	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	inturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
 	inturnRelayerRelayingTime := tx.TxTime + RelayWindowInSecond

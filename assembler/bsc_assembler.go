@@ -84,10 +84,8 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	relayerPubKey, err := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
-	if err != nil {
-		return err
-	}
+	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
+
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
 	inturnRelayerIdx := int(pkgs[0].TxTime) % len(relayerPubKeys)
 	inturnRelayerRelayingTime := pkgs[0].TxTime + RelayWindowInSecond
