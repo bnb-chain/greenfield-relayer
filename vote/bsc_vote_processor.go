@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
+	"sort"
 	"time"
 )
 
@@ -81,13 +82,17 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 
 	//For packages with same oracle sequence, aggregate their payload and make single vote to votepool
 	pkgsGroupByOracleSeq := make(map[uint64][]*model.BscRelayPackage)
-	for _, tx := range pkgs {
-		pkgsGroupByOracleSeq[tx.OracleSequence] = append(pkgsGroupByOracleSeq[tx.OracleSequence], tx)
+	for _, pack := range pkgs {
+		pkgsGroupByOracleSeq[pack.OracleSequence] = append(pkgsGroupByOracleSeq[pack.OracleSequence], pack)
 	}
 
 	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
 		aggPkgs := make(Packages, 0)
 		var txIds []int64
+
+		sort.Slice(pkgsForSeq, func(i, j int) bool {
+			return pkgsForSeq[i].PackageSequence < pkgsForSeq[j].PackageSequence
+		})
 
 		for _, pkg := range pkgsForSeq {
 			// aggregate pkgs with same oracle seq
@@ -97,23 +102,22 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			}
 			newP := Package{
 				ChannelId: pkg.ChannelId,
-				Sequence:  pkg.OracleSequence,
+				Sequence:  pkg.PackageSequence,
 				Payload:   payload, // aggregate payload to be signed
 			}
-			//voteDataPayloadBytes = append(voteDataPayloadBytes, payload...)
 			aggPkgs = append(aggPkgs, newP)
 			txIds = append(txIds, pkg.Id)
 		}
 
 		encBts, err := rlp.EncodeToBytes(aggPkgs)
-		encodedPackages := crypto.Keccak256Hash(encBts).Bytes()
+		eventHash := crypto.Keccak256Hash(encBts).Bytes()
 
 		if err != nil {
 			return fmt.Errorf("encode packages error, err=%s", err.Error())
 		}
 		channelId := relayercommon.OracleChannelId
 
-		v := p.constructVoteAndSign(encodedPackages)
+		v := p.constructVoteAndSign(eventHash)
 
 		//broadcast v
 		if err = retry.Do(func() error {
