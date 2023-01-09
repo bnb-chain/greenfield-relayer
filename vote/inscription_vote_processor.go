@@ -169,9 +169,8 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 	if err != nil {
 		return err
 	}
-	//Query from votePool until there are more than 2/3 votes
+	//Query from votePool until there are more than 2/3 valid votes
 	err = p.queryMoreThanTwoThirdVotesForTx(tx, validators)
-
 	if err != nil {
 		return err
 	}
@@ -191,7 +190,8 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.Ins
 	for {
 		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.ToBscCrossChainEvent)
 		if err != nil {
-			continue
+			relayercommon.Logger.Errorf("encounter error when query votes. will retry.")
+			return err
 		}
 		validVotesCountPerReq := len(queriedVotes)
 		if validVotesCountPerReq == 0 {
@@ -237,7 +237,6 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.Ins
 		}
 
 		validVotesTotalCount += validVotesCountPerReq
-
 		if validVotesTotalCount < len(validators)*2/3 {
 			if !isLocalVoteIncluded {
 				err := p.votePoolExecutor.BroadcastVote(localVote)

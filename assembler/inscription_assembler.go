@@ -55,7 +55,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	}
 	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, model.VOTED_All)
 	if err != nil {
-		common.Logger.Errorf("failed to get all voted tx with channel id %d and sequence : %d", channelId, nextSequence)
+		common.Logger.Errorf("failed to get VOTED_All tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err
 	}
 	if (*tx == model.InscriptionRelayTransaction{}) {

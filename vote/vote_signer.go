@@ -11,16 +11,16 @@ type VoteSigner struct {
 	pubKey  blscmn.PublicKey
 }
 
-func NewVoteSigner(pk []byte) (*VoteSigner, error) {
+func NewVoteSigner(pk []byte) *VoteSigner {
 	privKey, err := blst.SecretKeyFromBytes(pk)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	pubKey := privKey.PublicKey()
 	return &VoteSigner{
 		privKey: privKey,
 		pubKey:  pubKey,
-	}, nil
+	}
 }
 
 // SignVote sign a vote, data is used to signed to generate the signature

@@ -10,10 +10,8 @@ import (
 )
 
 var (
-	//TODO to be confirmed
 	CrossChainPackageEventName = "CrossChainPackage"
-
-	//deploy contract and get address and eventhash
+	//TODO
 	CrossChainPackageEventHash = common.HexToHash("")
 )
 

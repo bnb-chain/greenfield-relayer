@@ -12,11 +12,3 @@ const (
 	VotePoolQueryParameterEventType = "event_type"
 	VotePoolQueryParameterEventHash = "event_hash"
 )
-
-type Packages []Package
-
-type Package struct {
-	ChannelId uint8
-	Sequence  uint64
-	Payload   []byte
-}

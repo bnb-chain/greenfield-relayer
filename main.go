@@ -126,32 +126,21 @@ func main() {
 	bscListener := listener.NewBSCListener(cfg, bscExecutor, daoManager)
 
 	//vote signer
-	signer, err := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.VotePoolConfig.BlsPrivateKey))
-	if err != nil {
-		common.Logger.Error(err.Error())
-		return
-	}
+	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.VotePoolConfig.BlsPrivateKey))
 
 	//voteProcessor
-	inscriptionVoteProcessor, err := vote.NewInscriptionVoteProcessor(cfg, daoManager, signer, inscriptionExecutor, votePoolExecutor)
-	if err != nil {
-		common.Logger.Error(err.Error())
-		return
-	}
-	bscVoteProcessor, err := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor, votePoolExecutor)
-	if err != nil {
-		common.Logger.Error(err.Error())
-		return
-	}
+	inscriptionVoteProcessor := vote.NewInscriptionVoteProcessor(cfg, daoManager, signer, inscriptionExecutor, votePoolExecutor)
+	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor, votePoolExecutor)
+
 	//assembler
 	inscriptionAssembler := assembler.NewInscriptionAssembler(cfg, inscriptionExecutor, daoManager, bscExecutor, votePoolExecutor)
 	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, votePoolExecutor, inscriptionExecutor)
 
 	//Relayer
-	_ = relayer.NewInscriptionRelayer(inscriptionListener, inscriptionExecutor, bscExecutor, votePoolExecutor, inscriptionVoteProcessor, inscriptionAssembler)
+	insRelayer := relayer.NewInscriptionRelayer(inscriptionListener, inscriptionExecutor, bscExecutor, votePoolExecutor, inscriptionVoteProcessor, inscriptionAssembler)
 	bscRelayer := relayer.NewBSCRelayer(bscListener, inscriptionExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
 
-	//go insRelayer.Start()
+	go insRelayer.Start()
 	go bscRelayer.Start()
 
 	select {}

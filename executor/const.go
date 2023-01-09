@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	prefixForSequenceKey = []byte{0xf0}
+	PrefixForReceiveSequenceKey = []byte{0xf1}
 
 	tendermintLightClientContractAddr = ethereumcommon.HexToAddress("0x0000000000000000000000000000000000001003")
 	relayerIncentivizeContractAddr    = ethereumcommon.HexToAddress("0x0000000000000000000000000000000000001005")

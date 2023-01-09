@@ -214,7 +214,8 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	for {
 		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.FromBscCrossChainEvent)
 		if err != nil {
-			continue
+			relayercommon.Logger.Errorf("encounter error when query votes. will retry.")
+			return err
 		}
 
 		validVotesCntPerReq := len(queriedVotes)

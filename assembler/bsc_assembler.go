@@ -76,7 +76,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	aggregatedSignature, valBitSet, err := vote.AggregatedSignatureAndValidatorBitSet(votes, validators)
 
 	if err != nil {
-		return nil
+		return err
 	}
 
 	relayerPubKeys, err := a.votePoolExecutor.GetValidatorsBlsPublicKey()
