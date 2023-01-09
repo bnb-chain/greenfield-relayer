@@ -130,7 +130,7 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 
 	b := &model.BscBlock{
 		BlockHash:  nextHeightHeader.Hash().String(),
-		ParentHash: latestPolledBlock.BlockHash,
+		ParentHash: nextHeightHeader.ParentHash.String(),
 		Height:     height,
 		BlockTime:  int64(nextHeightHeader.Time),
 	}
