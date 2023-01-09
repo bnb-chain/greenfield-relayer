@@ -175,6 +175,15 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 
 func (l *InscriptionListener) monitorValidatorsAtHeight(height uint64) error {
 
+	if height == 1 {
+		return nil
+	}
+
+	latestHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
+	if height >= latestHeight {
+		return nil
+	}
+
 	relayercommon.Logger.Infof("Monitoring validator at height %d", height)
 	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(height)
 	if err != nil {
