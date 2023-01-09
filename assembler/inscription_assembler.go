@@ -34,7 +34,7 @@ func NewInscriptionAssembler(cfg *config.Config, executor *executor.InscriptionE
 
 // AssembleTransactionAndSend assemble a tx by gathering votes signature and then call the build-in smart-contract
 func (a *InscriptionAssembler) AssembleTransactionAndSend() {
-	for _, c := range a.config.InscriptionConfig.MonitorChannelList {
+	for _, c := range a.getMonitorChannels() {
 		go a.assembleTransactionAndSendForChannel(common.ChannelId(c))
 	}
 }
@@ -43,6 +43,7 @@ func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId co
 	for {
 		err := a.process(channelId)
 		if err != nil {
+			common.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
 			time.Sleep(RetryInterval)
 		}
 	}
@@ -144,4 +145,8 @@ func (a *InscriptionAssembler) validateSequenceFilled(curRelayerRelayingTime int
 
 func (a *InscriptionAssembler) getBlsPrivateKey() string {
 	return a.config.VotePoolConfig.BlsPrivateKey
+}
+
+func (a *InscriptionAssembler) getMonitorChannels() []uint8 {
+	return a.config.InscriptionConfig.MonitorChannelList
 }

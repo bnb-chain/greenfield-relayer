@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/tendermint/tendermint/votepool"
+	"time"
 )
 
 func DtoToEntity(v *model.Vote) (*votepool.Vote, error) {
@@ -25,11 +26,12 @@ func DtoToEntity(v *model.Vote) (*votepool.Vote, error) {
 
 func EntityToDto(from *votepool.Vote, channelId uint8, sequence uint64) *model.Vote {
 	return &model.Vote{
-		PubKey:    hex.EncodeToString(from.PubKey[:]),
-		Signature: hex.EncodeToString(from.Signature[:]),
-		EventType: uint32(from.EventType),
-		EventHash: from.EventHash,
-		ChannelId: channelId,
-		Sequence:  sequence,
+		PubKey:      hex.EncodeToString(from.PubKey[:]),
+		Signature:   hex.EncodeToString(from.Signature[:]),
+		EventType:   uint32(from.EventType),
+		EventHash:   from.EventHash,
+		ChannelId:   channelId,
+		Sequence:    sequence,
+		CreatedTime: time.Now().Unix(),
 	}
 }
