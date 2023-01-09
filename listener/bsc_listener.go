@@ -60,20 +60,21 @@ func (l *BSCListener) poll(height uint64) (uint64, error) {
 		relayercommon.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
 		return 0, err
 	}
+	if (*latestPolledBlock != model.BscBlock{}) {
+		latestPolledBlockHeight := latestPolledBlock.Height
+		if height <= latestPolledBlockHeight {
+			height = latestPolledBlockHeight + 1
+		}
 
-	latestPolledBlockHeight := latestPolledBlock.Height
-	if height <= latestPolledBlockHeight {
-		height = latestPolledBlockHeight + 1
-	}
+		latestBlockHeight, err := l.bscExecutor.GetLatestBlockHeightWithRetry()
+		if err != nil {
+			relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
+			return 0, err
+		}
 
-	latestBlockHeight, err := l.bscExecutor.GetLatestBlockHeightWithRetry()
-	if err != nil {
-		relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-		return 0, err
-	}
-
-	if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
-		return height, nil
+		if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
+			return height, nil
+		}
 	}
 
 	err = l.monitorCrossChainPkgAtBlockHeight(latestPolledBlock, height)
@@ -120,7 +121,6 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 		relayPkg, err := ParseRelayPackage(&l.CrossChainAbi, &log, nextHeightHeader.Time)
 		if err != nil {
 			return fmt.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
-			continue
 		}
 		if relayPkg == nil {
 			continue

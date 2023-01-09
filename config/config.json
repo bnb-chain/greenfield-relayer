@@ -9,10 +9,10 @@
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "87a6dd8a6da782c1bc124d60f0e2458e4c64af629cb4a7d355007012245e4086",
+    "private_key": "9f052be7b77e40f632b3f6e2c39f778c29259d1a4935df189a8d13a9f20ce9f1",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
-    "start_height": 8000,
+    "start_height": 1,
     "monitor_channel_list": [1]
   },
   "bsc_config": {
@@ -33,7 +33,7 @@
   "vote_pool_config": {
     "rpc_addr":
       "http://127.0.0.1:26750",
-    "bls_private_key": "22dff30bd5a8374d794151a626442412acefb4b78d94c4712066b7e77e37ea45"
+    "bls_private_key": "4ec7dcdfff9358eb5a7236b66abf700fb35ef747f3edc26043436e61ea6a23e4"
   },
   "log_config": {
     "level": "DEBUG",
