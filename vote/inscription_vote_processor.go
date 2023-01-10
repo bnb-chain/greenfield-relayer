@@ -122,7 +122,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 			if err != nil {
 				return err
 			}
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, tx.ChannelId, tx.Sequence))
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, tx.ChannelId, tx.Sequence, common.Hex2Bytes(tx.PayLoad)))
 			if err != nil {
 				return err
 			}
@@ -231,7 +231,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.Ins
 				continue
 			}
 			// a vote result persisted into DB should be valid, unique.
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq))
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, common.Hex2Bytes(tx.PayLoad)))
 			if err != nil {
 				return err
 			}

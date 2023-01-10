@@ -74,8 +74,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	aggregatedSignature, valBitSet, err := vote.AggregatSignatureAndValidatorBitSet(votes, validators)
-
+	aggregatedSignature, valBitSet, err := vote.AggregateSignatureAndValidatorBitSet(votes, validators)
 	if err != nil {
 		return err
 	}
@@ -116,7 +115,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		}
 		return nil
 	}
-	txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].EventHash, aggregatedSignature, valBitSet.Bytes())
+	txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].Payload, aggregatedSignature, valBitSet.Bytes())
 	if err != nil {
 		return err
 	}

@@ -24,14 +24,17 @@ func DtoToEntity(v *model.Vote) (*votepool.Vote, error) {
 	return &res, nil
 }
 
-func EntityToDto(from *votepool.Vote, channelId uint8, sequence uint64) *model.Vote {
-	return &model.Vote{
+func EntityToDto(from *votepool.Vote, channelId uint8, sequence uint64, payload []byte) *model.Vote {
+
+	v := model.Vote{
 		PubKey:      hex.EncodeToString(from.PubKey[:]),
 		Signature:   hex.EncodeToString(from.Signature[:]),
 		EventType:   uint32(from.EventType),
+		Payload:     payload,
 		EventHash:   from.EventHash,
 		ChannelId:   channelId,
 		Sequence:    sequence,
 		CreatedTime: time.Now().Unix(),
 	}
+	return &v
 }

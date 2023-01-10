@@ -141,7 +141,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			if err != nil {
 				return err
 			}
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, uint8(channelId), seq))
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, uint8(channelId), seq, encBts))
 			if err != nil {
 				return err
 			}
@@ -262,7 +262,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				validVotesCntPerReq--
 				continue
 			}
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq))
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.Payload))
 			if err != nil {
 				return err
 			}

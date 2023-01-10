@@ -74,7 +74,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	aggregatedSignature, valBitSet, err := vote.AggregatSignatureAndValidatorBitSet(votes, validators)
+	aggregatedSignature, valBitSet, err := vote.AggregateSignatureAndValidatorBitSet(votes, validators)
 	if err != nil {
 		return err
 	}
