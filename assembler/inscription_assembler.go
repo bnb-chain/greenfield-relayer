@@ -3,6 +3,8 @@ package assembler
 import (
 	"context"
 	"encoding/hex"
+	"time"
+
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db"
@@ -12,7 +14,6 @@ import (
 	"github.com/bnb-chain/inscription-relayer/util"
 	"github.com/bnb-chain/inscription-relayer/vote"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"time"
 )
 
 type InscriptionAssembler struct {
@@ -63,7 +64,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if (*tx == model.InscriptionRelayTransaction{}) {
 		return nil
 	}
-	//Get votes result for a tx, which are already validated and qualified to aggregate sig
+	// Get votes result for a tx, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
 	if err != nil {
 		common.Logger.Errorf("failed to get votes result for tx : %s", tx.TxHash)

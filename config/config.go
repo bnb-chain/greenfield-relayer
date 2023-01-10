@@ -65,26 +65,26 @@ type BSCConfig struct {
 
 func (cfg *BSCConfig) Validate() {
 	if len(cfg.RPCAddrs) == 0 {
-		panic(fmt.Sprintf("provider address of Binance Smart Chain should not be empty"))
+		panic("provider address of Binance Smart Chain should not be empty")
 	}
 
 	if cfg.KeyType == "" {
-		panic(fmt.Sprintf("key_type Binance Smart Chain should not be empty"))
+		panic("key_type Binance Smart Chain should not be empty")
 	}
 	if cfg.KeyType != KeyTypeLocalPrivateKey && cfg.KeyType != KeyTypeAWSPrivateKey {
 		panic(fmt.Sprintf("key_type of Binance Smart Chain only supports %s and %s", KeyTypeLocalPrivateKey, KeyTypeAWSPrivateKey))
 	}
 	if cfg.KeyType == KeyTypeAWSPrivateKey && cfg.AWSRegion == "" {
-		panic(fmt.Sprintf("aws_region of Binance Smart Chain should not be empty"))
+		panic("aws_region of Binance Smart Chain should not be empty")
 	}
 	if cfg.KeyType == KeyTypeAWSPrivateKey && cfg.AWSSecretName == "" {
-		panic(fmt.Sprintf("aws_secret_name of Binance Smart Chain should not be empty"))
+		panic("aws_secret_name of Binance Smart Chain should not be empty")
 	}
 	if cfg.KeyType != KeyTypeAWSPrivateKey && cfg.PrivateKey == "" {
-		panic(fmt.Sprintf("privateKey of Binance Smart Chain should not be empty"))
+		panic("privateKey of Binance Smart Chain should not be empty")
 	}
 	if cfg.GasLimit == 0 {
-		panic(fmt.Sprintf("gas_limit of Binance Smart Chain should be larger than 0"))
+		panic("gas_limit of Binance Smart Chain should be larger than 0")
 	}
 }
 
@@ -135,15 +135,15 @@ func (cfg *AlertConfig) Validate() {
 	}
 	balanceThreshold, ok := big.NewInt(1).SetString(cfg.BalanceThreshold, 10)
 	if !ok {
-		panic(fmt.Sprintf("unrecognized balance_threshold"))
+		panic("unrecognized balance_threshold")
 	}
 
 	if balanceThreshold.Cmp(big.NewInt(0)) <= 0 {
-		panic(fmt.Sprintf("balance_threshold should be positive"))
+		panic("balance_threshold should be positive")
 	}
 
 	if cfg.SequenceGapThreshold <= 0 {
-		panic(fmt.Sprintf("sequence_gap_threshold should be positive"))
+		panic("sequence_gap_threshold should be positive")
 	}
 }
 

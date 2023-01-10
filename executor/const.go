@@ -1,8 +1,9 @@
 package executor
 
 import (
-	ethereumcommon "github.com/ethereum/go-ethereum/common"
 	"time"
+
+	ethereumcommon "github.com/ethereum/go-ethereum/common"
 )
 
 const (
@@ -21,7 +22,5 @@ var (
 	PrefixForReceiveSequenceKey = []byte{0xf1}
 
 	tendermintLightClientContractAddr = ethereumcommon.HexToAddress("0x0000000000000000000000000000000000001003")
-	relayerIncentivizeContractAddr    = ethereumcommon.HexToAddress("0x0000000000000000000000000000000000001005")
-	relayerHubContractAddr            = ethereumcommon.HexToAddress("0x0000000000000000000000000000000000001006")
 	crossChainContractAddr            = ethereumcommon.HexToAddress("0x0000000000000000000000000000000000002000")
 )

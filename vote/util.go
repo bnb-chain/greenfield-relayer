@@ -2,6 +2,7 @@ package vote
 
 import (
 	"encoding/hex"
+
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"

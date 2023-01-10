@@ -9,7 +9,7 @@ type Vote struct {
 	PubKey      string `gorm:"NOT NULL;index:idx_vote_channel_id_sequence_pub_key"`
 	Signature   string `gorm:"NOT NULL"`
 	EventType   uint32 `gorm:"NOT NULL"`
-	Payload     []byte // used for bsc aggregated packages
+	Payload     []byte
 	EventHash   []byte `gorm:"NOT NULL"`
 	Sequence    uint64 `gorm:"NOT NULL;index:idx_vote_channel_id_sequence_pub_key"`
 	ChannelId   uint8  `gorm:"NOT NULL;index:idx_vote_channel_id_sequence_pub_key"`

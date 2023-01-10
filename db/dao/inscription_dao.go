@@ -2,11 +2,12 @@ package dao
 
 import (
 	"database/sql"
+	"time"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"gorm.io/gorm"
-	"time"
 )
 
 type InscriptionDao struct {

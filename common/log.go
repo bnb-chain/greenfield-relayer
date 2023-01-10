@@ -1,10 +1,11 @@
 package common
 
 import (
+	"os"
+
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/op/go-logging"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"os"
 )
 
 var (

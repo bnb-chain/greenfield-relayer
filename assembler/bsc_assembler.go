@@ -2,6 +2,8 @@ package assembler
 
 import (
 	"encoding/hex"
+	"time"
+
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db"
@@ -9,7 +11,6 @@ import (
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/util"
 	"github.com/bnb-chain/inscription-relayer/vote"
-	"time"
 )
 
 type BSCAssembler struct {
@@ -62,14 +63,14 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		common.Logger.Errorf("failed to get all validator voted tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err
 	}
-	//Get votes result for a packages, which are already validated and qualified to aggregate sig
+	// Get votes result for a packages, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(uint8(channelId), nextSequence)
 	if err != nil {
 		common.Logger.Errorf("failed to get votes result for packages for channel %d and sequence %d", channelId, nextSequence)
 		return err
 	}
 
-	//TODO switch to query validators from BSC lightcleint
+	// TODO switch to query validators from BSC lightcleint
 	validators, err := a.inscriptionExecutor.QueryLatestValidators()
 	if err != nil {
 		return err

@@ -3,6 +3,9 @@ package listener
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
@@ -13,11 +16,9 @@ import (
 	ethereumcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"gorm.io/gorm"
-	"strings"
 
 	"github.com/bnb-chain/inscription-relayer/executor/crosschain"
 	_ "strings"
-	"time"
 )
 
 type BSCListener struct {
@@ -29,7 +30,6 @@ type BSCListener struct {
 
 func NewBSCListener(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager) *BSCListener {
 	crossChainAbi, err := abi.JSON(strings.NewReader(crosschain.CrosschainMetaData.ABI))
-
 	if err != nil {
 		panic("marshal abi error")
 	}
@@ -54,7 +54,6 @@ func (l *BSCListener) Start() {
 }
 
 func (l *BSCListener) poll(height uint64) (uint64, error) {
-
 	latestPolledBlock, err := l.getLatestPolledBlock()
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
@@ -96,6 +95,9 @@ func (l *BSCListener) getLatestPolledBlock() (*model.BscBlock, error) {
 func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model.BscBlock, height uint64) error {
 	relayercommon.Logger.Infof("retrieve BSC block header at height=%d", height)
 	nextHeightHeader, err := l.bscExecutor.GetBlockHeaderAtHeight(height)
+	if err != nil {
+		return err
+	}
 	if nextHeightHeader == nil {
 		relayercommon.Logger.Infof("BSC header at height %d not found", height)
 		return nil
@@ -158,7 +160,7 @@ func (l *BSCListener) validateLatestPolledBlockIsForkedAndDelete(latestPolledBlo
 	parentBlockHash := header.ParentHash
 
 	if latestPolledBlock.Height != 0 && parentBlockHash.String() != latestPolledBlock.BlockHash {
-		//delete latestPolledBlock from DB
+		// delete latestPolledBlock from DB
 		err := l.daoManager.BSCDao.DB.Transaction(func(tx *gorm.DB) error {
 			err := l.daoManager.BSCDao.DeleteBlockAtHeight(latestPolledBlock.Height)
 			if err != nil {

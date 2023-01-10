@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"time"
+
 	"github.com/avast/retry-go/v4"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
@@ -20,7 +22,6 @@ import (
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
-	"time"
 )
 
 type InscriptionVoteProcessor struct {
@@ -33,7 +34,8 @@ type InscriptionVoteProcessor struct {
 }
 
 func NewInscriptionVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, inscriptionExecutor *executor.InscriptionExecutor,
-	votePoolExecutor *VotePoolExecutor) *InscriptionVoteProcessor {
+	votePoolExecutor *VotePoolExecutor,
+) *InscriptionVoteProcessor {
 	return &InscriptionVoteProcessor{
 		config:              cfg,
 		daoManager:          dao,
@@ -87,7 +89,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 			return err
 		}
 
-		//TODO remove testing purpose code
+		// TODO remove testing purpose code
 		bs2 := common.Hex2Bytes("16f6742aee55411cc79c06af0e265b9df5ba3b54de85fbfc96c7d6a67469e4d0")
 		secretKey2, err := blst.SecretKeyFromBytes(bs2)
 		if err != nil {
@@ -104,7 +106,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 			EventHash: eh,
 		}
 
-		//broadcast v
+		// broadcast v
 		if err = retry.Do(func() error {
 			err = p.votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
 			err = p.votePoolExecutor.BroadcastVote(v)
@@ -116,7 +118,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 			return err
 		}
 
-		//After vote submitted to vote pool, persist vote Data and update the status of tx to 'VOTED'.
+		// After vote submitted to vote pool, persist vote Data and update the status of tx to 'VOTED'.
 		err = p.daoManager.InscriptionDao.DB.Transaction(func(dbTx *gorm.DB) error {
 			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.VOTED)
 			if err != nil {
@@ -143,6 +145,7 @@ func (p *InscriptionVoteProcessor) CollectVotes() {
 		}
 	}
 }
+
 func (p *InscriptionVoteProcessor) collectVotes() error {
 	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(db.VOTED)
 	if err != nil {
@@ -165,12 +168,11 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 
 // prepareEnoughValidVotesForTx will prepare fetch and validate votes result, store in votes
 func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.InscriptionRelayTransaction) error {
-
 	validators, err := p.inscriptionExecutor.QueryLatestValidators()
 	if err != nil {
 		return err
 	}
-	//Query from votePool until there are more than 2/3 valid votes
+	// Query from votePool until there are more than 2/3 valid votes
 	err = p.queryMoreThanTwoThirdVotesForTx(tx, validators)
 	if err != nil {
 		return err
@@ -180,7 +182,6 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 
 // queryMoreThanTwoThirdVotesForTx query votes from votePool
 func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.InscriptionRelayTransaction, validators []stakingtypes.Validator) error {
-
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := tx.ChannelId
 	seq := tx.Sequence

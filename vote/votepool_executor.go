@@ -3,6 +3,7 @@ package vote
 import (
 	"context"
 	"encoding/hex"
+
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/executor"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"

@@ -3,6 +3,7 @@ package executor
 import (
 	"encoding/binary"
 	"encoding/hex"
+
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,6 +22,7 @@ func BuildChannelSequenceKey(destChainId common.ChainId, chanelId common.Channel
 	copy(key[prefixLength+destChainIDLength:], []byte{byte(chanelId)})
 	return key
 }
+
 func HexToEthSecp256k1PrivKey(hexString string) (*ethsecp256k1.PrivKey, error) {
 	bz, err := hex.DecodeString(hexString)
 	if err != nil {

@@ -2,11 +2,12 @@ package util
 
 import (
 	"encoding/binary"
+	"math/big"
+	"strconv"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/willf/bitset"
-	"math/big"
-	"strconv"
 )
 
 func IndexOf(element string, data []string) int {

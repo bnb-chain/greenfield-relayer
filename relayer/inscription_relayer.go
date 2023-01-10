@@ -17,7 +17,8 @@ type InscriptionRelayer struct {
 }
 
 func NewInscriptionRelayer(listener *listener.InscriptionListener, inscriptionExecutor *executor.InscriptionExecutor, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.InscriptionVoteProcessor, inscriptionAssembler *assembler.InscriptionAssembler) *InscriptionRelayer {
+	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.InscriptionVoteProcessor, inscriptionAssembler *assembler.InscriptionAssembler,
+) *InscriptionRelayer {
 	return &InscriptionRelayer{
 		listener:             listener,
 		inscriptionExecutor:  inscriptionExecutor,

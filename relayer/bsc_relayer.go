@@ -17,7 +17,8 @@ type BSCRelayer struct {
 }
 
 func NewBSCRelayer(listener *listener.BSCListener, inscriptionExecutor *executor.InscriptionExecutor, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.BSCVoteProcessor, bscAssembler *assembler.BSCAssembler) *BSCRelayer {
+	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.BSCVoteProcessor, bscAssembler *assembler.BSCAssembler,
+) *BSCRelayer {
 	return &BSCRelayer{
 		listener:            listener,
 		inscriptionExecutor: inscriptionExecutor,
@@ -32,7 +33,7 @@ func (r *BSCRelayer) Start() {
 	go r.monitorCrossChainEvents()
 	go r.signAndBroadcast()
 	go r.collectVotes()
-	//go r.assemblePackages()
+	go r.assemblePackages()
 }
 
 // monitorCrossChainEvents will monitor cross chain events for every block and persist into DB
@@ -42,7 +43,6 @@ func (r *BSCRelayer) monitorCrossChainEvents() {
 
 func (r *BSCRelayer) signAndBroadcast() {
 	r.voteProcessor.SignAndBroadcast()
-
 }
 
 func (r *BSCRelayer) collectVotes() {

@@ -5,6 +5,10 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"sync"
+	"time"
+
 	"github.com/avast/retry-go/v4"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
@@ -13,9 +17,6 @@ import (
 	"github.com/bnb-chain/inscription-relayer/executor/tendermintlightclient"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
-	"math/big"
-	"sync"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -287,7 +288,6 @@ func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *rela
 }
 
 func (e *BSCExecutor) CallBuildInSystemContract(channelID int8, blsSignature []byte, sequence uint64, validatorSet *big.Int, msgBytes []byte, nonce uint64) (common.Hash, error) {
-
 	txOpts, err := e.getTransactor(nonce)
 	if err != nil {
 		return common.Hash{}, err

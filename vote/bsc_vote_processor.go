@@ -5,6 +5,9 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sort"
+	"time"
+
 	"github.com/avast/retry-go/v4"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
@@ -18,8 +21,6 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
-	"sort"
-	"time"
 )
 
 type BSCVoteProcessor struct {
@@ -32,7 +33,8 @@ type BSCVoteProcessor struct {
 }
 
 func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *VotePoolExecutor) *BSCVoteProcessor {
+	votePoolExecutor *VotePoolExecutor,
+) *BSCVoteProcessor {
 	return &BSCVoteProcessor{
 		config:           cfg,
 		daoManager:       dao,
@@ -54,7 +56,6 @@ func (p *BSCVoteProcessor) SignAndBroadcast() {
 
 // SignAndBroadcast Will sign using the bls private key, and broadcast the vote to votepool
 func (p *BSCVoteProcessor) signAndBroadcast() error {
-
 	latestHeight, err := p.bscExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
@@ -70,7 +71,6 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		return nil
 	}
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(db.SAVED, leastSavedPkgHeight)
-
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
 		return err
@@ -81,7 +81,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		return nil
 	}
 
-	//For packages with same oracle sequence, aggregate their payload and make single vote to votepool
+	// For packages with same oracle sequence, aggregate their payload and make single vote to votepool
 	pkgsGroupByOracleSeq := make(map[uint64][]*model.BscRelayPackage)
 	for _, pack := range pkgs {
 		pkgsGroupByOracleSeq[pack.OracleSequence] = append(pkgsGroupByOracleSeq[pack.OracleSequence], pack)
@@ -125,7 +125,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		channelId := relayercommon.OracleChannelId
 		v := p.constructVoteAndSign(eventHash[:])
 
-		//broadcast v
+		// broadcast v
 		if err = retry.Do(func() error {
 			err = p.votePoolExecutor.BroadcastVote(v)
 			if err != nil {
@@ -207,7 +207,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayerc
 	if err != nil {
 		return err
 	}
-	//Query from votePool until there are more than 2/3 votes
+	// Query from votePool until there are more than 2/3 votes
 	err = p.queryMoreThanTwoThirdValidVotes(localVote, validators)
 	if err != nil {
 		return err
@@ -217,7 +217,6 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayerc
 
 // queryMoreThanTwoThirdValidVotes queries votes from votePool
 func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []stakingtypes.Validator) error {
-
 	validVotesTotalCnt := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence

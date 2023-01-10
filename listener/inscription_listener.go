@@ -3,6 +3,9 @@ package listener
 import (
 	"bytes"
 	"encoding/hex"
+	"strconv"
+	"time"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db"
@@ -12,8 +15,6 @@ import (
 	"github.com/bnb-chain/inscription-relayer/util"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"strconv"
-	"time"
 )
 
 type InscriptionListener struct {
@@ -175,12 +176,14 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 }
 
 func (l *InscriptionListener) monitorValidatorsAtHeight(height uint64) error {
-
 	if height == 1 {
 		return nil
 	}
 
 	latestHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
+	if err != nil {
+		return err
+	}
 	if height >= latestHeight {
 		return nil
 	}

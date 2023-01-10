@@ -12,7 +12,7 @@ import (
 )
 
 func GetSecret(secretName, region string) (string, error) {
-	//Create a Secrets Manager client
+	// Create a Secrets Manager client
 	sess, err := session.NewSession(&aws.Config{
 		Region: &region,
 	})
@@ -60,7 +60,7 @@ func SendTelegramMessage(identity string, botId string, chatId string, msg strin
 	}
 	_, err := http.PostForm(endPoint, formData)
 	if err != nil {
-		fmt.Println(fmt.Sprintf("send telegram message error, bot_id=%s, chat_id=%s, msg=%s, err=%s", botId, chatId, msg, err.Error()))
+		fmt.Println(fmt.Printf("send telegram message error, bot_id=%s, chat_id=%s, msg=%s, err=%s \n", botId, chatId, msg, err.Error()))
 		return
 	}
 }

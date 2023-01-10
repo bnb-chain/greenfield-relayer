@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"sync"
+	"time"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -14,8 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"google.golang.org/grpc"
-	"sync"
-	"time"
 
 	"github.com/avast/retry-go/v4"
 	clitx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -240,7 +241,6 @@ func (e *InscriptionExecutor) UpdateClients() {
 }
 
 func (e *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommon.Header, error) {
-
 	commit, err := e.getRpcClient().Commit(context.Background(), &height)
 	if err != nil {
 		return nil, err
@@ -325,11 +325,10 @@ func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, er
 }
 
 func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64) (string, error) {
-
 	txConfig := authtx.NewTxConfig(Cdc(), authtx.DefaultSignModes)
 	txBuilder := txConfig.NewTxBuilder()
 
-	//Todo fix
+	// Todo fix
 	oracleSeq, err := e.GetNextOracleSequence()
 	if err != nil {
 		return "", err
@@ -403,7 +402,7 @@ func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []b
 	if err != nil {
 		return "", err
 	}
-	//Broadcast transaction
+	// Broadcast transaction
 	txRes, err := e.getTxClient().BroadcastTx(
 		context.Background(),
 		&tx.BroadcastTxRequest{

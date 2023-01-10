@@ -2,9 +2,10 @@ package listener
 
 import (
 	"encoding/hex"
+	"math/big"
+
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
-	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -13,7 +14,7 @@ import (
 
 var (
 	CrossChainPackageEventName = "CrossChainPackage"
-	//TODO
+	// TODO
 	CrossChainPackageEventHash = common.HexToHash("")
 )
 

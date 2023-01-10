@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"github.com/bnb-chain/inscription-relayer/assembler"
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
@@ -121,22 +122,22 @@ func main() {
 
 	votePoolExecutor := vote.NewVotePoolExecutor(cfg, inscriptionExecutor)
 
-	//listener
+	// listener
 	inscriptionListener := listener.NewInscriptionListener(cfg, inscriptionExecutor, daoManager)
 	bscListener := listener.NewBSCListener(cfg, bscExecutor, daoManager)
 
-	//vote signer
+	// vote signer
 	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.VotePoolConfig.BlsPrivateKey))
 
-	//voteProcessor
+	// voteProcessor
 	inscriptionVoteProcessor := vote.NewInscriptionVoteProcessor(cfg, daoManager, signer, inscriptionExecutor, votePoolExecutor)
 	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor, votePoolExecutor)
 
-	//assembler
+	// assembler
 	inscriptionAssembler := assembler.NewInscriptionAssembler(cfg, inscriptionExecutor, daoManager, bscExecutor, votePoolExecutor)
 	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, votePoolExecutor, inscriptionExecutor)
 
-	//Relayer
+	// Relayer
 	insRelayer := relayer.NewInscriptionRelayer(inscriptionListener, inscriptionExecutor, bscExecutor, votePoolExecutor, inscriptionVoteProcessor, inscriptionAssembler)
 	bscRelayer := relayer.NewBSCRelayer(bscListener, inscriptionExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
 
