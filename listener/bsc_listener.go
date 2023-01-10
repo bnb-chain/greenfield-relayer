@@ -79,7 +79,7 @@ func (l *BSCListener) poll(height uint64) (uint64, error) {
 
 	err = l.monitorCrossChainPkgAtBlockHeight(latestPolledBlock, height)
 	if err != nil {
-		relayercommon.Logger.Errorf("encounter error when monitorCrossChainPkgAtBlockHeight, err=%s", err.Error())
+		relayercommon.Logger.Errorf("encounter error when monitor cross-chain packages at height %d, err=%s", height, err.Error())
 		return 0, err
 	}
 	return height + 1, nil

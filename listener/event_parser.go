@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"encoding/hex"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"math/big"
@@ -17,21 +18,33 @@ var (
 )
 
 func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64) (*model.BscRelayPackage, error) {
-	var p model.BscRelayPackage
-
-	err := abi.UnpackIntoInterface(&p, CrossChainPackageEventName, log.Data)
+	ev, err := parseCrossChainPackageEvent(abi, log)
 	if err != nil {
 		return nil, err
 	}
-
-	p.OracleSequence = big.NewInt(0).SetBytes(log.Topics[1].Bytes()).Uint64()
-	p.PackageSequence = big.NewInt(0).SetBytes(log.Topics[2].Bytes()).Uint64()
-	p.ChannelId = uint8(big.NewInt(0).SetBytes(log.Topics[3].Bytes()).Uint64())
+	var p model.BscRelayPackage
+	p.OracleSequence = ev.OracleSequence
+	p.PackageSequence = ev.PackageSequence
+	p.ChannelId = ev.ChannelId
 	p.TxHash = log.TxHash.String()
 	p.TxIndex = log.TxIndex
 	p.TxTime = int64(timestamp)
 	p.UpdatedTime = int64(timestamp)
 	p.Height = log.BlockNumber
 	p.Status = db.SAVED
+	p.PayLoad = hex.EncodeToString(ev.Payload)
 	return &p, nil
+}
+
+func parseCrossChainPackageEvent(abi *abi.ABI, log *types.Log) (*CrossChainPackageEvent, error) {
+	var ev CrossChainPackageEvent
+
+	err := abi.UnpackIntoInterface(&ev, CrossChainPackageEventName, log.Data)
+	if err != nil {
+		return nil, err
+	}
+	ev.OracleSequence = big.NewInt(0).SetBytes(log.Topics[1].Bytes()).Uint64()
+	ev.PackageSequence = big.NewInt(0).SetBytes(log.Topics[2].Bytes()).Uint64()
+	ev.ChannelId = uint8(big.NewInt(0).SetBytes(log.Topics[3].Bytes()).Uint64())
+	return &ev, nil
 }
