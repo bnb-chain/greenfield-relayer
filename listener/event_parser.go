@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"math/big"
 
@@ -31,6 +32,6 @@ func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64) (*model.B
 	p.TxTime = int64(timestamp)
 	p.UpdatedTime = int64(timestamp)
 	p.Height = log.BlockNumber
-	p.Status = model.SAVED
+	p.Status = db.SAVED
 	return &p, nil
 }

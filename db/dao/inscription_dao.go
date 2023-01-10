@@ -3,6 +3,7 @@ package dao
 import (
 	"database/sql"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"gorm.io/gorm"
 	"time"
@@ -27,7 +28,7 @@ func (d *InscriptionDao) GetLatestBlock() (*model.InscriptionBlock, error) {
 	return &block, nil
 }
 
-func (d *InscriptionDao) GetTransactionsByStatus(s model.InternalStatus) ([]*model.InscriptionRelayTransaction, error) {
+func (d *InscriptionDao) GetTransactionsByStatus(s db.TxStatus) ([]*model.InscriptionRelayTransaction, error) {
 	txs := make([]*model.InscriptionRelayTransaction, 0)
 	err := d.DB.Where("status = ? ", s).Find(&txs).Order("tx_time desc").Error
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -36,7 +37,7 @@ func (d *InscriptionDao) GetTransactionsByStatus(s model.InternalStatus) ([]*mod
 	return txs, nil
 }
 
-func (d *InscriptionDao) GetTransactionsByStatusAndHeight(status model.InternalStatus, height uint64) ([]*model.InscriptionRelayTransaction, error) {
+func (d *InscriptionDao) GetTransactionsByStatusAndHeight(status db.TxStatus, height uint64) ([]*model.InscriptionRelayTransaction, error) {
 	txs := make([]*model.InscriptionRelayTransaction, 0)
 	err := d.DB.Where("status = ? and height = ?", status, height).Find(&txs).Order("tx_time asc").Error
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -47,7 +48,7 @@ func (d *InscriptionDao) GetTransactionsByStatusAndHeight(status model.InternalS
 
 func (d *InscriptionDao) GetLatestVotedTransactionHeight() (uint64, error) {
 	var result uint64
-	res := d.DB.Table("inscription_relay_transaction").Select("MAX(height)").Where("status = ?", model.VOTED)
+	res := d.DB.Table("inscription_relay_transaction").Select("MAX(height)").Where("status = ?", db.VOTED)
 	if res.RowsAffected == 0 {
 		return 0, nil
 	}
@@ -60,7 +61,7 @@ func (d *InscriptionDao) GetLatestVotedTransactionHeight() (uint64, error) {
 
 func (d *InscriptionDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	var result sql.NullInt64
-	res := d.DB.Table("inscription_relay_transaction").Select("MIN(height)").Where("status = ?", model.SAVED)
+	res := d.DB.Table("inscription_relay_transaction").Select("MIN(height)").Where("status = ?", db.SAVED)
 	err := res.Row().Scan(&result)
 	if err != nil {
 		return 0, err
@@ -68,7 +69,7 @@ func (d *InscriptionDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	return uint64(result.Int64), nil
 }
 
-func (d *InscriptionDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId relayercommon.ChannelId, sequence uint64, status model.InternalStatus) (*model.InscriptionRelayTransaction, error) {
+func (d *InscriptionDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId relayercommon.ChannelId, sequence uint64, status db.TxStatus) (*model.InscriptionRelayTransaction, error) {
 	tx := model.InscriptionRelayTransaction{}
 	err := d.DB.Where("channel_id = ? and sequence = ? and status = ?", channelId, sequence, status).Find(&tx).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -77,13 +78,13 @@ func (d *InscriptionDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId
 	return &tx, nil
 }
 
-func (d *InscriptionDao) UpdateTransactionStatus(id int64, status model.InternalStatus) error {
+func (d *InscriptionDao) UpdateTransactionStatus(id int64, status db.TxStatus) error {
 	err := d.DB.Model(model.InscriptionRelayTransaction{}).Where("id = ?", id).Updates(
 		model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix()}).Error
 	return err
 }
 
-func (d *InscriptionDao) UpdateTransactionStatusAndClaimTxHash(id int64, status model.InternalStatus, claimTxHash string) error {
+func (d *InscriptionDao) UpdateTransactionStatusAndClaimTxHash(id int64, status db.TxStatus, claimTxHash string) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.InscriptionRelayTransaction{}).Where("id = ?", id).Updates(
 			model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error

@@ -79,7 +79,7 @@ func (l *BSCListener) poll(height uint64) (uint64, error) {
 
 	err = l.monitorCrossChainPkgAtBlockHeight(latestPolledBlock, height)
 	if err != nil {
-		relayercommon.Logger.Errorf("Encounter error when monitorCrossChainPkgAtBlockHeight, err=%s", err.Error())
+		relayercommon.Logger.Errorf("encounter error when monitorCrossChainPkgAtBlockHeight, err=%s", err.Error())
 		return 0, err
 	}
 	return height + 1, nil
@@ -106,7 +106,7 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 		return err
 	}
 	if isForked {
-		relayercommon.Logger.Infof("Deleted block at height %d from DB due to it is forked", latestPolledBlock.Height)
+		relayercommon.Logger.Infof("deleted block at height %d from DB due to it is forked", latestPolledBlock.Height)
 		return nil
 	}
 	logs, err := l.getLogsFromHeader(nextHeightHeader)

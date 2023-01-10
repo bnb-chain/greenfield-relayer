@@ -27,7 +27,7 @@ func Verify(vote *votepool.Vote, eventHash []byte) error {
 	return nil
 }
 
-func AggregatedSignatureAndValidatorBitSet(votes []*model.Vote, validators []stakingtypes.Validator) ([]byte, *bitset.BitSet, error) {
+func AggregatSignatureAndValidatorBitSet(votes []*model.Vote, validators []stakingtypes.Validator) ([]byte, *bitset.BitSet, error) {
 	signatures := make([][]byte, 0, len(votes))
 	voteAddrSet := make(map[string]struct{}, len(votes))
 	valBitSet := bitset.New(256)

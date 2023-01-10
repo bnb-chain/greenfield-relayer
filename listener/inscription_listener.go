@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
@@ -60,7 +61,7 @@ func (l *InscriptionListener) poll(height uint64) {
 func (l *InscriptionListener) pollHelper(height uint64) (uint64, error) {
 	latestPolledBlock, err := l.getLatestPolledBlock()
 	if err != nil {
-		relayercommon.Logger.Errorf("Failed to get latest block from db, error: %s", err.Error())
+		relayercommon.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
 		return 0, err
 	}
 	latestPolledBlockHeight := latestPolledBlock.Height
@@ -70,7 +71,7 @@ func (l *InscriptionListener) pollHelper(height uint64) (uint64, error) {
 
 	latestBlockHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
-		relayercommon.Logger.Errorf("Failed to get latest block height, error: %s", err.Error())
+		relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 		return 0, err
 	}
 
@@ -157,7 +158,7 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 						relayercommon.Logger.Errorf("unexpected attr, key is %s", attr.Key)
 					}
 				}
-				relayTx.Status = model.SAVED
+				relayTx.Status = db.SAVED
 				relayTx.Height = uint64(block.Height)
 				relayTx.UpdatedTime = time.Now().Unix()
 				txs = append(txs, &relayTx)
@@ -184,7 +185,7 @@ func (l *InscriptionListener) monitorValidatorsAtHeight(height uint64) error {
 		return nil
 	}
 
-	relayercommon.Logger.Infof("Monitoring validator at height %d", height)
+	relayercommon.Logger.Infof("monitoring validator at height %d", height)
 	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(height)
 	if err != nil {
 		return err

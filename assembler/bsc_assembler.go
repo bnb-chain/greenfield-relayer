@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/util"
 	"github.com/bnb-chain/inscription-relayer/vote"
@@ -74,7 +74,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	aggregatedSignature, valBitSet, err := vote.AggregatedSignatureAndValidatorBitSet(votes, validators)
+	aggregatedSignature, valBitSet, err := vote.AggregatSignatureAndValidatorBitSet(votes, validators)
 
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		indexDiff = len(relayerPubKeys) - (inturnRelayerIdx - relayerIdx)
 	}
 	curRelayerRelayingTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
-	common.Logger.Infof("Current relayer relaying time is %d", curRelayerRelayingTime)
+	common.Logger.Infof("current relayer relaying time is %d", curRelayerRelayingTime)
 
 	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
 
@@ -110,7 +110,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	}
 	// if the sequence is already filled, update packages status to FILLED in DB
 	if isAlreadyFilled {
-		if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, model.FILLED); err != nil {
+		if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.FILLED); err != nil {
 			common.Logger.Errorf("failed to update packages status %s", pkgIds)
 			return err
 		}
@@ -121,7 +121,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 	common.Logger.Infof("claimed transaction with txHash %s", txHash)
-	err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimTxHash(pkgIds, model.FILLED, txHash)
+	err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimTxHash(pkgIds, db.FILLED, txHash)
 	if err != nil {
 		common.Logger.Errorf("failed to update packages error %s", err.Error())
 		return err

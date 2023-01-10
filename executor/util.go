@@ -29,13 +29,6 @@ func HexToEthSecp256k1PrivKey(hexString string) (*ethsecp256k1.PrivKey, error) {
 	return ethHd.EthSecp256k1.Generate()(bz).(*ethsecp256k1.PrivKey), nil
 }
 
-func isHeaderNonExistingErr(err error) bool {
-	if err != nil && err.Error() == "RPC error -32603 - Internal error: Height must be less than or equal to the current blockchain height" {
-		return true
-	}
-	return false
-}
-
 func Cdc() *codec.ProtoCodec {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	interfaceRegistry.RegisterInterface("AccountI", (*authtypes.AccountI)(nil))

@@ -191,7 +191,7 @@ func (e *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpcclient.Cli
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			relayercommon.Logger.Infof("Failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			relayercommon.Logger.Infof("failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -205,7 +205,7 @@ func (e *InscriptionExecutor) GetLatestBlockHeight(ctx context.Context, client r
 
 func (e *InscriptionExecutor) UpdateClients() {
 	for {
-		relayercommon.Logger.Infof("Start to monitor inscription data-seeds healthy")
+		relayercommon.Logger.Infof("start to monitor inscription data-seeds healthy")
 		for _, inscriptionClient := range e.inscriptionClients {
 			if time.Since(inscriptionClient.UpdatedAt).Seconds() > DataSeedDenyServiceThreshold {
 				msg := fmt.Sprintf("data seed %s is not accessable", inscriptionClient.Provider)
@@ -324,9 +324,7 @@ func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, er
 	return account, nil
 }
 
-func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte,
-	aggregatedSig []byte,
-	VoteAddressSet []uint64) (string, error) {
+func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64) (string, error) {
 
 	txConfig := authtx.NewTxConfig(Cdc(), authtx.DefaultSignModes)
 	txBuilder := txConfig.NewTxBuilder()
@@ -334,26 +332,24 @@ func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte,
 	//Todo fix
 	oracleSeq, err := e.GetNextOracleSequence()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	msgClaim := &oracletypes.MsgClaim{}
 	msgClaim.FromAddress = e.address
 	msgClaim.Payload = payloadBts
-	msgClaim.VoteAddressSet = VoteAddressSet
+	msgClaim.VoteAddressSet = voteAddressSet
 	msgClaim.Sequence = oracleSeq
 	msgClaim.AggSignature = aggregatedSig
-	msgClaim.DestChainId = uint32(e.config.BSCConfig.ChainId)
-	msgClaim.SrcChainId = uint32(e.config.InscriptionConfig.ChainId)
+	msgClaim.DestChainId = e.getDestChainId()
+	msgClaim.SrcChainId = e.getSrcChainId()
 	msgClaim.Timestamp = uint64(time.Now().Unix())
 	err = txBuilder.SetMsgs(msgClaim)
-
-	fmt.Println(msgClaim.String())
 
 	if err != nil {
 		return "", err
 	}
-	txBuilder.SetGasLimit(210000)
+	txBuilder.SetGasLimit(e.config.InscriptionConfig.GasLimit)
 
 	acct, err := e.GetAccount(e.address)
 	if err != nil {
@@ -382,7 +378,7 @@ func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte,
 	sig = signing.SignatureV2{}
 
 	signerData := xauthsigning.SignerData{
-		ChainID:       "inscription_9000-1",
+		ChainID:       e.config.InscriptionConfig.ChainIdString,
 		AccountNumber: accountNum,
 		Sequence:      accountSeq,
 	}
@@ -421,4 +417,12 @@ func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte,
 		return "", fmt.Errorf("claim error, code=%d, log=%s", txRes.TxResponse.Code, txRes.TxResponse.RawLog)
 	}
 	return txRes.TxResponse.TxHash, nil
+}
+
+func (e *InscriptionExecutor) getDestChainId() uint32 {
+	return uint32(e.config.InscriptionConfig.ChainId)
+}
+
+func (e *InscriptionExecutor) getSrcChainId() uint32 {
+	return uint32(e.config.BSCConfig.ChainId)
 }

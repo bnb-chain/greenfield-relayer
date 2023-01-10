@@ -127,7 +127,7 @@ func (e *BSCExecutor) SwitchClient() {
 	if e.clientIdx >= len(e.bscClients) {
 		e.clientIdx = 0
 	}
-	relayercommon.Logger.Infof("Switch to provider: %s", e.config.BSCConfig.RPCAddrs[e.clientIdx])
+	relayercommon.Logger.Infof("switch to provider: %s", e.config.BSCConfig.RPCAddrs[e.clientIdx])
 }
 
 func (e *BSCExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
@@ -142,7 +142,7 @@ func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (l
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			relayercommon.Logger.Infof("Failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			relayercommon.Logger.Infof("failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -158,7 +158,7 @@ func (e *BSCExecutor) GetLatestBlockHeight(client *ethclient.Client) (uint64, er
 
 func (e *BSCExecutor) UpdateClients() {
 	for {
-		relayercommon.Logger.Infof("Start to monitor bsc data-seeds healthy")
+		relayercommon.Logger.Infof("start to monitor bsc data-seeds healthy")
 		for _, bscClient := range e.bscClients {
 			if time.Since(bscClient.UpdatedAt).Seconds() > DataSeedDenyServiceThreshold {
 				msg := fmt.Sprintf("data seed %s is not accessable", bscClient.Provider)
@@ -259,17 +259,10 @@ func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Has
 	if err != nil {
 		return common.Hash{}, err
 	}
-
-tryAgain:
-	header, err := e.InscriptionExecutor.QueryTendermintHeader(int64(height))
+	header, err := e.QueryTendermintHeaderWithRetry(int64(height))
 	if err != nil {
-		if isHeaderNonExistingErr(err) {
-			goto tryAgain
-		} else {
-			return common.Hash{}, err
-		}
+		return common.Hash{}, err
 	}
-
 	headerBytes, err := header.SignedHeader.ToProto().Marshal()
 	if err != nil {
 		return common.Hash{}, err
@@ -279,6 +272,18 @@ tryAgain:
 		return common.Hash{}, err
 	}
 	return tx.Hash(), nil
+}
+
+func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *relayercommon.Header, err error) {
+	return header, retry.Do(func() error {
+		header, err = e.InscriptionExecutor.QueryTendermintHeader(height)
+		return err
+	}, relayercommon.RtyAttem,
+		relayercommon.RtyDelay,
+		relayercommon.RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			relayercommon.Logger.Infof("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+		}))
 }
 
 func (e *BSCExecutor) CallBuildInSystemContract(channelID int8, blsSignature []byte, sequence uint64, validatorSet *big.Int, msgBytes []byte, nonce uint64) (common.Hash, error) {

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/bnb-chain/inscription-relayer/db"
 	"gorm.io/gorm"
 )
 
@@ -25,10 +26,10 @@ type BscRelayPackage struct {
 	PayLoad         string `gorm:"type:text"`
 	TxIndex         uint   `gorm:"NOT NULL"`
 	ClaimTxHash     string
-	Status          InternalStatus `gorm:"NOT NULL;index:idx_bsc_relay_package_status"`
-	Height          uint64         `gorm:"NOT NULL;index:idx_bsc_relay_package_height"`
-	TxTime          int64          `gorm:"NOT NULL"`
-	UpdatedTime     int64          `gorm:"NOT NULL"`
+	Status          db.TxStatus `gorm:"NOT NULL;index:idx_bsc_relay_package_status"`
+	Height          uint64      `gorm:"NOT NULL;index:idx_bsc_relay_package_height"`
+	TxTime          int64       `gorm:"NOT NULL"`
+	UpdatedTime     int64       `gorm:"NOT NULL"`
 }
 
 func (l *BscRelayPackage) TableName() string {

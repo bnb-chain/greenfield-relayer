@@ -1,7 +1,10 @@
 package db
 
-import "time"
+type TxStatus int
 
 const (
-	QueryDBRetryInterval = 2 * time.Second
+	SAVED     TxStatus = 0
+	VOTED     TxStatus = 1
+	VOTED_All TxStatus = 2
+	FILLED    TxStatus = 3
 )

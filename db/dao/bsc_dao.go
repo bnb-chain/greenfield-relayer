@@ -3,6 +3,7 @@ package dao
 import (
 	"database/sql"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"gorm.io/gorm"
 	"time"
@@ -27,7 +28,7 @@ func (d *BSCDao) GetLatestBlock() (*model.BscBlock, error) {
 	return &block, nil
 }
 
-func (d *BSCDao) GetPackagesByStatus(status model.InternalStatus) ([]*model.BscRelayPackage, error) {
+func (d *BSCDao) GetPackagesByStatus(status db.TxStatus) ([]*model.BscRelayPackage, error) {
 	votedTxs := make([]*model.BscRelayPackage, 0)
 	err := d.DB.Where("status = ? ", status).Find(&votedTxs).Order("tx_time asc").Error
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -36,7 +37,7 @@ func (d *BSCDao) GetPackagesByStatus(status model.InternalStatus) ([]*model.BscR
 	return votedTxs, nil
 }
 
-func (d *BSCDao) GetPackagesByStatusAndHeight(status model.InternalStatus, height uint64) ([]*model.BscRelayPackage, error) {
+func (d *BSCDao) GetPackagesByStatusAndHeight(status db.TxStatus, height uint64) ([]*model.BscRelayPackage, error) {
 	unVotedTxs := make([]*model.BscRelayPackage, 0)
 	err := d.DB.Where("status = ? and height = ?", status, height).Find(&unVotedTxs).Order("tx_time asc").Error
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -47,7 +48,7 @@ func (d *BSCDao) GetPackagesByStatusAndHeight(status model.InternalStatus, heigh
 
 func (d *BSCDao) GetLeastSavedPackagesHeight() (uint64, error) {
 	var result sql.NullInt64
-	res := d.DB.Table("bsc_relay_package").Select("MIN(height)").Where("status = ?", model.SAVED)
+	res := d.DB.Table("bsc_relay_package").Select("MIN(height)").Where("status = ?", db.SAVED)
 	err := res.Row().Scan(&result)
 	if err != nil {
 		return 0, err
@@ -55,14 +56,14 @@ func (d *BSCDao) GetLeastSavedPackagesHeight() (uint64, error) {
 	return uint64(result.Int64), nil
 }
 
-func (d *BSCDao) UpdateBatchPackagesStatus(txIds []int64, status model.InternalStatus) error {
+func (d *BSCDao) UpdateBatchPackagesStatus(txIds []int64, status db.TxStatus) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
 			model.BscRelayPackage{Status: status, UpdatedTime: time.Now().Unix()}).Error
 	})
 }
 
-func (d *BSCDao) UpdateBatchPackagesStatusAndClaimTxHash(txIds []int64, status model.InternalStatus, claimTxHash string) error {
+func (d *BSCDao) UpdateBatchPackagesStatusAndClaimTxHash(txIds []int64, status db.TxStatus, claimTxHash string) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
 			model.BscRelayPackage{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
@@ -71,7 +72,7 @@ func (d *BSCDao) UpdateBatchPackagesStatusAndClaimTxHash(txIds []int64, status m
 
 func (d *BSCDao) GetAllVotedPackages(channelId relayercommon.ChannelId, sequence uint64) ([]*model.BscRelayPackage, error) {
 	pkgs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("channel_id = ? and oracle_sequence = ? and status = ? ", channelId, sequence, model.VOTED_All).Find(&pkgs).Error
+	err := d.DB.Where("channel_id = ? and oracle_sequence = ? and status = ? ", channelId, sequence, db.VOTED_All).Find(&pkgs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

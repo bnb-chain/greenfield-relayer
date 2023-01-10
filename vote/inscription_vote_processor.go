@@ -8,6 +8,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
@@ -68,9 +69,9 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 	if leastSavedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
 		return nil
 	}
-	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(model.SAVED, leastSavedTxHeight)
+	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(db.SAVED, leastSavedTxHeight)
 	if err != nil {
-		relayercommon.Logger.Errorf("Failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
+		relayercommon.Logger.Errorf("failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
 		return err
 	}
 
@@ -117,7 +118,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 
 		//After vote submitted to vote pool, persist vote Data and update the status of tx to 'VOTED'.
 		err = p.daoManager.InscriptionDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, model.VOTED)
+			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.VOTED)
 			if err != nil {
 				return err
 			}
@@ -143,7 +144,7 @@ func (p *InscriptionVoteProcessor) CollectVotes() {
 	}
 }
 func (p *InscriptionVoteProcessor) collectVotes() error {
-	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(model.VOTED)
+	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(db.VOTED)
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
 		return err
@@ -154,7 +155,7 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 			return err
 		}
 
-		err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, model.VOTED_All)
+		err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.VOTED_All)
 		if err != nil {
 			return err
 		}

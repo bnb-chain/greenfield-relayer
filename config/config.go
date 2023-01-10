@@ -45,6 +45,8 @@ type InscriptionConfig struct {
 	ChainId                   uint16   `json:"chain_id"`
 	StartHeight               uint64   `json:"start_height"`
 	MonitorChannelList        []uint8  `json:"monitor_channel_list"`
+	GasLimit                  uint64   `json:"gas_limit"`
+	ChainIdString             string   `json:"chain_id_string"`
 }
 
 type BSCConfig struct {
@@ -178,13 +180,11 @@ func ParseConfigFromJson(content string) *Config {
 func ParseConfigFromFile(filePath string) *Config {
 	bz, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Println("------")
 		panic(err)
 	}
 
 	var config Config
 	if err := json.Unmarshal(bz, &config); err != nil {
-		fmt.Println("----jhgkjkgk--")
 		panic(err)
 	}
 

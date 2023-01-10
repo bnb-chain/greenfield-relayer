@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/bnb-chain/inscription-relayer/db"
 	"gorm.io/gorm"
 )
 
@@ -27,9 +28,9 @@ type InscriptionRelayTransaction struct {
 	RelayerFee string `gorm:"NOT NULL"`
 
 	ClaimTxHash string
-	Status      InternalStatus `gorm:"NOT NULL;index:idx_inscription_relay_transaction_status"`
-	TxTime      int64          `gorm:"NOT NULL"`
-	UpdatedTime int64          `gorm:"NOT NULL"`
+	Status      db.TxStatus `gorm:"NOT NULL;index:idx_inscription_relay_transaction_status"`
+	TxTime      int64       `gorm:"NOT NULL"`
+	UpdatedTime int64       `gorm:"NOT NULL"`
 }
 
 func (*InscriptionRelayTransaction) TableName() string {

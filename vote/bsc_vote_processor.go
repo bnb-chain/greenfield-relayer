@@ -8,12 +8,13 @@ import (
 	"github.com/avast/retry-go/v4"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/util"
+	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
@@ -68,10 +69,10 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 	if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
 		return nil
 	}
-	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(model.SAVED, leastSavedPkgHeight)
+	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(db.SAVED, leastSavedPkgHeight)
 
 	if err != nil {
-		relayercommon.Logger.Errorf("Failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
+		relayercommon.Logger.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
 		return err
 	}
 
@@ -103,21 +104,26 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			newP := Package{
 				ChannelId: pkg.ChannelId,
 				Sequence:  pkg.PackageSequence,
-				Payload:   payload, // aggregate payload to be signed
+				Payload:   payload,
 			}
 			aggPkgs = append(aggPkgs, newP)
 			txIds = append(txIds, pkg.Id)
 		}
 
 		encBts, err := rlp.EncodeToBytes(aggPkgs)
-		eventHash := crypto.Keccak256Hash(encBts).Bytes()
-
+		blsClaim := oracletypes.BlsClaim{
+			SrcChainId:  uint32(p.config.BSCConfig.ChainId),
+			DestChainId: uint32(p.config.InscriptionConfig.ChainId),
+			Timestamp:   uint64(pkgsForSeq[0].TxTime),
+			Sequence:    seq,
+			Payload:     encBts,
+		}
+		eventHash := blsClaim.GetSignBytes()
 		if err != nil {
 			return fmt.Errorf("encode packages error, err=%s", err.Error())
 		}
 		channelId := relayercommon.OracleChannelId
-
-		v := p.constructVoteAndSign(eventHash)
+		v := p.constructVoteAndSign(eventHash[:])
 
 		//broadcast v
 		if err = retry.Do(func() error {
@@ -131,7 +137,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		}
 
 		err = p.daoManager.BSCDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, model.VOTED)
+			err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, db.VOTED)
 			if err != nil {
 				return err
 			}
@@ -158,7 +164,7 @@ func (p *BSCVoteProcessor) CollectVotes() {
 }
 
 func (p *BSCVoteProcessor) collectVotes() error {
-	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(model.VOTED)
+	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(db.VOTED)
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
 		return err
@@ -182,7 +188,7 @@ func (p *BSCVoteProcessor) collectVotes() error {
 			return err
 		}
 
-		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, model.VOTED_All)
+		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, db.VOTED_All)
 		if err != nil {
 			return err
 		}
@@ -209,7 +215,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayerc
 	return nil
 }
 
-// queryMoreThanTwoThirdValidVotes query votes from votePool
+// queryMoreThanTwoThirdValidVotes queries votes from votePool
 func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []stakingtypes.Validator) error {
 
 	validVotesTotalCnt := 1 // assume local vote is valid
