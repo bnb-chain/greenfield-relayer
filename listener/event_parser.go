@@ -32,7 +32,7 @@ func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64) (*model.B
 	p.TxTime = int64(timestamp)
 	p.UpdatedTime = int64(timestamp)
 	p.Height = log.BlockNumber
-	p.Status = db.SAVED
+	p.Status = db.Saved
 	p.PayLoad = hex.EncodeToString(ev.Payload)
 	return &p, nil
 }

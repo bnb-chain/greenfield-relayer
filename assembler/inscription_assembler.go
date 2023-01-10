@@ -56,9 +56,9 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, db.VOTED_All)
+	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, db.AllVoted)
 	if err != nil {
-		common.Logger.Errorf("failed to get VOTED_All tx with channel id %d and sequence : %d", channelId, nextSequence)
+		common.Logger.Errorf("failed to get AllVoted tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err
 	}
 	if (*tx == model.InscriptionRelayTransaction{}) {
@@ -107,7 +107,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	}
 
 	if isAlreadyFilled {
-		if err = a.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.FILLED); err != nil {
+		if err = a.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Filled); err != nil {
 			common.Logger.Errorf("failed to update tx status %s", tx)
 			return err
 		}
@@ -123,7 +123,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 	common.Logger.Infof("delivery transaction to BSC with txHash %s", txHash.String())
-	err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimTxHash(tx.Id, db.FILLED, txHash.String())
+	err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimTxHash(tx.Id, db.Filled, txHash.String())
 	if err != nil {
 		common.Logger.Errorf("failed to update Tx status %d", tx.Id)
 		return err

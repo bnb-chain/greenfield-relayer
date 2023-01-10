@@ -48,7 +48,7 @@ func (d *BSCDao) GetPackagesByStatusAndHeight(status db.TxStatus, height uint64)
 
 func (d *BSCDao) GetLeastSavedPackagesHeight() (uint64, error) {
 	var result sql.NullInt64
-	res := d.DB.Table("bsc_relay_package").Select("MIN(height)").Where("status = ?", db.SAVED)
+	res := d.DB.Table("bsc_relay_package").Select("MIN(height)").Where("status = ?", db.Saved)
 	err := res.Row().Scan(&result)
 	if err != nil {
 		return 0, err
@@ -72,7 +72,7 @@ func (d *BSCDao) UpdateBatchPackagesStatusAndClaimTxHash(txIds []int64, status d
 
 func (d *BSCDao) GetAllVotedPackages(sequence uint64) ([]*model.BscRelayPackage, error) {
 	pkgs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("oracle_sequence = ? and status = ? ", sequence, db.VOTED_All).Find(&pkgs).Error
+	err := d.DB.Where("oracle_sequence = ? and status = ? ", sequence, db.AllVoted).Find(&pkgs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

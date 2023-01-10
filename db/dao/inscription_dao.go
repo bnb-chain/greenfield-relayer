@@ -49,7 +49,7 @@ func (d *InscriptionDao) GetTransactionsByStatusAndHeight(status db.TxStatus, he
 
 func (d *InscriptionDao) GetLatestVotedTransactionHeight() (uint64, error) {
 	var result uint64
-	res := d.DB.Table("inscription_relay_transaction").Select("MAX(height)").Where("status = ?", db.VOTED)
+	res := d.DB.Table("inscription_relay_transaction").Select("MAX(height)").Where("status = ?", db.SelfVoted)
 	if res.RowsAffected == 0 {
 		return 0, nil
 	}
@@ -62,7 +62,7 @@ func (d *InscriptionDao) GetLatestVotedTransactionHeight() (uint64, error) {
 
 func (d *InscriptionDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	var result sql.NullInt64
-	res := d.DB.Table("inscription_relay_transaction").Select("MIN(height)").Where("status = ?", db.SAVED)
+	res := d.DB.Table("inscription_relay_transaction").Select("MIN(height)").Where("status = ?", db.Saved)
 	err := res.Row().Scan(&result)
 	if err != nil {
 		return 0, err

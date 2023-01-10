@@ -3,7 +3,8 @@ package vote
 import "time"
 
 const (
-	RetryInterval = 1 * time.Second
+	RetryInterval         = 1 * time.Second
+	QueryVotepoolMaxRetry = 5
 
 	VotePoolBroadcastMethodName   = "broadcast_vote"
 	VotePoolBroadcastParameterKey = "vote"

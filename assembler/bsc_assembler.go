@@ -109,9 +109,9 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	//if err != nil {
 	//	return err
 	//}
-	//// if the sequence is already filled, update packages status to FILLED in DB
+	//// if the sequence is already filled, update packages status to Filled in DB
 	//if isAlreadyFilled {
-	//	if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.FILLED); err != nil {
+	//	if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Filled); err != nil {
 	//		common.Logger.Errorf("failed to update packages status %s", pkgIds)
 	//		return err
 	//	}
@@ -122,7 +122,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 	common.Logger.Infof("claimed transaction with txHash %s", txHash)
-	err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimTxHash(pkgIds, db.FILLED, txHash)
+	err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimTxHash(pkgIds, db.Filled, txHash)
 	if err != nil {
 		common.Logger.Errorf("failed to update packages error %s", err.Error())
 		return err

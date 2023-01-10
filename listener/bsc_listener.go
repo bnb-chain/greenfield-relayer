@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/bnb-chain/inscription-relayer/db"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 	"strings"
 	"time"
+
+	"github.com/bnb-chain/inscription-relayer/db"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
@@ -120,7 +121,7 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 		return fmt.Errorf("failed to get logs at height, height=%d, err=%s", height, err.Error())
 	}
 
-	//TODO remvoe testing purpose code
+	// TODO remvoe testing purpose code
 	relayPkgs := make([]*model.BscRelayPackage, 0)
 	pkgSeq := 30
 	end := pkgSeq + 5
@@ -134,7 +135,7 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 		relayPkg.Height = 0
 		relayPkg.TxHash = "hash"
 		relayPkg.TxIndex = 1
-		relayPkg.Status = db.SAVED
+		relayPkg.Status = db.Saved
 		relayPkg.TxTime = ts
 		relayPkg.UpdatedTime = ts
 		relayPkgs = append(relayPkgs, &relayPkg)

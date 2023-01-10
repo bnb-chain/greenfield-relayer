@@ -159,7 +159,7 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 						relayercommon.Logger.Errorf("unexpected attr, key is %s", attr.Key)
 					}
 				}
-				relayTx.Status = db.SAVED
+				relayTx.Status = db.Saved
 				relayTx.Height = uint64(block.Height)
 				relayTx.UpdatedTime = time.Now().Unix()
 				txs = append(txs, &relayTx)

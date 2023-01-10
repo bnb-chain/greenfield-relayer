@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"sort"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 
 	"github.com/avast/retry-go/v4"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
@@ -72,7 +73,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 	if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
 		return nil
 	}
-	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(db.SAVED, leastSavedPkgHeight)
+	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(db.Saved, leastSavedPkgHeight)
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
 		return err
@@ -94,7 +95,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		var txIds []int64
 
 		sort.Slice(pkgsForSeq, func(i, j int) bool {
-			return pkgsForSeq[i].PackageSequence < pkgsForSeq[j].PackageSequence
+			return pkgsForSeq[i].TxIndex < pkgsForSeq[j].TxIndex
 		})
 
 		for _, pkg := range pkgsForSeq {
@@ -173,7 +174,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		}
 
 		err = p.daoManager.BSCDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, db.VOTED)
+			err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, db.SelfVoted)
 			if err != nil {
 				return err
 			}
@@ -200,7 +201,7 @@ func (p *BSCVoteProcessor) CollectVotes() {
 }
 
 func (p *BSCVoteProcessor) collectVotes() error {
-	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(db.VOTED)
+	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(db.SelfVoted)
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
 		return err
@@ -224,7 +225,7 @@ func (p *BSCVoteProcessor) collectVotes() error {
 			return err
 		}
 
-		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, db.VOTED_All)
+		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, db.AllVoted)
 		if err != nil {
 			return err
 		}
@@ -253,10 +254,14 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayerc
 
 // queryMoreThanTwoThirdValidVotes queries votes from votePool
 func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []stakingtypes.Validator) error {
+	triedTimes := 0
 	validVotesTotalCnt := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	for {
+		if triedTimes > QueryVotepoolMaxRetry {
+			return nil
+		}
 		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.FromBscCrossChainEvent)
 		if err != nil {
 			relayercommon.Logger.Errorf("encounter error when query votes. will retry.")
@@ -304,20 +309,23 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 		}
 
 		validVotesTotalCnt += validVotesCntPerReq
-		if validVotesTotalCnt < len(validators)*2/3 {
-			if !isLocalVoteIncluded {
-				v, err := DtoToEntity(localVote)
-				if err != nil {
-					return err
-				}
-				err = p.votePoolExecutor.BroadcastVote(v)
-				if err != nil {
-					return err
-				}
-			}
-			continue
+
+		if validVotesTotalCnt > len(validators)*2/3 {
+			return nil
 		}
-		return nil
+
+		if !isLocalVoteIncluded {
+			v, err := DtoToEntity(localVote)
+			if err != nil {
+				return err
+			}
+			err = p.votePoolExecutor.BroadcastVote(v)
+			if err != nil {
+				return err
+			}
+		}
+		triedTimes++
+		continue
 	}
 }
 

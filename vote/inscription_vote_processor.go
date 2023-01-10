@@ -71,7 +71,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 	if leastSavedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
 		return nil
 	}
-	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(db.SAVED, leastSavedTxHeight)
+	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(db.Saved, leastSavedTxHeight)
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
 		return err
@@ -118,9 +118,9 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 			return err
 		}
 
-		// After vote submitted to vote pool, persist vote Data and update the status of tx to 'VOTED'.
+		// After vote submitted to vote pool, persist vote Data and update the status of tx to 'SELF_VOTED'.
 		err = p.daoManager.InscriptionDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.VOTED)
+			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.SelfVoted)
 			if err != nil {
 				return err
 			}
@@ -147,7 +147,7 @@ func (p *InscriptionVoteProcessor) CollectVotes() {
 }
 
 func (p *InscriptionVoteProcessor) collectVotes() error {
-	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(db.VOTED)
+	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(db.SelfVoted)
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
 		return err
@@ -157,8 +157,7 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 		if err != nil {
 			return err
 		}
-
-		err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.VOTED_All)
+		err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.AllVoted)
 		if err != nil {
 			return err
 		}
@@ -166,13 +165,12 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 	return nil
 }
 
-// prepareEnoughValidVotesForTx will prepare fetch and validate votes result, store in votes
+// prepareEnoughValidVotesForTx fetches and validate votes result, store in vote table
 func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.InscriptionRelayTransaction) error {
 	validators, err := p.inscriptionExecutor.QueryLatestValidators()
 	if err != nil {
 		return err
 	}
-	// Query from votePool until there are more than 2/3 valid votes
 	err = p.queryMoreThanTwoThirdVotesForTx(tx, validators)
 	if err != nil {
 		return err
@@ -180,8 +178,9 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 	return nil
 }
 
-// queryMoreThanTwoThirdVotesForTx query votes from votePool
+// queryMoreThanTwoThirdVotesForTx queries votes from votePool
 func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.InscriptionRelayTransaction, validators []stakingtypes.Validator) error {
+	triedTimes := 0
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := tx.ChannelId
 	seq := tx.Sequence
@@ -190,6 +189,12 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.Ins
 		return err
 	}
 	for {
+		// skip current tx if reach the max retry.
+		if triedTimes > QueryVotepoolMaxRetry {
+			// TODO mark the status to tx to ?
+			return nil
+		}
+
 		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.ToBscCrossChainEvent)
 		if err != nil {
 			relayercommon.Logger.Errorf("encounter error when query votes. will retry.")
@@ -239,16 +244,18 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(tx *model.Ins
 		}
 
 		validVotesTotalCount += validVotesCountPerReq
-		if validVotesTotalCount < len(validators)*2/3 {
-			if !isLocalVoteIncluded {
-				err := p.votePoolExecutor.BroadcastVote(localVote)
-				if err != nil {
-					return err
-				}
-			}
-			continue
+
+		if validVotesTotalCount > len(validators)*2/3 {
+			return nil
 		}
-		return nil
+		if !isLocalVoteIncluded {
+			err := p.votePoolExecutor.BroadcastVote(localVote)
+			if err != nil {
+				return err
+			}
+		}
+		triedTimes++
+		continue
 	}
 }
 
