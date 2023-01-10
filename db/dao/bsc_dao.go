@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"time"
 
-	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"gorm.io/gorm"
@@ -71,9 +70,9 @@ func (d *BSCDao) UpdateBatchPackagesStatusAndClaimTxHash(txIds []int64, status d
 	})
 }
 
-func (d *BSCDao) GetAllVotedPackages(channelId relayercommon.ChannelId, sequence uint64) ([]*model.BscRelayPackage, error) {
+func (d *BSCDao) GetAllVotedPackages(sequence uint64) ([]*model.BscRelayPackage, error) {
 	pkgs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("channel_id = ? and oracle_sequence = ? and status = ? ", channelId, sequence, db.VOTED_All).Find(&pkgs).Error
+	err := d.DB.Where("oracle_sequence = ? and status = ? ", sequence, db.VOTED_All).Find(&pkgs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

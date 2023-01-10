@@ -9,7 +9,7 @@
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "9f052be7b77e40f632b3f6e2c39f778c29259d1a4935df189a8d13a9f20ce9f1",
+    "private_key": "1dfddaef3b0bd41471e0e48240e9c4bcf1a3044be469869ff903c6081e8574e9",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
     "start_height": 1,
@@ -29,13 +29,13 @@
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 0,
     "start_height": 0,
-    "chain_id": 1,
+    "chain_id": 2,
     "bsc_cross_chain_contract_address": "0x0000000000000000000000000000000000002000"
   },
   "vote_pool_config": {
     "rpc_addr":
       "http://127.0.0.1:26750",
-    "bls_private_key": "4ec7dcdfff9358eb5a7236b66abf700fb35ef747f3edc26043436e61ea6a23e4"
+    "bls_private_key": "2b9422da725da69e407b8a3484ae622d28a20b55f1818f3013b34b0edc478c54"
   },
   "log_config": {
     "level": "DEBUG",

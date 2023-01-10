@@ -2,7 +2,11 @@ package listener
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/db"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"math/big"
 	"strings"
 	"time"
 
@@ -111,24 +115,41 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 		relayercommon.Logger.Infof("deleted block at height %d from DB due to it is forked", latestPolledBlock.Height)
 		return nil
 	}
-	logs, err := l.getLogsFromHeader(nextHeightHeader)
+	_, err = l.getLogsFromHeader(nextHeightHeader)
 	if err != nil {
 		return fmt.Errorf("failed to get logs at height, height=%d, err=%s", height, err.Error())
 	}
 
+	//TODO remvoe testing purpose code
 	relayPkgs := make([]*model.BscRelayPackage, 0)
-	for _, log := range logs {
-		relayercommon.Logger.Infof("get log: %d, %s, %s", log.BlockNumber, log.Topics[0].String(), log.TxHash.String())
-
-		relayPkg, err := ParseRelayPackage(&l.CrossChainAbi, &log, nextHeightHeader.Time)
-		if err != nil {
-			return fmt.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
-		}
-		if relayPkg == nil {
-			continue
-		}
-		relayPkgs = append(relayPkgs, relayPkg)
+	pkgSeq := 30
+	end := pkgSeq + 5
+	ts := time.Now().Unix()
+	for i := pkgSeq; i < end; i++ {
+		relayPkg := model.BscRelayPackage{}
+		relayPkg.ChannelId = 1
+		relayPkg.OracleSequence = 10
+		relayPkg.PackageSequence = uint64(i)
+		relayPkg.PayLoad = hex.EncodeToString(GetPayload(uint64(ts)))
+		relayPkg.Height = 0
+		relayPkg.TxHash = "hash"
+		relayPkg.TxIndex = 1
+		relayPkg.Status = db.SAVED
+		relayPkg.TxTime = ts
+		relayPkg.UpdatedTime = ts
+		relayPkgs = append(relayPkgs, &relayPkg)
 	}
+
+	//for _, log := range logs {
+	//	relayercommon.Logger.Infof("get log: %d, %s, %s", log.BlockNumber, log.Topics[0].String(), log.TxHash.String())
+	//	relayPkg, err := ParseRelayPackage(&l.CrossChainAbi, &log, nextHeightHeader.Time)
+	//	if err != nil {
+	//		return fmt.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
+	//	}
+	//	if relayPkg == nil {
+	//		continue
+	//	}
+	//}
 
 	b := &model.BscBlock{
 		BlockHash:  nextHeightHeader.Hash().String(),
@@ -177,4 +198,10 @@ func (l *BSCListener) validateLatestPolledBlockIsForkedAndDelete(latestPolledBlo
 		}
 	}
 	return false, nil
+}
+
+func GetPayload(ts uint64) []byte {
+	payloadHeader := sdk.EncodePackageHeader(sdk.SynCrossChainPackageType, ts, *big.NewInt(1))
+	payloadHeader = append(payloadHeader, []byte("test payload")...)
+	return payloadHeader
 }

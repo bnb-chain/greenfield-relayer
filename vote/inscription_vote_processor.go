@@ -90,7 +90,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 		}
 
 		// TODO remove testing purpose code
-		bs2 := common.Hex2Bytes("16f6742aee55411cc79c06af0e265b9df5ba3b54de85fbfc96c7d6a67469e4d0")
+		bs2 := common.Hex2Bytes("0fdb6ed435515cbf4b72558a6f42d881fd99e0eddc719cb5890fbf1ec723bd0c")
 		secretKey2, err := blst.SecretKeyFromBytes(bs2)
 		if err != nil {
 			panic(err)

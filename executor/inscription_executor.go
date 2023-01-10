@@ -324,7 +324,7 @@ func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, er
 	return account, nil
 }
 
-func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64) (string, error) {
+func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64) (string, error) {
 	txConfig := authtx.NewTxConfig(Cdc(), authtx.DefaultSignModes)
 	txBuilder := txConfig.NewTxBuilder()
 
@@ -342,7 +342,7 @@ func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []b
 	msgClaim.AggSignature = aggregatedSig
 	msgClaim.DestChainId = e.getDestChainId()
 	msgClaim.SrcChainId = e.getSrcChainId()
-	msgClaim.Timestamp = uint64(time.Now().Unix())
+	msgClaim.Timestamp = uint64(claimTs)
 	err = txBuilder.SetMsgs(msgClaim)
 
 	if err != nil {

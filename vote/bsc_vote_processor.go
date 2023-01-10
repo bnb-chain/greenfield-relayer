@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"sort"
 	"time"
 
@@ -125,8 +127,42 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		channelId := relayercommon.OracleChannelId
 		v := p.constructVoteAndSign(eventHash[:])
 
+		// TODO remove testing purpose code
+		bs2 := common.Hex2Bytes("0fdb6ed435515cbf4b72558a6f42d881fd99e0eddc719cb5890fbf1ec723bd0c")
+		secretKey2, err := blst.SecretKeyFromBytes(bs2)
+		if err != nil {
+			panic(err)
+		}
+		pubKey2 := secretKey2.PublicKey()
+		sign2 := secretKey2.Sign(eventHash[:]).Marshal()
+
+		mockVoteFromRelayer2 := &votepool.Vote{
+			PubKey:    pubKey2.Marshal(),
+			Signature: sign2,
+			EventType: 2,
+			EventHash: eventHash[:],
+		}
+
+		// TODO remove testing purpose code
+		bs3 := common.Hex2Bytes("354d661122e3ae2e17b15e3cdecb3f5d54bb78009ca431e0247e7a2f49fa5745")
+		secretKey3, err := blst.SecretKeyFromBytes(bs3)
+		if err != nil {
+			panic(err)
+		}
+		pubKey3 := secretKey3.PublicKey()
+		sign3 := secretKey3.Sign(eventHash[:]).Marshal()
+
+		mockVoteFromRelayer3 := &votepool.Vote{
+			PubKey:    pubKey3.Marshal(),
+			Signature: sign3,
+			EventType: 2,
+			EventHash: eventHash[:],
+		}
+
 		// broadcast v
 		if err = retry.Do(func() error {
+			err = p.votePoolExecutor.BroadcastVote(mockVoteFromRelayer3)
+			err = p.votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
 			err = p.votePoolExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for events with channel id %d and sequence %d", channelId, seq)

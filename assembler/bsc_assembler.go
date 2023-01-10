@@ -52,7 +52,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 	var pkgIds []int64
-	pkgs, err := a.daoManager.BSCDao.GetAllVotedPackages(channelId, nextSequence)
+	pkgs, err := a.daoManager.BSCDao.GetAllVotedPackages(nextSequence)
 	if len(pkgs) == 0 {
 		return nil
 	}
@@ -85,11 +85,12 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
+	claimTs := pkgs[0].TxTime
 
+	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
-	inturnRelayerIdx := int(pkgs[0].TxTime) % len(relayerPubKeys)
-	inturnRelayerRelayingTime := pkgs[0].TxTime + RelayWindowInSecond
+	inturnRelayerIdx := int(claimTs) % len(relayerPubKeys)
+	inturnRelayerRelayingTime := claimTs + RelayWindowInSecond
 
 	common.Logger.Infof("In-turn relayer relaying time is %d", inturnRelayerRelayingTime)
 
@@ -104,19 +105,19 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 
 	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
 
-	isAlreadyFilled, err := a.validateSequenceFilled(curRelayerRelayingTime, nextSequence, channelId)
-	if err != nil {
-		return err
-	}
-	// if the sequence is already filled, update packages status to FILLED in DB
-	if isAlreadyFilled {
-		if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.FILLED); err != nil {
-			common.Logger.Errorf("failed to update packages status %s", pkgIds)
-			return err
-		}
-		return nil
-	}
-	txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].Payload, aggregatedSignature, valBitSet.Bytes())
+	//isAlreadyFilled, err := a.validateSequenceFilled(curRelayerRelayingTime, nextSequence, channelId)
+	//if err != nil {
+	//	return err
+	//}
+	//// if the sequence is already filled, update packages status to FILLED in DB
+	//if isAlreadyFilled {
+	//	if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.FILLED); err != nil {
+	//		common.Logger.Errorf("failed to update packages status %s", pkgIds)
+	//		return err
+	//	}
+	//	return nil
+	//}
+	txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].Payload, aggregatedSignature, valBitSet.Bytes(), claimTs)
 	if err != nil {
 		return err
 	}
