@@ -36,8 +36,7 @@ type BSCVoteProcessor struct {
 }
 
 func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *VotePoolExecutor,
-) *BSCVoteProcessor {
+	votePoolExecutor *VotePoolExecutor) *BSCVoteProcessor {
 	return &BSCVoteProcessor{
 		config:           cfg,
 		daoManager:       dao,

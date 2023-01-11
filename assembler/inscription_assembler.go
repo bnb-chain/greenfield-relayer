@@ -97,52 +97,62 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	} else {
 		indexDiff = len(relayerBlsPubKeys) - (inturnRelayerIdx - relayerIdx)
 	}
-	curRelayerRelayingTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
-	common.Logger.Infof("current relayer relaying time is %d", curRelayerRelayingTime)
+	curRelayerRelayingStartTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
+	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
 	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
-	isAlreadyFilled, err := a.validateSequenceFilled(curRelayerRelayingTime, nextSequence, channelId)
-	if err != nil {
-		return err
-	}
+	filled := make(chan struct{})
+	defer close(filled)
+	errC := make(chan error)
+	defer close(errC)
+	go a.validateSequenceFilled(filled, errC, nextSequence, channelId)
 
-	if isAlreadyFilled {
-		if err = a.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Filled); err != nil {
-			common.Logger.Errorf("failed to update tx status %s", tx)
+	for {
+		select {
+		case err = <-errC:
 			return err
+		case <-filled:
+			if err = a.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Filled); err != nil {
+				common.Logger.Errorf("failed to update tx status %s", tx)
+				return err
+			}
+			return nil
+		default:
+			if time.Now().Unix() >= curRelayerRelayingStartTime {
+				common.Logger.Infof("relaying transaction %s", tx.TxHash)
+				nonce, err := a.bscExecutor.GetClient().PendingNonceAt(context.Background(), a.bscExecutor.TxSender)
+				if err != nil {
+					return err
+				}
+				txHash, err := a.bscExecutor.CallBuildInSystemContract(int8(channelId), aggregatedSignature, nextSequence, util.BitSetToBigInt(valBitSet), ethcommon.Hex2Bytes(tx.PayLoad), nonce)
+				if err != nil {
+					return err
+				}
+				common.Logger.Infof("delivery transaction to BSC with txHash %s", txHash.String())
+				err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimTxHash(tx.Id, db.Filled, txHash.String())
+				if err != nil {
+					common.Logger.Errorf("failed to update Tx status %d", tx.Id)
+					return err
+				}
+			}
 		}
-		return nil
 	}
-	common.Logger.Infof("relaying transaction %s", tx.TxHash)
-	nonce, err := a.bscExecutor.GetClient().PendingNonceAt(context.Background(), a.bscExecutor.TxSender)
-	if err != nil {
-		return err
-	}
-	txHash, err := a.bscExecutor.CallBuildInSystemContract(int8(channelId), aggregatedSignature, nextSequence, util.BitSetToBigInt(valBitSet), ethcommon.Hex2Bytes(tx.PayLoad), nonce)
-	if err != nil {
-		return err
-	}
-	common.Logger.Infof("delivery transaction to BSC with txHash %s", txHash.String())
-	err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimTxHash(tx.Id, db.Filled, txHash.String())
-	if err != nil {
-		common.Logger.Errorf("failed to update Tx status %d", tx.Id)
-		return err
-	}
-	return nil
 }
 
-func (a *InscriptionAssembler) validateSequenceFilled(curRelayerRelayingTime int64, sequence uint64, channelID common.ChannelId) (bool, error) {
-	for time.Now().Unix() < curRelayerRelayingTime {
+func (a *InscriptionAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID common.ChannelId) {
+	ticker := time.NewTicker(RetryInterval)
+	defer ticker.Stop()
+	for {
 		nextDeliverySequence, err := a.inscriptionExecutor.GetNextDeliverySequenceForChannel(channelID)
 		if err != nil {
-			return false, err
+			errC <- err
 		}
-		if sequence <= nextDeliverySequence-1 {
+		if sequence < nextDeliverySequence {
 			common.Logger.Infof("sequence %d for channel %d has already been filled ", sequence, channelID)
-			return true, nil
+			filled <- struct{}{}
 		}
+		<-ticker.C
 	}
-	return false, nil
 }
 
 func (a *InscriptionAssembler) getBlsPrivateKey() string {

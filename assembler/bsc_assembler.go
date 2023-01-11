@@ -85,14 +85,15 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	claimTs := pkgs[0].TxTime
+	// packages for same oracle sequence share a timestamp
+	pkgTs := pkgs[0].TxTime
 
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
-	inturnRelayerIdx := int(claimTs) % len(relayerPubKeys)
-	inturnRelayerRelayingTime := claimTs + RelayWindowInSecond
+	inturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
+	inturnRelayerRelayingTime := pkgTs + RelayWindowInSecond
 
-	common.Logger.Infof("In-turn relayer relaying time is %d", inturnRelayerRelayingTime)
+	common.Logger.Infof("in-turn relayer relaying time is %d", inturnRelayerRelayingTime)
 
 	var indexDiff int
 	if relayerIdx >= inturnRelayerIdx {
@@ -100,48 +101,57 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	} else {
 		indexDiff = len(relayerPubKeys) - (inturnRelayerIdx - relayerIdx)
 	}
-	curRelayerRelayingTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
-	common.Logger.Infof("current relayer relaying time is %d", curRelayerRelayingTime)
+	curRelayerRelayingStartTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
+	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
 	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
+	filled := make(chan struct{})
+	defer close(filled)
+	errC := make(chan error)
+	defer close(errC)
+	go a.validateSequenceFilled(filled, errC, nextSequence)
 
-	//isAlreadyFilled, err := a.validateSequenceFilled(curRelayerRelayingTime, nextSequence, channelId)
-	//if err != nil {
-	//	return err
-	//}
-	//// if the sequence is already filled, update packages status to Filled in DB
-	//if isAlreadyFilled {
-	//	if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Filled); err != nil {
-	//		common.Logger.Errorf("failed to update packages status %s", pkgIds)
-	//		return err
-	//	}
-	//	return nil
-	//}
-	txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].Payload, aggregatedSignature, valBitSet.Bytes(), claimTs)
-	if err != nil {
-		return err
+	for {
+		select {
+		case err = <-errC:
+			return err
+		case <-filled:
+			if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Filled); err != nil {
+				common.Logger.Errorf("failed to update packages status %s", pkgIds)
+				return err
+			}
+			return nil
+		default:
+			if time.Now().Unix() >= curRelayerRelayingStartTime {
+				txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].Payload, aggregatedSignature, valBitSet.Bytes(), pkgTs)
+				if err != nil {
+					return err
+				}
+				common.Logger.Infof("claimed transaction with txHash %s", txHash)
+				err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Filled, txHash)
+				if err != nil {
+					common.Logger.Errorf("failed to update packages error %s", err.Error())
+					return err
+				}
+			}
+		}
 	}
-	common.Logger.Infof("claimed transaction with txHash %s", txHash)
-	err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimTxHash(pkgIds, db.Filled, txHash)
-	if err != nil {
-		common.Logger.Errorf("failed to update packages error %s", err.Error())
-		return err
-	}
-	return nil
 }
 
-func (a *BSCAssembler) validateSequenceFilled(curRelayerRelayingTime int64, sequence uint64, channelID common.ChannelId) (bool, error) {
-	for time.Now().Unix() < curRelayerRelayingTime {
-		nextDeliverySequence, err := a.inscriptionExecutor.GetNextDeliverySequenceForChannel(channelID)
+func (a *BSCAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64) {
+	ticker := time.NewTicker(RetryInterval)
+	defer ticker.Stop()
+	for {
+		nextDeliverySequence, err := a.bscExecutor.GetNextDeliveryOracleSequence()
 		if err != nil {
-			return false, err
+			errC <- err
 		}
-		if sequence <= nextDeliverySequence-1 {
-			common.Logger.Infof("sequence %d for channel %d has already been filled ", sequence, channelID)
-			return true, nil
+		if sequence < nextDeliverySequence {
+			common.Logger.Infof("Oracle sequence %d for has already been filled ", sequence)
+			filled <- struct{}{}
 		}
+		<-ticker.C
 	}
-	return false, nil
 }
 
 func (a *BSCAssembler) getBlsPrivateKey() string {
