@@ -3,6 +3,7 @@ package listener
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -113,8 +114,7 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 		return err
 	}
 	if isForked {
-		relayercommon.Logger.Infof("deleted block at height %d from DB due to it is forked", latestPolledBlock.Height)
-		return nil
+		return errors.New("There is fork ")
 	}
 	_, err = l.getLogsFromHeader(nextHeightHeader)
 	if err != nil {
@@ -132,7 +132,7 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 		relayPkg.OracleSequence = 10
 		relayPkg.PackageSequence = uint64(i)
 		relayPkg.PayLoad = hex.EncodeToString(GetPayload(uint64(ts)))
-		relayPkg.Height = 0
+		relayPkg.Height = height
 		relayPkg.TxHash = "hash"
 		relayPkg.TxIndex = 1
 		relayPkg.Status = db.Saved
@@ -197,6 +197,8 @@ func (l *BSCListener) validateLatestPolledBlockIsForkedAndDelete(latestPolledBlo
 		if err != nil {
 			return true, err
 		}
+		relayercommon.Logger.Infof("deleted block at height %d from DB due to it is forked", latestPolledBlock.Height)
+		return true, nil
 	}
 	return false, nil
 }
