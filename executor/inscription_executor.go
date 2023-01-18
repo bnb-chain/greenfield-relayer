@@ -116,7 +116,6 @@ func initInscriptionClients(rpcAddrs, grpcAddrs []string) []*InscriptionClient {
 			UpdatedAt:          time.Now(),
 		})
 	}
-
 	return inscriptionClients
 }
 
@@ -271,14 +270,14 @@ func (e *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommo
 
 // GetNextDeliverySequenceForChannel call dest chain(BSC) to return a sequence# which should be used.
 func (e *InscriptionExecutor) GetNextDeliverySequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
-	sequence, err := e.BscExecutor.GetNextSequence(channelID)
+	sequence, err := e.BscExecutor.GetNextReceiveSequenceForChannel(channelID)
 	if err != nil {
 		return 0, err
 	}
 	return sequence, nil
 }
 
-func (e *InscriptionExecutor) GetNextOracleSequence() (uint64, error) {
+func (e *InscriptionExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 	path := fmt.Sprintf("/store/%s/%s", SequenceStoreName, "key")
 	key := BuildChannelSequenceKey(relayercommon.ChainId(e.config.BSCConfig.ChainId), 0x00)
 	response, err := e.getRpcClient().ABCIQuery(context.Background(), path, key)
@@ -291,8 +290,8 @@ func (e *InscriptionExecutor) GetNextOracleSequence() (uint64, error) {
 	return binary.BigEndian.Uint64(response.Response.Value), nil
 }
 
-// GetNextSequenceForChannel gets the sequence specifically for cross-chain package's channel
-func (e *InscriptionExecutor) GetNextSequenceForChannel(id relayercommon.ChannelId) (uint64, error) {
+// GetNextReceiveSequenceForChannel gets the sequence specifically for cross-chain package's channel
+func (e *InscriptionExecutor) GetNextReceiveSequenceForChannel(id relayercommon.ChannelId) (uint64, error) {
 	path := fmt.Sprintf("/store/crosschain/key")
 	key := BuildChannelSequenceKey(relayercommon.ChainId(e.config.BSCConfig.ChainId), id)
 	response, err := e.getRpcClient().ABCIQuery(context.Background(), path, key)
@@ -380,7 +379,7 @@ func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, er
 func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64) (string, error) {
 	txConfig := authtx.NewTxConfig(Cdc(), authtx.DefaultSignModes)
 	txBuilder := txConfig.NewTxBuilder()
-	seq, err := e.GetNextOracleSequence()
+	seq, err := e.GetNextReceiveOracleSequence()
 	if err != nil {
 		return "", err
 	}

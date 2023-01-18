@@ -1,7 +1,7 @@
-# How to run test
+# How to run test in local
 
-To run the integration tests, Database Mysql instance is required to be running for onchain data storage.
-A docker compose file is provided to quickly set it up.
+1. Set up BSC and Inscription and modify the `config_test.json` file
+2. A Mysql instance is required to be running for onchain data storage. A docker compose file is provided to quickly set it up.
 
 Start the Mysql container in detach mode
 ```shell script

@@ -40,7 +40,6 @@ func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId common
 	for {
 		err := a.process(channelId)
 		if err != nil {
-			panic(err)
 			common.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
 			time.Sleep(RetryInterval)
 		}

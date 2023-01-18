@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	//Change your relayers Bls private key when integration test using local env
 	Relayer1HexBlsPrivKey = "2969268e6722a8e16579e7a3380f83a2dd0b15478a2994cb0ac6480e1aead999" // for test only
 	Relayer2HexBlsPrivKey = "6f235c2c0d91ecdf961f4409061a785d456b9bc4b398e2a0940378397772cb0b"
 )
@@ -36,9 +37,9 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	//Given: Prepare cross-chain packages to be sent. Define the channel id, oracle sequence and package sequence are
 	// retrieved from destination chain(Inscription),
 	channelId := uint8(1)
-	oracleSeq, err := inscriptionExecutor.GetNextOracleSequence()
+	oracleSeq, err := inscriptionExecutor.GetNextReceiveOracleSequence()
 	require.NoError(t, err)
-	packageStartSeq, err := inscriptionExecutor.GetNextSequenceForChannel(relayercommon.ChannelId(channelId))
+	packageStartSeq, err := inscriptionExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
 	require.NoError(t, err)
 
 	relayPkgs := make([]*model.BscRelayPackage, 0)
@@ -69,6 +70,8 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	// Inscription Votepool, gathering votes from votepool, and assembler them to claim in Inscription.
 	err = daoManager.BSCDao.SaveBatchPackages(relayPkgs)
 	require.NoError(t, err)
+
+	// This is needed in local testing, if move to use testnet, can trigger transaction use cli.
 	go broadcastVotesFromOtherRelayers(daoManager, app.BSCRelayer.VotePoolExecutor, oracleSeq)
 
 	// The first in-turn relayer has 40 seconds relaying window, so that need to wait for a  while if current one is not the first in-turn.
@@ -85,9 +88,9 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	require.EqualValues(t, packageStartSeq, pkgs[0].PackageSequence)
 	require.EqualValues(t, endSeq, pkgs[packagesSize-1].PackageSequence)
 
-	nextSeq, err := inscriptionExecutor.GetNextSequenceForChannel(relayercommon.ChannelId(channelId))
+	nextSeq, err := inscriptionExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
 	require.EqualValues(t, endSeq+1, nextSeq)
-	nextOracleSeq, err := inscriptionExecutor.GetNextOracleSequence()
+	nextOracleSeq, err := inscriptionExecutor.GetNextReceiveOracleSequence()
 	require.EqualValues(t, oracleSeq+1, nextOracleSeq)
 
 }

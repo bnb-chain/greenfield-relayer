@@ -227,7 +227,7 @@ func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, erro
 	return header, nil
 }
 
-func (e *BSCExecutor) GetNextSequence(channelID relayercommon.ChannelId) (uint64, error) {
+func (e *BSCExecutor) GetNextReceiveSequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
 	crossChainInstance, err := crosschain.NewCrosschain(CrossChainContractAddr, e.GetRpcClient())
 	if err != nil {
 		return 0, err
@@ -243,7 +243,7 @@ func (e *BSCExecutor) GetNextSequence(channelID relayercommon.ChannelId) (uint64
 }
 
 func (e *BSCExecutor) GetNextDeliveryOracleSequence() (uint64, error) {
-	sequence, err := e.InscriptionExecutor.GetNextOracleSequence()
+	sequence, err := e.InscriptionExecutor.GetNextReceiveOracleSequence()
 	if err != nil {
 		return 0, err
 	}
@@ -274,9 +274,7 @@ func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Has
 	if err != nil {
 		return common.Hash{}, err
 	}
-	//TODO
-	//header, err := e.QueryTendermintHeaderWithRetry(int64(height))
-	header, err := e.QueryLatestTendermintHeaderWithRetry()
+	header, err := e.QueryTendermintHeaderWithRetry(int64(height))
 	if err != nil {
 		return common.Hash{}, err
 	}

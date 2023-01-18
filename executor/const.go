@@ -23,6 +23,6 @@ const (
 var (
 	PrefixForReceiveSequenceKey = []byte{0xf1}
 
-	InscriptionLightClientContractAddr = ethereumcommon.HexToAddress("0xeDC2E0dDbB7F10C3CA10c2c964C134b758044Bce")
-	CrossChainContractAddr             = ethereumcommon.HexToAddress("0x58d1A4Cb3622B3201Fe8E21B65824fa624a0026C")
+	InscriptionLightClientContractAddr = ethereumcommon.HexToAddress("0x71b750F84B4d1d72C17EcEba811fA6E4C8c9CfdC")
+	CrossChainContractAddr             = ethereumcommon.HexToAddress("0x2078fEEF78BD06AcDdb46619a681327aaEeeAE20")
 )

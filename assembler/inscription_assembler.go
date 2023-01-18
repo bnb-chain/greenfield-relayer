@@ -2,13 +2,13 @@ package assembler
 
 import (
 	"encoding/hex"
+	"github.com/bnb-chain/inscription-relayer/db/model"
 	"time"
 
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/util"
 	"github.com/bnb-chain/inscription-relayer/vote"
@@ -43,7 +43,6 @@ func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId co
 	for {
 		err := a.process(channelId)
 		if err != nil {
-
 			common.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
 			time.Sleep(RetryInterval)
 		}
@@ -58,20 +57,18 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 
 	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, db.AllVoted)
 	if err != nil {
-		common.Logger.Errorf("failed to get AllVoted tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err
 	}
 	if (*tx == model.InscriptionRelayTransaction{}) {
 		return nil
 	}
-
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
 	if err != nil {
 		common.Logger.Errorf("failed to get votes for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 		return err
 	}
-	validators, err := a.inscriptionExecutor.BscExecutor.QueryCachedLatestValidators()
+	validators, err := a.bscExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
 	}
@@ -79,8 +76,8 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	// TODO Switch to use bsc validators
-	relayerBlsPubKeys, err := a.inscriptionExecutor.BscExecutor.GetValidatorsBlsPublicKey()
+
+	relayerBlsPubKeys, err := a.bscExecutor.GetValidatorsBlsPublicKey()
 	if err != nil {
 		return err
 	}

@@ -9,8 +9,6 @@ import (
 	"math/big"
 	"time"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/avast/retry-go/v4"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
@@ -90,7 +88,15 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 		if err != nil {
 			return err
 		}
+
+		// in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
+		// transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
 		if tx.Sequence < nextDeliverySequence {
+			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Filled)
+			if err != nil {
+				relayercommon.Logger.Errorf("failed to update packages error %s", err.Error())
+				return err
+			}
 			relayercommon.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
 			continue
 		}
@@ -152,9 +158,15 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 			if err != nil {
 				return err
 			}
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, tx.ChannelId, tx.Sequence, aggregatedPayload))
+			exist, err := p.daoManager.VoteDao.IsVoteExist(tx.ChannelId, tx.Sequence, hex.EncodeToString(v.PubKey[:]))
 			if err != nil {
 				return err
+			}
+			if !exist {
+				err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, tx.ChannelId, tx.Sequence, aggregatedPayload))
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		})
@@ -195,17 +207,12 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 
 // prepareEnoughValidVotesForTx fetches and validate votes result, store in vote table
 func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.InscriptionRelayTransaction) error {
-	// TODO Remove this after testing
-	// validators, err := p.inscriptionExecutor.QueryCachedLatestValidators()
-
 	localVote, err := p.daoManager.VoteDao.GetVoteByChannelIdAndSequenceAndPubKey(tx.ChannelId, tx.Sequence, hex.EncodeToString(p.blsPublicKey))
 	if err != nil {
 		return err
 	}
 
-	// TODO switch to query bsc valicators once ready
-	// validators, err := p.inscriptionExecutor.bscExecutor.QueryCachedLatestValidators()
-	validators, err := p.inscriptionExecutor.QueryCachedLatestValidators()
+	validators, err := p.inscriptionExecutor.BscExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
 	}
@@ -217,8 +224,8 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 	return nil
 }
 
-// queryMoreThanTwoThirdVotesForTx queries votes from votePool   // TODO switch to BSC validators once ready
-func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []stakingtypes.Validator, txId int64) error {
+// queryMoreThanTwoThirdVotesForTx queries votes from votePool
+func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []executor.Validator, txId int64) error {
 	triedTimes := 0
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
@@ -315,18 +322,17 @@ func (p *InscriptionVoteProcessor) getEventHash(aggregatedPayload []byte) []byte
 	return crypto.Keccak256Hash(aggregatedPayload).Bytes()
 }
 
-// TODO switch to BSC validators once ready
-func (p *InscriptionVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []stakingtypes.Validator) bool {
+func (p *InscriptionVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []executor.Validator) bool {
 	for _, validator := range validators {
-		if bytes.Equal(v.PubKey[:], validator.RelayerBlsKey[:]) {
+		if bytes.Equal(v.PubKey[:], validator.BlsPublicKey[:]) {
 			return true
 		}
 	}
 	return false
 }
 
-// aggregatePayloadForTx aggregate required fields by concatenating their bytes, this will be used as payload when calling BSC smart contract
-
+// aggregatePayloadForTx aggregate required fields by concatenating their bytes, this will be used as payload when
+// calling BSC smart contract, and also used to generate eventHash for broadcasting vote
 func (p *InscriptionVoteProcessor) aggregatePayloadForTx(tx *model.InscriptionRelayTransaction) ([]byte, error) {
 	var aggregatedPayload []byte
 

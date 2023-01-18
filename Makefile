@@ -15,8 +15,6 @@ else
 	go build -o build/inscription-relayer -ldflags="$(ldflags)" main.go
 endif
 
-
-
 install:
 ifeq ($(OS),Windows_NT)
 	go install main.go
@@ -25,7 +23,7 @@ else
 endif
 
 build_docker:
-	go mod vendor # temporary, should be removed after open source
+	#go mod vendor # temporary, should be removed after open source
 	docker build . -t ${IMAGE_NAME}
 
 .PHONY: build install build_docker

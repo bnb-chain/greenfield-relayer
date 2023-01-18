@@ -2,7 +2,6 @@ package executor
 
 import (
 	"context"
-	"encoding/hex"
 	"github.com/ethereum/go-ethereum"
 	ethereumcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -37,7 +36,7 @@ func TestGetBlockHeader(t *testing.T) {
 
 func TestGetSequence(t *testing.T) {
 	e, _ := InitExecutors()
-	seq, err := e.GetNextSequence(1)
+	seq, err := e.GetNextReceiveSequenceForChannel(1)
 	require.NoError(t, err)
 	t.Log(seq)
 }
@@ -53,25 +52,21 @@ func TestQueryLatestValidators(t *testing.T) {
 	e, _ := InitExecutors()
 	relayers, err := e.QueryLatestValidators()
 	require.NoError(t, err)
-	t.Log(relayers[0].RelayerAddress)
-	t.Log(hex.EncodeToString(relayers[0].BlsPublicKey))
-
+	t.Log(relayers)
 }
 
 func TestSyncTendermintHeader(t *testing.T) {
 	e, _ := InitExecutors()
-	cliHeight, err := e.GetLightClientLatestHeight()
+	curLightClientHeight, err := e.GetLightClientLatestHeight()
 	require.NoError(t, err)
-	t.Log(cliHeight)
-	//insLaestheight, err := e.GetLatestBlockHeightWithRetry()
-	hash, err := e.SyncTendermintLightClientHeader(cliHeight + 1)
+	t.Log(curLightClientHeight)
+	hash, err := e.SyncTendermintLightClientHeader(curLightClientHeight + 1)
 	time.Sleep(10 * time.Second)
-
 	require.NoError(t, err)
 	t.Log(hash.String())
 	nextHeight, err := e.GetLightClientLatestHeight()
 	t.Log(nextHeight)
-	//require.EqualValues(t, cliHeight+1, nextHeight)
+	require.EqualValues(t, curLightClientHeight+1, nextHeight)
 }
 
 func TestGetLogsFromHeader(t *testing.T) {

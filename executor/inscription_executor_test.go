@@ -6,16 +6,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetInsBlockHeight(t *testing.T) {
+func TestGetLatestBlockHeightWithRetry(t *testing.T) {
 	_, e := InitExecutors()
 	height, err := e.GetLatestBlockHeightWithRetry()
 	require.NoError(t, err)
 	t.Log(height)
 }
 
-func TestGetNextOracleSequence(t *testing.T) {
+func TestGetNextReceiveOracleSequence(t *testing.T) {
 	_, e := InitExecutors()
-	oracleSeq, err := e.GetNextOracleSequence()
+	oracleSeq, err := e.GetNextReceiveOracleSequence()
+	require.NoError(t, err)
+	t.Log(oracleSeq)
+}
+
+func TestGetNextReceiveSequenceForChannel(t *testing.T) {
+	_, e := InitExecutors()
+	oracleSeq, err := e.GetNextReceiveSequenceForChannel(2)
 	require.NoError(t, err)
 	t.Log(oracleSeq)
 }

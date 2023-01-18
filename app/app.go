@@ -43,8 +43,8 @@ func NewApp(cfg *config.Config) *App {
 	votePoolExecutor := vote.NewVotePoolExecutor(cfg)
 
 	// listener
-	inscriptionListener := listener.NewInscriptionListener(cfg, inscriptionExecutor, daoManager)
-	bscListener := listener.NewBSCListener(cfg, bscExecutor, daoManager)
+	inscriptionListener := listener.NewInscriptionListener(cfg, inscriptionExecutor, bscExecutor, daoManager)
+	bscListener := listener.NewBSCListener(cfg, bscExecutor, inscriptionExecutor, daoManager)
 
 	// vote signer
 	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.VotePoolConfig.BlsPrivateKey))

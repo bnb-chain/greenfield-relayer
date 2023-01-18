@@ -27,6 +27,14 @@ func InitTestApp() app.App {
 	if err != nil {
 		panic(err)
 	}
+	err = db.Migrator().DropTable(&model.InscriptionRelayTransaction{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.Migrator().DropTable(&model.InscriptionBlock{})
+	if err != nil {
+		panic(err)
+	}
 	return *app.NewApp(cfg)
 }
 

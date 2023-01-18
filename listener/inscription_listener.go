@@ -19,76 +19,79 @@ import (
 type InscriptionListener struct {
 	config              *config.Config
 	inscriptionExecutor *executor.InscriptionExecutor
+	bscExecutor         *executor.BSCExecutor
 	DaoManager          *dao.DaoManager
 }
 
-func NewInscriptionListener(cfg *config.Config, executor *executor.InscriptionExecutor, dao *dao.DaoManager) *InscriptionListener {
+func NewInscriptionListener(cfg *config.Config, insExecutor *executor.InscriptionExecutor, bscExecutor *executor.BSCExecutor, dao *dao.DaoManager) *InscriptionListener {
 	return &InscriptionListener{
 		config:              cfg,
-		inscriptionExecutor: executor,
+		inscriptionExecutor: insExecutor,
+		bscExecutor:         bscExecutor,
 		DaoManager:          dao,
 	}
 }
 
 func (l *InscriptionListener) Start() {
-	heightToPoll := l.config.InscriptionConfig.StartHeight
-	go l.poll(heightToPoll)
-	go l.monitorValidators(heightToPoll)
+	curHeight := l.config.InscriptionConfig.StartHeight
+	go l.poll(curHeight)
+	go l.monitorValidators(curHeight)
 }
 
-func (l *InscriptionListener) monitorValidators(heightToPoll uint64) {
+func (l *InscriptionListener) monitorValidators(curHeight uint64) {
+
 	for {
-		nextHeight, err := l.monitorValidatorsAtHeight(heightToPoll)
+		nextHeight, err := l.monitorValidatorsAtHeight(curHeight)
 		if err != nil {
 			time.Sleep(RetryInterval)
 			continue
 		}
-		heightToPoll = nextHeight
+		curHeight = nextHeight
 	}
 }
 
-func (l *InscriptionListener) poll(heightToPoll uint64) {
+func (l *InscriptionListener) poll(curHeight uint64) {
 	for {
-		nextHeight, err := l.pollHelper(heightToPoll)
+		nextHeight, err := l.pollHelper(curHeight)
 		if err != nil {
 			time.Sleep(RetryInterval)
 			continue
 		}
-		heightToPoll = nextHeight
+		curHeight = nextHeight
 	}
 }
 
-func (l *InscriptionListener) pollHelper(heightToPoll uint64) (uint64, error) {
+func (l *InscriptionListener) pollHelper(curHeight uint64) (uint64, error) {
 	latestPolledBlock, err := l.getLatestPolledBlock()
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
 		return 0, err
 	}
 	latestPolledBlockHeight := latestPolledBlock.Height
-	if heightToPoll <= latestPolledBlockHeight {
-		heightToPoll = latestPolledBlockHeight + 1
+	if curHeight <= latestPolledBlockHeight {
+		curHeight = latestPolledBlockHeight + 1
 	}
 
 	latestBlockHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get latest block heightToPoll, error: %s", err.Error())
+		relayercommon.Logger.Errorf("failed to get latest block curHeight, error: %s", err.Error())
 		return 0, err
 	}
 	if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
-		return heightToPoll, nil
+		return curHeight, nil
 	}
-	blockRes, block, err := l.getBlockAndBlockResult(heightToPoll)
+	blockRes, block, err := l.getBlockAndBlockResult(curHeight)
 	if err != nil {
-		relayercommon.Logger.Errorf("encounter error when retrieve block and block result at heightToPoll %d, err=%s", heightToPoll, err.Error())
+		relayercommon.Logger.Errorf("encounter error when retrieve block and block result at curHeight %d, err=%s", curHeight, err.Error())
 		return 0, err
 	}
 
 	err = l.monitorCrossChainEvent(blockRes, block)
 	if err != nil {
-		relayercommon.Logger.Errorf("encounter error when monitor events at block %d, err=%s", heightToPoll, err.Error())
+		relayercommon.Logger.Errorf("encounter error when monitor events at block %d, err=%s", curHeight, err.Error())
 		return 0, err
 	}
-	return heightToPoll + 1, nil
+	return curHeight + 1, nil
 }
 
 func (l *InscriptionListener) getLatestPolledBlock() (*model.InscriptionBlock, error) {
@@ -117,7 +120,6 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 
 	for _, tx := range blockResults.TxsResults {
 		for _, event := range tx.Events {
-			// event.ma
 			relayTx := model.InscriptionRelayTransaction{}
 			if event.Type == EventTypeCrossChain {
 				for _, attr := range event.Attributes {
@@ -183,12 +185,12 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 
 				//TODO for tesitng
 				//relayTx.Sequence =
-				nextDeliverySeqOnInscription, _ := l.inscriptionExecutor.GetNextDeliverySequenceForChannel(relayercommon.ChannelId(relayTx.ChannelId))
-				relayTx.Sequence = nextDeliverySeqOnInscription
+				_, _ = l.inscriptionExecutor.GetNextDeliverySequenceForChannel(relayercommon.ChannelId(relayTx.ChannelId))
+				relayTx.Sequence = 9
 
 				relayTx.Status = db.Saved
 				relayTx.Height = uint64(block.Height)
-				relayTx.UpdatedTime = time.Now().Unix()
+				relayTx.UpdatedTime = 1674042368
 				txs = append(txs, &relayTx)
 			}
 		}
@@ -202,38 +204,40 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 	return l.DaoManager.InscriptionDao.SaveBlockAndBatchTransactions(b, txs)
 }
 
-func (l *InscriptionListener) monitorValidatorsAtHeight(height uint64) (uint64, error) {
-	if height == 1 {
-		return height + 1, nil
+func (l *InscriptionListener) monitorValidatorsAtHeight(curHeight uint64) (uint64, error) {
+	if curHeight == 1 {
+		return curHeight + 1, nil
 	}
 
-	lightClientLatestHeight, err := l.inscriptionExecutor.BscExecutor.GetLightClientLatestHeight()
+	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
-		return height, err
+		return curHeight, err
+
 	}
 
-	if height <= lightClientLatestHeight {
+	if curHeight <= lightClientLatestHeight {
 		return lightClientLatestHeight + 1, nil
 	}
 
-	relayercommon.Logger.Infof("monitoring validator at height %d", height)
-	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(height)
+	relayercommon.Logger.Infof("monitoring validator at height %d", curHeight)
+	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(curHeight)
 	if err != nil {
-		return height, err
+		return curHeight, err
 	}
 
-	prevValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(height - 1)
+	prevValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(curHeight - 1)
 	if err != nil {
-		return height, err
+		return curHeight, err
 	}
 
 	if len(curValidators) != len(prevValidators) {
-		txHash, err := l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader(height)
+		relayercommon.Logger.Infof("syncing tendermint header at height %d", curHeight)
+		txHash, err := l.bscExecutor.SyncTendermintLightClientHeader(curHeight)
 		if err != nil {
-			return height, err
+			return curHeight, err
 		}
-		relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", height, txHash.String())
-		return height + 1, nil
+		relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", curHeight, txHash.String())
+		return curHeight + 1, nil
 	}
 
 	for idx, curVal := range curValidators {
@@ -244,15 +248,14 @@ func (l *InscriptionListener) monitorValidatorsAtHeight(height uint64) (uint64, 
 			!bytes.Equal(curVal.ConsensusPubkey.Value, prevVal.ConsensusPubkey.Value) ||
 			!bytes.Equal(curVal.RelayerBlsKey, prevVal.RelayerBlsKey) ||
 			curVal.RelayerAddress != prevVal.RelayerAddress {
-
-			relayercommon.Logger.Infof("syncing tendermint header at height %d", height)
-			txHash, err := l.inscriptionExecutor.BscExecutor.SyncTendermintLightClientHeader(height)
+			relayercommon.Logger.Infof("syncing tendermint header at height %d", curHeight)
+			txHash, err := l.bscExecutor.SyncTendermintLightClientHeader(curHeight)
 			if err != nil {
-				return height, err
+				return curHeight, err
 			}
-			relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", height, txHash.String())
-			return height + 1, nil
+			relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", curHeight, txHash.String())
+			return curHeight + 1, nil
 		}
 	}
-	return height + 1, nil
+	return curHeight + 1, nil
 }

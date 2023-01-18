@@ -2,7 +2,6 @@ package listener
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -23,22 +22,24 @@ import (
 )
 
 type BSCListener struct {
-	config        *config.Config
-	bscExecutor   *executor.BSCExecutor
-	DaoManager    *dao.DaoManager
-	crossChainAbi abi.ABI
+	config              *config.Config
+	bscExecutor         *executor.BSCExecutor
+	inscriptionExecutor *executor.InscriptionExecutor
+	DaoManager          *dao.DaoManager
+	crossChainAbi       abi.ABI
 }
 
-func NewBSCListener(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager) *BSCListener {
+func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, insExecutor *executor.InscriptionExecutor, dao *dao.DaoManager) *BSCListener {
 	crossChainAbi, err := abi.JSON(strings.NewReader(crosschain.CrosschainMetaData.ABI))
 	if err != nil {
 		panic("marshal abi error")
 	}
 	return &BSCListener{
-		config:        cfg,
-		bscExecutor:   executor,
-		DaoManager:    dao,
-		crossChainAbi: crossChainAbi,
+		config:              cfg,
+		bscExecutor:         bscExecutor,
+		inscriptionExecutor: insExecutor,
+		DaoManager:          dao,
+		crossChainAbi:       crossChainAbi,
 	}
 }
 
@@ -93,14 +94,14 @@ func (l *BSCListener) getLatestPolledBlock() (*model.BscBlock, error) {
 	return block, nil
 }
 
-func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model.BscBlock, height uint64) error {
-	relayercommon.Logger.Infof("retrieve BSC block header at height=%d", height)
-	nextHeightHeader, err := l.bscExecutor.GetBlockHeaderAtHeight(height)
+func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model.BscBlock, curHeight uint64) error {
+	relayercommon.Logger.Infof("retrieve BSC block header at height=%d", curHeight)
+	nextHeightHeader, err := l.bscExecutor.GetBlockHeaderAtHeight(curHeight)
 	if err != nil {
 		return err
 	}
 	if nextHeightHeader == nil {
-		relayercommon.Logger.Infof("BSC header at height %d not found", height)
+		relayercommon.Logger.Infof("BSC header at height %d not found", curHeight)
 		return nil
 	}
 
@@ -109,22 +110,27 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 		return err
 	}
 	if isForked {
-		return errors.New("There is fork ")
+		return fmt.Errorf("There is fork at current  block height, height=%d", curHeight)
 	}
 	logs, err := l.getLogsFromHeader(nextHeightHeader)
 	if err != nil {
-		return fmt.Errorf("failed to get logs at height, height=%d, err=%s", height, err.Error())
+		return fmt.Errorf("failed to get logs at height, height=%d, err=%s", curHeight, err.Error())
 	}
 	relayPkgs := make([]*model.BscRelayPackage, 0)
 	for _, log := range logs {
 		relayercommon.Logger.Infof("get log: %d, %s, %s", log.BlockNumber, log.Topics[0].String(), log.TxHash.String())
-		relayPkg, err := ParseRelayPackage(&l.crossChainAbi, &log, nextHeightHeader.Time)
+		relayPkg, err := ParseRelayPackage(&l.crossChainAbi, &log, nextHeightHeader.Time, relayercommon.ChainId(l.config.InscriptionConfig.ChainId), relayercommon.ChainId(l.config.BSCConfig.ChainId))
 		if err != nil {
-			return fmt.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
+			relayercommon.Logger.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
+			continue
 		}
 		//TODO  remove after testing
 		nextDeliverySeqOnInscription, err := l.bscExecutor.GetNextDeliveryOracleSequence()
 		relayPkg.OracleSequence = nextDeliverySeqOnInscription
+		seq, err := l.inscriptionExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(relayPkg.ChannelId))
+		relayPkg.OracleSequence = nextDeliverySeqOnInscription
+		relayPkg.PackageSequence = seq
+
 		if relayPkg == nil {
 			continue
 		}
@@ -134,7 +140,7 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 	b := &model.BscBlock{
 		BlockHash:  nextHeightHeader.Hash().String(),
 		ParentHash: nextHeightHeader.ParentHash.String(),
-		Height:     height,
+		Height:     curHeight,
 		BlockTime:  int64(nextHeightHeader.Time),
 	}
 	return l.DaoManager.BSCDao.SaveBlockAndBatchPackages(b, relayPkgs)
