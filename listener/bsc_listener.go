@@ -44,14 +44,14 @@ func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, insEx
 }
 
 func (l *BSCListener) Start() {
-	heightToPoll := l.config.BSCConfig.StartHeight
+	curHeight := l.config.BSCConfig.StartHeight
 	for {
-		nextHeight, err := l.poll(heightToPoll)
+		nextHeight, err := l.poll(curHeight)
 		if err != nil {
 			time.Sleep(RetryInterval)
 			continue
 		}
-		heightToPoll = nextHeight
+		curHeight = nextHeight
 	}
 }
 

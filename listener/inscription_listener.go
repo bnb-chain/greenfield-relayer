@@ -86,7 +86,7 @@ func (l *InscriptionListener) pollHelper(curHeight uint64) (uint64, error) {
 		return 0, err
 	}
 
-	err = l.monitorCrossChainEvent(blockRes, block)
+	err = l.monitorCrossChainEvents(blockRes, block)
 	if err != nil {
 		relayercommon.Logger.Errorf("encounter error when monitor events at block %d, err=%s", curHeight, err.Error())
 		return 0, err
@@ -115,7 +115,7 @@ func (l *InscriptionListener) getBlockAndBlockResult(height uint64) (*ctypes.Res
 	return blockResults, block, nil
 }
 
-func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
+func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
 	txs := make([]*model.InscriptionRelayTransaction, 0)
 
 	for _, tx := range blockResults.TxsResults {
@@ -185,12 +185,12 @@ func (l *InscriptionListener) monitorCrossChainEvent(blockResults *ctypes.Result
 
 				//TODO for tesitng
 				//relayTx.Sequence =
-				_, _ = l.inscriptionExecutor.GetNextDeliverySequenceForChannel(relayercommon.ChannelId(relayTx.ChannelId))
-				relayTx.Sequence = 9
+				seq, _ := l.inscriptionExecutor.GetNextDeliverySequenceForChannel(relayercommon.ChannelId(relayTx.ChannelId))
+				relayTx.Sequence = seq
 
 				relayTx.Status = db.Saved
 				relayTx.Height = uint64(block.Height)
-				relayTx.UpdatedTime = 1674042368
+				relayTx.UpdatedTime = time.Now().Unix()
 				txs = append(txs, &relayTx)
 			}
 		}

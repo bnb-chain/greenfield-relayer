@@ -20,7 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
 )
@@ -106,43 +105,8 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 		}
 		v := p.constructVoteAndSign(aggregatedPayload)
 
-		// TODO remove testing purpose code
-		bs2 := common.Hex2Bytes("2969268e6722a8e16579e7a3380f83a2dd0b15478a2994cb0ac6480e1aead999")
-		secretKey2, err := blst.SecretKeyFromBytes(bs2)
-		if err != nil {
-			panic(err)
-		}
-		eh := p.getEventHash(aggregatedPayload)
-		pubKey2 := secretKey2.PublicKey()
-		sign2 := secretKey2.Sign(eh).Marshal()
-
-		mockVoteFromRelayer2 := &votepool.Vote{
-			PubKey:    pubKey2.Marshal(),
-			Signature: sign2,
-			EventType: 1,
-			EventHash: eh,
-		}
-
-		// TODO remove testing purpose code
-		bs3 := common.Hex2Bytes("6f235c2c0d91ecdf961f4409061a785d456b9bc4b398e2a0940378397772cb0b")
-		secretKey3, err := blst.SecretKeyFromBytes(bs3)
-		if err != nil {
-			panic(err)
-		}
-		pubKey3 := secretKey3.PublicKey()
-		sign3 := secretKey3.Sign(eh).Marshal()
-
-		mockVoteFromRelayer3 := &votepool.Vote{
-			PubKey:    pubKey3.Marshal(),
-			Signature: sign3,
-			EventType: 1,
-			EventHash: eh,
-		}
-
 		// broadcast v
 		if err = retry.Do(func() error {
-			err = p.votePoolExecutor.BroadcastVote(mockVoteFromRelayer3)
-			err = p.votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
 			err = p.votePoolExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)

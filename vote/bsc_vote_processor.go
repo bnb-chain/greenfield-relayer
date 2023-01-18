@@ -130,7 +130,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 
 		encodedPayload, err := rlp.EncodeToBytes(aggPkgs)
 		blsClaim := oracletypes.BlsClaim{
-			// chain ids are validated when persisted into DB, non-matched chain ids packages would be omitted
+			// chain ids are validated when packages persisted into DB, non-matched ones would be omitted
 			SrcChainId:  uint32(p.config.BSCConfig.ChainId),
 			DestChainId: uint32(p.config.InscriptionConfig.ChainId),
 			Timestamp:   uint64(pkgsForSeq[0].TxTime),
