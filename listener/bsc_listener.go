@@ -124,12 +124,6 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 			relayercommon.Logger.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
 			continue
 		}
-		//TODO  remove after testing
-		nextDeliverySeqOnInscription, err := l.bscExecutor.GetNextDeliveryOracleSequence()
-		relayPkg.OracleSequence = nextDeliverySeqOnInscription
-		seq, err := l.inscriptionExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(relayPkg.ChannelId))
-		relayPkg.OracleSequence = nextDeliverySeqOnInscription
-		relayPkg.PackageSequence = seq
 
 		if relayPkg == nil {
 			continue

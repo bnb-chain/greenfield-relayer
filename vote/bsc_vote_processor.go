@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"sort"
 	"time"
 
@@ -144,9 +142,6 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		channelId := relayercommon.OracleChannelId
 		v := p.constructVoteAndSign(eventHash[:])
 
-		//TODO remove after test
-		broadcastVotesFromOtherRelayers(v, p.votePoolExecutor)
-
 		// broadcast v
 		if err = retry.Do(func() error {
 			err = p.votePoolExecutor.BroadcastVote(v)
@@ -193,7 +188,6 @@ func (p *BSCVoteProcessor) CollectVotes() {
 
 func (p *BSCVoteProcessor) collectVotes() error {
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(db.SelfVoted)
-	// check if they are processed, (in old block)
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
 		return err
@@ -337,38 +331,4 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []stak
 		}
 	}
 	return false
-}
-
-func broadcastVotesFromOtherRelayers(localVote *votepool.Vote,
-	votePoolExecutor *VotePoolExecutor) {
-
-	secretKey1, err := blst.SecretKeyFromBytes(common.Hex2Bytes("2969268e6722a8e16579e7a3380f83a2dd0b15478a2994cb0ac6480e1aead999"))
-	if err != nil {
-		panic(err)
-	}
-	pubKey1 := secretKey1.PublicKey()
-	sign1 := secretKey1.Sign(localVote.EventHash[:]).Marshal()
-
-	mockVoteFromRelayer1 := &votepool.Vote{
-		PubKey:    pubKey1.Marshal(),
-		Signature: sign1,
-		EventType: 2,
-		EventHash: localVote.EventHash[:],
-	}
-
-	secretKey2, err := blst.SecretKeyFromBytes(common.Hex2Bytes("6f235c2c0d91ecdf961f4409061a785d456b9bc4b398e2a0940378397772cb0b"))
-	if err != nil {
-		panic(err)
-	}
-	pubKey2 := secretKey2.PublicKey()
-	sign2 := secretKey2.Sign(localVote.EventHash[:]).Marshal()
-
-	mockVoteFromRelayer2 := &votepool.Vote{
-		PubKey:    pubKey2.Marshal(),
-		Signature: sign2,
-		EventType: 2,
-		EventHash: localVote.EventHash[:],
-	}
-	votePoolExecutor.BroadcastVote(mockVoteFromRelayer1)
-	votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
 }

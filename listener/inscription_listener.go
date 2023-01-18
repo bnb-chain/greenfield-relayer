@@ -183,11 +183,6 @@ func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.Resul
 					}
 				}
 
-				//TODO for tesitng
-				//relayTx.Sequence =
-				seq, _ := l.inscriptionExecutor.GetNextDeliverySequenceForChannel(relayercommon.ChannelId(relayTx.ChannelId))
-				relayTx.Sequence = seq
-
 				relayTx.Status = db.Saved
 				relayTx.Height = uint64(block.Height)
 				relayTx.UpdatedTime = time.Now().Unix()
