@@ -85,10 +85,10 @@ func (d *InscriptionDao) UpdateTransactionStatus(id int64, status db.TxStatus) e
 	return err
 }
 
-func (d *InscriptionDao) UpdateTransactionStatusAndClaimTxHash(id int64, status db.TxStatus, claimTxHash string) error {
+func (d *InscriptionDao) UpdateTransactionStatusAndClaimedTxHash(id int64, status db.TxStatus, claimedTxHash string) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.InscriptionRelayTransaction{}).Where("id = ?", id).Updates(
-			model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
+			model.InscriptionRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimedTxHash: claimedTxHash}).Error
 	})
 }
 

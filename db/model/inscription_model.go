@@ -17,20 +17,20 @@ func (*InscriptionBlock) TableName() string {
 }
 
 type InscriptionRelayTransaction struct {
-	Id        int64
-	TxHash    string `gorm:"NOT NULL"`
-	Type      string `gorm:"NOT NULL"`
-	ChannelId uint8  `gorm:"NOT NULL;index:idx_inscription_relay_transaction_channel_seq_status"`
-	Sequence  uint64 `gorm:"NOT NULL;index:idx_inscription_relay_transaction_channel_seq_status"`
-	Height    uint64 `gorm:"NOT NULL;index:idx_inscription_relay_transaction_height"`
-
-	PayLoad    string `gorm:"type:text"`
-	RelayerFee string `gorm:"NOT NULL"`
-
-	ClaimTxHash string
-	Status      db.TxStatus `gorm:"NOT NULL;index:idx_inscription_relay_transaction_status"`
-	TxTime      int64       `gorm:"NOT NULL"`
-	UpdatedTime int64       `gorm:"NOT NULL"`
+	Id            int64
+	SrcChainId    uint32 `gorm:"NOT NULL"`
+	DestChainId   uint32 `gorm:"NOT NULL"`
+	ChannelId     uint8  `gorm:"NOT NULL;index:idx_inscription_relay_transaction_channel_seq_status"`
+	Sequence      uint64 `gorm:"NOT NULL;index:idx_inscription_relay_transaction_channel_seq_status"`
+	PackageType   uint32 `gorm:"NOT NULL"`
+	Height        uint64 `gorm:"NOT NULL;index:idx_inscription_relay_transaction_height"`
+	PayLoad       string `gorm:"type:text"`
+	RelayerFee    string `gorm:"NOT NULL"`
+	AckRelayerFee string `gorm:"NOT NULL"`
+	ClaimedTxHash string
+	Status        db.TxStatus `gorm:"NOT NULL;index:idx_inscription_relay_transaction_status"`
+	TxTime        int64       `gorm:"NOT NULL"`
+	UpdatedTime   int64       `gorm:"NOT NULL"`
 }
 
 func (*InscriptionRelayTransaction) TableName() string {

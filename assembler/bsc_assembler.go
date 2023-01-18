@@ -40,6 +40,7 @@ func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId common
 	for {
 		err := a.process(channelId)
 		if err != nil {
+			panic(err)
 			common.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
 			time.Sleep(RetryInterval)
 		}
@@ -70,8 +71,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	// TODO switch to query validators from BSC lightcleint
-	validators, err := a.inscriptionExecutor.QueryLatestValidators()
+	validators, err := a.inscriptionExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	relayerPubKeys, err := a.votePoolExecutor.GetValidatorsBlsPublicKey()
+	relayerPubKeys, err := a.inscriptionExecutor.GetValidatorsBlsPublicKey()
 	if err != nil {
 		return err
 	}
@@ -90,25 +90,27 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
-	inturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
-	inturnRelayerRelayingTime := pkgTs + RelayWindowInSecond
-
-	common.Logger.Infof("in-turn relayer relaying time is %d", inturnRelayerRelayingTime)
+	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
+	packagesRelayStartTime := pkgTs + BSCRelayingDelayInSecond
+	common.Logger.Infof("packages will be relayed starting at %d", packagesRelayStartTime)
 
 	var indexDiff int
-	if relayerIdx >= inturnRelayerIdx {
-		indexDiff = relayerIdx - inturnRelayerIdx
+	if relayerIdx >= firstInturnRelayerIdx {
+		indexDiff = relayerIdx - firstInturnRelayerIdx
 	} else {
-		indexDiff = len(relayerPubKeys) - (inturnRelayerIdx - relayerIdx)
+		indexDiff = len(relayerPubKeys) - (firstInturnRelayerIdx - relayerIdx)
 	}
-	curRelayerRelayingStartTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
-	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
+	curRelayerRelayingStartTime := int64(0)
+	if indexDiff == 0 {
+		curRelayerRelayingStartTime = packagesRelayStartTime
+	} else {
+		curRelayerRelayingStartTime = packagesRelayStartTime + FirstInturnRelayerRelayingWindowInSecond + int64(indexDiff-1)*InturnRelayerRelayingWindowInSecond
+	}
+	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
 	filled := make(chan struct{})
-	defer close(filled)
 	errC := make(chan error)
-	defer close(errC)
 	go a.validateSequenceFilled(filled, errC, nextSequence)
 
 	for {
@@ -123,7 +125,8 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 			return nil
 		default:
 			if time.Now().Unix() >= curRelayerRelayingStartTime {
-				txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].Payload, aggregatedSignature, valBitSet.Bytes(), pkgTs)
+				common.Logger.Infof("claiming transaction at %d", time.Now().Unix())
+				txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].ClaimPayload, aggregatedSignature, valBitSet.Bytes(), pkgTs)
 				if err != nil {
 					return err
 				}
@@ -133,6 +136,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 					common.Logger.Errorf("failed to update packages error %s", err.Error())
 					return err
 				}
+				return nil
 			}
 		}
 	}
@@ -147,7 +151,7 @@ func (a *BSCAssembler) validateSequenceFilled(filled chan struct{}, errC chan er
 			errC <- err
 		}
 		if sequence < nextDeliverySequence {
-			common.Logger.Infof("Oracle sequence %d for has already been filled ", sequence)
+			common.Logger.Infof("Oracle sequence %d has been filled ", sequence)
 			filled <- struct{}{}
 		}
 		<-ticker.C

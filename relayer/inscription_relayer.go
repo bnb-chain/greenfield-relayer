@@ -8,8 +8,8 @@ import (
 )
 
 type InscriptionRelayer struct {
-	listener             *listener.InscriptionListener
-	inscriptionExecutor  *executor.InscriptionExecutor
+	Listener             *listener.InscriptionListener
+	InscriptionExecutor  *executor.InscriptionExecutor
 	bscExecutor          *executor.BSCExecutor
 	votePoolExecutor     *vote.VotePoolExecutor
 	voteProcessor        *vote.InscriptionVoteProcessor
@@ -20,8 +20,8 @@ func NewInscriptionRelayer(listener *listener.InscriptionListener, inscriptionEx
 	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.InscriptionVoteProcessor, inscriptionAssembler *assembler.InscriptionAssembler,
 ) *InscriptionRelayer {
 	return &InscriptionRelayer{
-		listener:             listener,
-		inscriptionExecutor:  inscriptionExecutor,
+		Listener:             listener,
+		InscriptionExecutor:  inscriptionExecutor,
 		bscExecutor:          bscExecutor,
 		votePoolExecutor:     votePoolExecutor,
 		voteProcessor:        voteProcessor,
@@ -30,25 +30,30 @@ func NewInscriptionRelayer(listener *listener.InscriptionListener, inscriptionEx
 }
 
 func (r *InscriptionRelayer) Start() {
-	go r.monitorCrossChainEvents()
-	go r.signAndBroadcast()
-	go r.collectVotes()
-	go r.assembleTransactions()
+	go r.MonitorCrossChainEvents()
+	go r.SignAndBroadcast()
+	go r.CollectVotes()
+	go r.AssembleTransactions()
+	go r.UpdateCachedLatestValidators()
 }
 
-// monitorCrossChainEvents will monitor cross chain events for every block and persist into DB
-func (r *InscriptionRelayer) monitorCrossChainEvents() {
-	r.listener.Start()
+// MonitorCrossChainEvents will monitor cross chain events for every block and persist into DB
+func (r *InscriptionRelayer) MonitorCrossChainEvents() {
+	r.Listener.Start()
 }
 
-func (r *InscriptionRelayer) signAndBroadcast() {
+func (r *InscriptionRelayer) SignAndBroadcast() {
 	r.voteProcessor.SignAndBroadcast()
 }
 
-func (r *InscriptionRelayer) collectVotes() {
+func (r *InscriptionRelayer) CollectVotes() {
 	r.voteProcessor.CollectVotes()
 }
 
-func (r *InscriptionRelayer) assembleTransactions() {
+func (r *InscriptionRelayer) AssembleTransactions() {
 	r.inscriptionAssembler.AssembleTransactionAndSend()
+}
+
+func (r *InscriptionRelayer) UpdateCachedLatestValidators() {
+	r.InscriptionExecutor.UpdateCachedLatestValidators() // cache validators queried from inscription, update it every 1 minute
 }

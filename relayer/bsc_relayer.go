@@ -8,47 +8,52 @@ import (
 )
 
 type BSCRelayer struct {
-	listener            *listener.BSCListener
-	inscriptionExecutor *executor.InscriptionExecutor
+	Listener            *listener.BSCListener
+	InscriptionExecutor *executor.InscriptionExecutor
 	bscExecutor         *executor.BSCExecutor
-	votePoolExecutor    *vote.VotePoolExecutor
+	VotePoolExecutor    *vote.VotePoolExecutor
 	voteProcessor       *vote.BSCVoteProcessor
-	bscAssembler        *assembler.BSCAssembler
+	assembler           *assembler.BSCAssembler
 }
 
 func NewBSCRelayer(listener *listener.BSCListener, inscriptionExecutor *executor.InscriptionExecutor, bscExecutor *executor.BSCExecutor,
 	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.BSCVoteProcessor, bscAssembler *assembler.BSCAssembler,
 ) *BSCRelayer {
 	return &BSCRelayer{
-		listener:            listener,
-		inscriptionExecutor: inscriptionExecutor,
+		Listener:            listener,
+		InscriptionExecutor: inscriptionExecutor,
 		bscExecutor:         bscExecutor,
-		votePoolExecutor:    votePoolExecutor,
+		VotePoolExecutor:    votePoolExecutor,
 		voteProcessor:       voteProcessor,
-		bscAssembler:        bscAssembler,
+		assembler:           bscAssembler,
 	}
 }
 
 func (r *BSCRelayer) Start() {
-	go r.monitorCrossChainEvents()
-	go r.signAndBroadcast()
-	go r.collectVotes()
-	go r.assemblePackages()
+	go r.MonitorCrossChainEvents()
+	go r.SignAndBroadcast()
+	go r.CollectVotes()
+	go r.AssemblePackages()
+	go r.UpdateCachedLatestValidators()
 }
 
-// monitorCrossChainEvents will monitor cross chain events for every block and persist into DB
-func (r *BSCRelayer) monitorCrossChainEvents() {
-	r.listener.Start()
+// MonitorCrossChainEvents will monitor cross chain events for every block and persist into DB
+func (r *BSCRelayer) MonitorCrossChainEvents() {
+	r.Listener.Start()
 }
 
-func (r *BSCRelayer) signAndBroadcast() {
+func (r *BSCRelayer) SignAndBroadcast() {
 	r.voteProcessor.SignAndBroadcast()
 }
 
-func (r *BSCRelayer) collectVotes() {
+func (r *BSCRelayer) CollectVotes() {
 	r.voteProcessor.CollectVotes()
 }
 
-func (r *BSCRelayer) assemblePackages() {
-	r.bscAssembler.AssemblePackagesAndClaim()
+func (r *BSCRelayer) AssemblePackages() {
+	r.assembler.AssemblePackagesAndClaim()
+}
+
+func (r *BSCRelayer) UpdateCachedLatestValidators() {
+	r.bscExecutor.UpdateCachedLatestValidators() // cache validators queried from inscription, update it every 1 minute
 }

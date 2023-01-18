@@ -1,8 +1,10 @@
 # inscription-relayer
 
-Inscription Relayer is a bidirectional relaying tool serving Inscription and BSC cross-chain needs:
-1. cross-chain transactions from Inscription to BSC
-2. cross-chain packages from BSC to Inscription
+Inscription Relayer is a bidirectional relaying tool serving communication
+requirement between Inscription and BSC. It is a standalone process that can only be run by Inscription validators. The relayer watches cross chain events happen on BSC and Inscription independently and persist them into the database, after a few blocks confirmation to reach finality, the relayer will sign a message by the BLS key to confirm the event, and broadcast the signed event which called vote through the p2p network on Inscription network. Once enough votes from the Inscription relayer are collected, the relayer will assemble a cross chain package transaction and submit it to the BSC or Greenfield network
+
+
+
 
 
 ## Build

@@ -12,7 +12,7 @@
     "private_key": "eef73c3bf9239fc0faf1dcd13dec43a7be2f0c361cbceadeabe7765e9e68c4e1",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
-    "start_height": 13150,
+    "start_height": 1,
     "monitor_channel_list": [1],
     "gas_limit": 210000,
     "chain_id_string": "inscription_9000-121"
@@ -33,7 +33,7 @@
   },
   "vote_pool_config": {
     "rpc_addr":
-      "http://127.0.0.1:26750",
+    "http://127.0.0.1:26750",
     "bls_private_key": "1afd9371ebe27dc75face6fb3602fc6d8b93bbd885d81bfcdac7ec2db8246f6f"
   },
   "log_config": {

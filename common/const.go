@@ -12,3 +12,7 @@ var (
 	RtyDelay  = retry.Delay(time.Millisecond * 400)
 	RtyErr    = retry.LastErrorOnly(true)
 )
+
+const (
+	OracleChannelId ChannelId = 0
+)

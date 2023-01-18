@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"sort"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/avast/retry-go/v4"
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
@@ -36,7 +37,8 @@ type BSCVoteProcessor struct {
 }
 
 func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *VotePoolExecutor) *BSCVoteProcessor {
+	votePoolExecutor *VotePoolExecutor,
+) *BSCVoteProcessor {
 	return &BSCVoteProcessor{
 		config:           cfg,
 		daoManager:       dao,
@@ -79,7 +81,6 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 	}
 
 	if len(pkgs) == 0 {
-		time.Sleep(RetryInterval)
 		return nil
 	}
 
@@ -90,35 +91,51 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 	}
 
 	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
-		aggPkgs := make(Packages, 0)
-		var txIds []int64
+		aggPkgs := make(oracletypes.Packages, 0)
+		var pkgIds []int64
 
 		sort.Slice(pkgsForSeq, func(i, j int) bool {
 			return pkgsForSeq[i].TxIndex < pkgsForSeq[j].TxIndex
 		})
-
 		for _, pkg := range pkgsForSeq {
 			// aggregate pkgs with same oracle seq
 			payload, err := hex.DecodeString(pkg.PayLoad)
 			if err != nil {
 				return fmt.Errorf("decode payload error, payload=%s", pkg.PayLoad)
 			}
-			newP := Package{
-				ChannelId: pkg.ChannelId,
+
+			pack := oracletypes.Package{
+				ChannelId: sdk.ChannelID(pkg.ChannelId),
 				Sequence:  pkg.PackageSequence,
 				Payload:   payload,
 			}
-			aggPkgs = append(aggPkgs, newP)
-			txIds = append(txIds, pkg.Id)
+			aggPkgs = append(aggPkgs, pack)
+			pkgIds = append(pkgIds, pkg.Id)
 		}
 
-		encBts, err := rlp.EncodeToBytes(aggPkgs)
+		// check if oracle sequence is filled on inscription, if so, update packages status to filled and skip to next oracle sequence
+		nextDeliverySeqOnInscription, err := p.bscExecutor.GetNextDeliveryOracleSequence()
+		if err != nil {
+			return err
+		}
+		if seq < nextDeliverySeqOnInscription {
+			err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Filled)
+			if err != nil {
+				relayercommon.Logger.Errorf("failed to update packages error %s", err.Error())
+				return err
+			}
+			relayercommon.Logger.Infof("packages' oracle sequence %d is less than nex delivery oracle sequence %d", seq, nextDeliverySeqOnInscription)
+			continue
+		}
+
+		encodedPayload, err := rlp.EncodeToBytes(aggPkgs)
 		blsClaim := oracletypes.BlsClaim{
+			//TODO fix to get
 			SrcChainId:  uint32(p.config.BSCConfig.ChainId),
 			DestChainId: uint32(p.config.InscriptionConfig.ChainId),
 			Timestamp:   uint64(pkgsForSeq[0].TxTime),
 			Sequence:    seq,
-			Payload:     encBts,
+			Payload:     encodedPayload,
 		}
 		eventHash := blsClaim.GetSignBytes()
 		if err != nil {
@@ -127,42 +144,11 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		channelId := relayercommon.OracleChannelId
 		v := p.constructVoteAndSign(eventHash[:])
 
-		// TODO remove testing purpose code
-		bs2 := common.Hex2Bytes("0fdb6ed435515cbf4b72558a6f42d881fd99e0eddc719cb5890fbf1ec723bd0c")
-		secretKey2, err := blst.SecretKeyFromBytes(bs2)
-		if err != nil {
-			panic(err)
-		}
-		pubKey2 := secretKey2.PublicKey()
-		sign2 := secretKey2.Sign(eventHash[:]).Marshal()
-
-		mockVoteFromRelayer2 := &votepool.Vote{
-			PubKey:    pubKey2.Marshal(),
-			Signature: sign2,
-			EventType: 2,
-			EventHash: eventHash[:],
-		}
-
-		// TODO remove testing purpose code
-		bs3 := common.Hex2Bytes("354d661122e3ae2e17b15e3cdecb3f5d54bb78009ca431e0247e7a2f49fa5745")
-		secretKey3, err := blst.SecretKeyFromBytes(bs3)
-		if err != nil {
-			panic(err)
-		}
-		pubKey3 := secretKey3.PublicKey()
-		sign3 := secretKey3.Sign(eventHash[:]).Marshal()
-
-		mockVoteFromRelayer3 := &votepool.Vote{
-			PubKey:    pubKey3.Marshal(),
-			Signature: sign3,
-			EventType: 2,
-			EventHash: eventHash[:],
-		}
+		//TODO remove after test
+		broadcastVotesFromOtherRelayers(v, p.votePoolExecutor)
 
 		// broadcast v
 		if err = retry.Do(func() error {
-			err = p.votePoolExecutor.BroadcastVote(mockVoteFromRelayer3)
-			err = p.votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
 			err = p.votePoolExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for events with channel id %d and sequence %d", channelId, seq)
@@ -173,11 +159,11 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		}
 
 		err = p.daoManager.BSCDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, db.SelfVoted)
+			err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.SelfVoted)
 			if err != nil {
 				return err
 			}
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, uint8(channelId), seq, encBts))
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, uint8(channelId), seq, encodedPayload))
 			if err != nil {
 				return err
 			}
@@ -201,6 +187,7 @@ func (p *BSCVoteProcessor) CollectVotes() {
 
 func (p *BSCVoteProcessor) collectVotes() error {
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(db.SelfVoted)
+	// check if they are processed, (in old block)
 	if err != nil {
 		relayercommon.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
 		return err
@@ -238,8 +225,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayerc
 	if err != nil {
 		return err
 	}
-
-	validators, err := p.bscExecutor.InscriptionExecutor.QueryLatestValidators()
+	validators, err := p.bscExecutor.InscriptionExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
 	}
@@ -257,8 +243,11 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	validVotesTotalCnt := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
+	ticker := time.NewTicker(2 * time.Second)
 	for {
-		if triedTimes > QueryVotepoolMaxRetry {
+		<-ticker.C
+		triedTimes++
+		if triedTimes > QueryVotepoolMaxRetryTimes {
 			return nil
 		}
 		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.FromBscCrossChainEvent)
@@ -281,7 +270,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				continue
 			}
 
-			if err := Verify(v, localVote.EventHash); err != nil {
+			if err := VerifySignature(v, localVote.EventHash[:]); err != nil {
 				relayercommon.Logger.Errorf("verify vote's signature failed,  err=%s", err)
 				validVotesCntPerReq--
 				continue
@@ -301,7 +290,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				validVotesCntPerReq--
 				continue
 			}
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.Payload))
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload))
 			if err != nil {
 				return err
 			}
@@ -323,7 +312,6 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				return err
 			}
 		}
-		triedTimes++
 		continue
 	}
 }
@@ -331,7 +319,8 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 func (p *BSCVoteProcessor) constructVoteAndSign(eventHash []byte) *votepool.Vote {
 	var v votepool.Vote
 	v.EventType = votepool.FromBscCrossChainEvent
-	p.signer.SignVote(&v, eventHash)
+	v.EventHash = eventHash
+	p.signer.SignVote(&v)
 	return &v
 }
 
@@ -342,4 +331,38 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []stak
 		}
 	}
 	return false
+}
+
+func broadcastVotesFromOtherRelayers(localVote *votepool.Vote,
+	votePoolExecutor *VotePoolExecutor) {
+
+	secretKey1, err := blst.SecretKeyFromBytes(common.Hex2Bytes("2969268e6722a8e16579e7a3380f83a2dd0b15478a2994cb0ac6480e1aead999"))
+	if err != nil {
+		panic(err)
+	}
+	pubKey1 := secretKey1.PublicKey()
+	sign1 := secretKey1.Sign(localVote.EventHash[:]).Marshal()
+
+	mockVoteFromRelayer1 := &votepool.Vote{
+		PubKey:    pubKey1.Marshal(),
+		Signature: sign1,
+		EventType: 2,
+		EventHash: localVote.EventHash[:],
+	}
+
+	secretKey2, err := blst.SecretKeyFromBytes(common.Hex2Bytes("6f235c2c0d91ecdf961f4409061a785d456b9bc4b398e2a0940378397772cb0b"))
+	if err != nil {
+		panic(err)
+	}
+	pubKey2 := secretKey2.PublicKey()
+	sign2 := secretKey2.Sign(localVote.EventHash[:]).Marshal()
+
+	mockVoteFromRelayer2 := &votepool.Vote{
+		PubKey:    pubKey2.Marshal(),
+		Signature: sign2,
+		EventType: 2,
+		EventHash: localVote.EventHash[:],
+	}
+	votePoolExecutor.BroadcastVote(mockVoteFromRelayer1)
+	votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
 }

@@ -2,30 +2,24 @@ package vote
 
 import (
 	"context"
-	"encoding/hex"
 
 	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/executor"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	"github.com/tendermint/tendermint/votepool"
 )
 
 type VotePoolExecutor struct {
-	client              *client.Client
-	config              *config.Config
-	inscriptionExecutor *executor.InscriptionExecutor
+	client *client.Client
 }
 
-func NewVotePoolExecutor(cfg *config.Config, inscriptionExecutor *executor.InscriptionExecutor) *VotePoolExecutor {
+func NewVotePoolExecutor(cfg *config.Config) *VotePoolExecutor {
 	cli, err := client.New(cfg.VotePoolConfig.RPCAddr)
 	if err != nil {
 		panic(err)
 	}
 	return &VotePoolExecutor{
-		client:              cli,
-		config:              cfg,
-		inscriptionExecutor: inscriptionExecutor,
+		client: cli,
 	}
 }
 
@@ -44,23 +38,9 @@ func (e *VotePoolExecutor) QueryVotes(eventHash []byte, eventType votepool.Event
 func (e *VotePoolExecutor) BroadcastVote(v *votepool.Vote) error {
 	broadcastMap := make(map[string]interface{})
 	broadcastMap[VotePoolBroadcastParameterKey] = *v
-	var broadcastVote coretypes.ResultBroadcastVote
-
-	_, err := e.client.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &broadcastVote)
+	_, err := e.client.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &coretypes.ResultBroadcastVote{})
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func (e *VotePoolExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
-	validators, err := e.inscriptionExecutor.QueryLatestValidators()
-	if err != nil {
-		return nil, err
-	}
-	var keys []string
-	for _, v := range validators {
-		keys = append(keys, hex.EncodeToString(v.GetRelayerBlsKey()))
-	}
-	return keys, nil
 }

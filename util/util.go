@@ -28,7 +28,7 @@ func GetBlsPubKeyFromPrivKeyStr(privKeyStr string) []byte {
 }
 
 // QuotedStrToIntWithBitSize convert a QuoteStr ""6""  to int 6
-func QuotedStrToIntWithBitSize(str string, bitSize int) (int64, error) {
+func QuotedStrToIntWithBitSize(str string, bitSize int) (uint64, error) {
 	s, err := strconv.Unquote(str)
 	if err != nil {
 		return 0, err
@@ -37,17 +37,41 @@ func QuotedStrToIntWithBitSize(str string, bitSize int) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return num, nil
+	return uint64(num), nil
 }
 
 func BitSetToBigInt(set *bitset.BitSet) *big.Int {
 	bts := make([]byte, 0)
-	for _, i := range set.Bytes() {
-		bt := make([]byte, 8)
-		binary.LittleEndian.PutUint64(bt, i)
-		bts = append(bts, bt...)
+	for i := len(set.Bytes()) - 1; i >= 0; i-- {
+		bytes := Uint64ToBytes(set.Bytes()[i])
+		for _, b := range bytes {
+			bts = append(bts, b)
+		}
 	}
-	res := new(big.Int)
-	res.SetBytes(bts)
-	return res
+	return new(big.Int).SetBytes(bts)
+}
+
+func Uint16ToBytes(num uint16) []byte {
+	bt := make([]byte, 2)
+	binary.BigEndian.PutUint16(bt, num)
+	return bt
+}
+
+func Uint32ToBytes(num uint32) []byte {
+	bt := make([]byte, 4)
+	binary.BigEndian.PutUint32(bt, num)
+	return bt
+}
+
+func Uint64ToBytes(num uint64) []byte {
+	bt := make([]byte, 8)
+	binary.BigEndian.PutUint64(bt, num)
+	return bt
+}
+
+func ReverseBytes(bytes []byte) []byte {
+	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
+		bytes[i], bytes[j] = bytes[j], bytes[i]
+	}
+	return bytes
 }

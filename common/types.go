@@ -10,10 +10,6 @@ type (
 	ChainId   uint16
 )
 
-const (
-	OracleChannelId ChannelId = 0
-)
-
 type Header struct {
 	SignedHeader tmtypes.SignedHeader
 	Height       uint64

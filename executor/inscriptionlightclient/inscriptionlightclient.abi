@@ -27,12 +27,12 @@
     },
     {
       "inputs": [],
-      "name": "CROSS_CHAIN_CONTRACT_ADDR",
+      "name": "CODE_OK",
       "outputs": [
         {
-          "internalType": "address",
+          "internalType": "uint32",
           "name": "",
-          "type": "address"
+          "type": "uint32"
         }
       ],
       "stateMutability": "view",
@@ -40,12 +40,25 @@
     },
     {
       "inputs": [],
-      "name": "INSCRIPTION_LIGHT_CLIENT_ADDR",
+      "name": "ERROR_FAIL_DECODE",
       "outputs": [
         {
-          "internalType": "address",
+          "internalType": "uint32",
           "name": "",
-          "type": "address"
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "GOV_CHANNELID",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
         }
       ],
       "stateMutability": "view",
@@ -67,19 +80,6 @@
     {
       "inputs": [],
       "name": "PACKAGE_VERIFY_CONTRACT",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "TOKEN_HUB_ADDR",
       "outputs": [
         {
           "internalType": "address",
@@ -157,7 +157,7 @@
     },
     {
       "inputs": [],
-      "name": "height",
+      "name": "insHeight",
       "outputs": [
         {
           "internalType": "uint64",

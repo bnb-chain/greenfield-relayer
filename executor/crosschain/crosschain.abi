@@ -24,7 +24,13 @@
         {
           "indexed": false,
           "internalType": "uint32",
-          "name": "chainId",
+          "name": "srcChainId",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "dstChainId",
           "type": "uint32"
         },
         {
@@ -206,31 +212,6 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "challenger",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint64",
-          "name": "packageSequence",
-          "type": "uint64"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint8",
-          "name": "channelId",
-          "type": "uint8"
-        }
-      ],
-      "name": "SuccessChallenge",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
           "name": "executor",
           "type": "address"
         }
@@ -342,12 +323,12 @@
     },
     {
       "inputs": [],
-      "name": "CROSS_CHAIN_CONTRACT_ADDR",
+      "name": "CODE_OK",
       "outputs": [
         {
-          "internalType": "address",
+          "internalType": "uint32",
           "name": "",
-          "type": "address"
+          "type": "uint32"
         }
       ],
       "stateMutability": "view",
@@ -381,6 +362,19 @@
     },
     {
       "inputs": [],
+      "name": "ERROR_FAIL_DECODE",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "FAIL_ACK_PACKAGE",
       "outputs": [
         {
@@ -394,64 +388,12 @@
     },
     {
       "inputs": [],
-      "name": "INIT_BATCH_SIZE",
+      "name": "GOV_CHANNELID",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "INIT_CANCEL_TRANSFER_QUORUM",
-      "outputs": [
-        {
-          "internalType": "uint16",
-          "name": "",
-          "type": "uint16"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "INIT_REOPEN_QUORUM",
-      "outputs": [
-        {
-          "internalType": "uint16",
-          "name": "",
-          "type": "uint16"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "INIT_SUSPEND_QUORUM",
-      "outputs": [
-        {
-          "internalType": "uint16",
-          "name": "",
-          "type": "uint16"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "INSCRIPTION_LIGHT_CLIENT_ADDR",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
+          "type": "uint8"
         }
       ],
       "stateMutability": "view",
@@ -524,19 +466,6 @@
     },
     {
       "inputs": [],
-      "name": "TOKEN_HUB_ADDR",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "TRANSFER_IN_CHANNELID",
       "outputs": [
         {
@@ -591,11 +520,6 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "tokenAddr",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
           "name": "attacker",
           "type": "address"
         }
@@ -610,28 +534,9 @@
       "name": "chainId",
       "outputs": [
         {
-          "internalType": "uint32",
+          "internalType": "uint16",
           "name": "",
-          "type": "uint32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "name": "challenged",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
+          "type": "uint16"
         }
       ],
       "stateMutability": "view",
@@ -645,7 +550,7 @@
           "type": "uint8"
         }
       ],
-      "name": "channelHandlerContractMap",
+      "name": "channelHandlerMap",
       "outputs": [
         {
           "internalType": "address",
@@ -772,31 +677,34 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "govHub",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "bytes",
-          "name": "payload",
+          "name": "_payload",
           "type": "bytes"
         },
         {
           "internalType": "bytes",
-          "name": "blsSignature",
+          "name": "_blsSignature",
           "type": "bytes"
         },
         {
           "internalType": "uint256",
-          "name": "validatorSet",
+          "name": "_validatorsBitSet",
           "type": "uint256"
-        },
-        {
-          "internalType": "uint64",
-          "name": "packageSequence",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint8",
-          "name": "channelId",
-          "type": "uint8"
         }
       ],
       "name": "handlePackage",
@@ -807,9 +715,14 @@
     {
       "inputs": [
         {
-          "internalType": "uint32",
+          "internalType": "uint16",
           "name": "_insChainId",
-          "type": "uint32"
+          "type": "uint16"
+        },
+        {
+          "internalType": "address",
+          "name": "_govHub",
+          "type": "address"
         }
       ],
       "name": "initialize",
@@ -822,9 +735,9 @@
       "name": "insChainId",
       "outputs": [
         {
-          "internalType": "uint32",
+          "internalType": "uint16",
           "name": "",
-          "type": "uint32"
+          "type": "uint16"
         }
       ],
       "stateMutability": "view",

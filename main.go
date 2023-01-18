@@ -3,20 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/app"
 
-	"github.com/bnb-chain/inscription-relayer/assembler"
 	"github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
-	"github.com/bnb-chain/inscription-relayer/listener"
-	"github.com/bnb-chain/inscription-relayer/relayer"
-	"github.com/bnb-chain/inscription-relayer/vote"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-
+	config "github.com/bnb-chain/inscription-relayer/config"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -50,9 +40,7 @@ func printUsage() {
 func main() {
 	initFlags()
 	configType := viper.GetString(flagConfigType)
-
 	configType = "local"
-
 	if configType != config.AWSConfig && configType != config.LocalConfig {
 		printUsage()
 		return
@@ -97,52 +85,10 @@ func main() {
 
 	common.InitLogger(&cfg.LogConfig)
 
-	var db *gorm.DB
-	if cfg.DBConfig.DBPath != "" {
-		var err error
-		db, err = gorm.Open(mysql.Open(cfg.DBConfig.DBPath), &gorm.Config{})
-		if err != nil {
-			panic(fmt.Sprintf("open db error, err=%s", err.Error()))
-		}
-		model.InitBSCTables(db)
-		model.InitInscriptionTables(db)
-		model.InitVoteTables(db)
+	if cfg.DBConfig.DBPath == "" {
+		panic("DB config is not present in config file, please follow instruction to specify it")
 	}
 
-	inscriptionDao := dao.NewInscriptionDao(db)
-	bscDao := dao.NewBSCDao(db)
-	voteDao := dao.NewVoteDao(db)
-	daoManager := dao.NewDaoManager(inscriptionDao, bscDao, voteDao)
-
-	inscriptionExecutor := executor.NewInscriptionExecutor(cfg)
-	bscExecutor := executor.NewBSCExecutor(cfg, daoManager)
-
-	inscriptionExecutor.SetBSCExecutor(bscExecutor)
-	bscExecutor.SetInscriptionExecutor(inscriptionExecutor)
-
-	votePoolExecutor := vote.NewVotePoolExecutor(cfg, inscriptionExecutor)
-
-	// listener
-	inscriptionListener := listener.NewInscriptionListener(cfg, inscriptionExecutor, daoManager)
-	bscListener := listener.NewBSCListener(cfg, bscExecutor, daoManager)
-
-	// vote signer
-	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.VotePoolConfig.BlsPrivateKey))
-
-	// voteProcessor
-	inscriptionVoteProcessor := vote.NewInscriptionVoteProcessor(cfg, daoManager, signer, inscriptionExecutor, votePoolExecutor)
-	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor, votePoolExecutor)
-
-	// assembler
-	inscriptionAssembler := assembler.NewInscriptionAssembler(cfg, inscriptionExecutor, daoManager, bscExecutor, votePoolExecutor)
-	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, votePoolExecutor, inscriptionExecutor)
-
-	// Relayer
-	_ = relayer.NewInscriptionRelayer(inscriptionListener, inscriptionExecutor, bscExecutor, votePoolExecutor, inscriptionVoteProcessor, inscriptionAssembler)
-	bscRelayer := relayer.NewBSCRelayer(bscListener, inscriptionExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
-
-	//go insRelayer.Start()
-	go bscRelayer.Start()
-
+	app.NewApp(cfg).Start()
 	select {}
 }

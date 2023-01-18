@@ -95,6 +95,18 @@ func (d *BSCDao) SaveBlockAndBatchPackages(b *model.BscBlock, pkgs []*model.BscR
 	})
 }
 
+func (d *BSCDao) SaveBatchPackages(pkgs []*model.BscRelayPackage) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		if len(pkgs) != 0 {
+			err := dbTx.Create(pkgs).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func (d *BSCDao) DeleteBlockAtHeight(height uint64) error {
 	return d.DB.Where("height = ?", height).Delete(model.BscBlock{}).Error
 }

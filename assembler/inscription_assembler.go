@@ -1,7 +1,6 @@
 package assembler
 
 import (
-	"context"
 	"encoding/hex"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/util"
 	"github.com/bnb-chain/inscription-relayer/vote"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 type InscriptionAssembler struct {
@@ -45,6 +43,7 @@ func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId co
 	for {
 		err := a.process(channelId)
 		if err != nil {
+
 			common.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
 			time.Sleep(RetryInterval)
 		}
@@ -56,6 +55,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
+
 	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, db.AllVoted)
 	if err != nil {
 		common.Logger.Errorf("failed to get AllVoted tx with channel id %d and sequence : %d", channelId, nextSequence)
@@ -64,14 +64,14 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if (*tx == model.InscriptionRelayTransaction{}) {
 		return nil
 	}
+
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
 	if err != nil {
-		common.Logger.Errorf("failed to get votes result for tx : %s", tx.TxHash)
+		common.Logger.Errorf("failed to get votes for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 		return err
 	}
-
-	validators, err := a.inscriptionExecutor.QueryLatestValidators()
+	validators, err := a.inscriptionExecutor.BscExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
 	}
@@ -79,32 +79,35 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if err != nil {
 		return err
 	}
-
-	relayerBlsPubKeys, err := a.votePoolExecutor.GetValidatorsBlsPublicKey()
+	// TODO Switch to use bsc validators
+	relayerBlsPubKeys, err := a.inscriptionExecutor.BscExecutor.GetValidatorsBlsPublicKey()
 	if err != nil {
 		return err
 	}
 
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
-	inturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
-	inturnRelayerRelayingTime := tx.TxTime + RelayWindowInSecond
-	common.Logger.Infof("In-turn relayer relaying time is %d", inturnRelayerRelayingTime)
+	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
+	txRelayStartTime := tx.TxTime + InscriptionRelayingDelayInSecond
+	common.Logger.Infof("tx will be relayed starting at %d", txRelayStartTime)
 
 	var indexDiff int
-	if relayerIdx >= inturnRelayerIdx {
-		indexDiff = relayerIdx - inturnRelayerIdx
+	if relayerIdx >= firstInturnRelayerIdx {
+		indexDiff = relayerIdx - firstInturnRelayerIdx
 	} else {
-		indexDiff = len(relayerBlsPubKeys) - (inturnRelayerIdx - relayerIdx)
+		indexDiff = len(relayerBlsPubKeys) - (firstInturnRelayerIdx - relayerIdx)
 	}
-	curRelayerRelayingStartTime := inturnRelayerRelayingTime + int64(indexDiff*RelayIntervalBetweenRelayersInSecond)
+	curRelayerRelayingStartTime := int64(0)
+	if indexDiff == 0 {
+		curRelayerRelayingStartTime = txRelayStartTime
+	} else {
+		curRelayerRelayingStartTime = txRelayStartTime + FirstInturnRelayerRelayingWindowInSecond + int64(indexDiff-1)*InturnRelayerRelayingWindowInSecond
+	}
 	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
 	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
 	filled := make(chan struct{})
-	defer close(filled)
 	errC := make(chan error)
-	defer close(errC)
 	go a.validateSequenceFilled(filled, errC, nextSequence, channelId)
 
 	for {
@@ -119,21 +122,18 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 			return nil
 		default:
 			if time.Now().Unix() >= curRelayerRelayingStartTime {
-				common.Logger.Infof("relaying transaction %s", tx.TxHash)
-				nonce, err := a.bscExecutor.GetClient().PendingNonceAt(context.Background(), a.bscExecutor.TxSender)
-				if err != nil {
-					return err
-				}
-				txHash, err := a.bscExecutor.CallBuildInSystemContract(int8(channelId), aggregatedSignature, nextSequence, util.BitSetToBigInt(valBitSet), ethcommon.Hex2Bytes(tx.PayLoad), nonce)
+				common.Logger.Infof("relaying transaction with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
+				txHash, err := a.bscExecutor.CallBuildInSystemContract(aggregatedSignature, util.BitSetToBigInt(valBitSet), votes[0].ClaimPayload)
 				if err != nil {
 					return err
 				}
 				common.Logger.Infof("delivery transaction to BSC with txHash %s", txHash.String())
-				err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimTxHash(tx.Id, db.Filled, txHash.String())
+				err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Filled, txHash.String())
 				if err != nil {
-					common.Logger.Errorf("failed to update Tx status %d", tx.Id)
+					common.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'filled'", tx.ChannelId, tx.Sequence)
 					return err
 				}
+				return nil
 			}
 		}
 	}

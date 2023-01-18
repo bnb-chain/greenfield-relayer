@@ -14,7 +14,7 @@ import (
 
 var (
 	CrossChainPackageEventName = "CrossChainPackage"
-	CrossChainPackageEventHash = common.HexToHash("0x1cd5706f63b9e9177bd01b759fa8bcbd7452d79f49564943ed85a52f57bef179")
+	CrossChainPackageEventHash = common.HexToHash("0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a")
 )
 
 func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64) (*model.BscRelayPackage, error) {

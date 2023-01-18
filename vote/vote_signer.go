@@ -24,9 +24,8 @@ func NewVoteSigner(pk []byte) *VoteSigner {
 }
 
 // SignVote sign a vote, data is used to signed to generate the signature
-func (signer *VoteSigner) SignVote(vote *votepool.Vote, data []byte) {
-	signature := signer.privKey.Sign(data[:])
-	vote.EventHash = append(vote.EventHash, data[:]...)
+func (signer *VoteSigner) SignVote(vote *votepool.Vote) {
 	vote.PubKey = append(vote.PubKey, signer.pubKey.Marshal()...)
+	signature := signer.privKey.Sign(vote.EventHash[:])
 	vote.Signature = append(vote.Signature, signature.Marshal()...)
 }

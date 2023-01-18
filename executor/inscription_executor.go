@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
@@ -49,6 +50,7 @@ type InscriptionExecutor struct {
 	config             *config.Config
 	privateKey         *ethsecp256k1.PrivKey
 	address            string
+	validators         []stakingtypes.Validator // used for cache validators
 }
 
 func grpcConn(addr string) *grpc.ClientConn {
@@ -186,7 +188,7 @@ func (e *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpcclient.Cli
 		latestHeightQueryCtx, cancelLatestHeightQueryCtx := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelLatestHeightQueryCtx()
 		var err error
-		latestHeight, err = e.GetLatestBlockHeight(latestHeightQueryCtx, client)
+		latestHeight, err = e.getLatestBlockHeight(latestHeightQueryCtx, client)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -196,7 +198,7 @@ func (e *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpcclient.Cli
 		}))
 }
 
-func (e *InscriptionExecutor) GetLatestBlockHeight(ctx context.Context, client rpcclient.Client) (uint64, error) {
+func (e *InscriptionExecutor) getLatestBlockHeight(ctx context.Context, client rpcclient.Client) (uint64, error) {
 	status, err := client.Status(ctx)
 	if err != nil {
 		return 0, err
@@ -245,8 +247,7 @@ func (e *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommo
 	if err != nil {
 		return nil, err
 	}
-
-	validators, err := e.QueryLatestValidators()
+	validators, err := e.QueryValidatorsAtHeight(uint64(height))
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +291,21 @@ func (e *InscriptionExecutor) GetNextOracleSequence() (uint64, error) {
 	return binary.BigEndian.Uint64(response.Response.Value), nil
 }
 
-func (e *InscriptionExecutor) QueryLatestValidators() ([]stakingtypes.Validator, error) {
+// GetNextSequenceForChannel gets the sequence specifically for cross-chain package's channel
+func (e *InscriptionExecutor) GetNextSequenceForChannel(id relayercommon.ChannelId) (uint64, error) {
+	path := fmt.Sprintf("/store/crosschain/key")
+	key := BuildChannelSequenceKey(relayercommon.ChainId(e.config.BSCConfig.ChainId), id)
+	response, err := e.getRpcClient().ABCIQuery(context.Background(), path, key)
+	if err != nil {
+		return 0, err
+	}
+	if response.Response.Value == nil {
+		return 0, nil
+	}
+	return binary.BigEndian.Uint64(response.Response.Value), nil
+}
+
+func (e *InscriptionExecutor) queryLatestValidators() ([]stakingtypes.Validator, error) {
 	height, err := e.GetLatestBlockHeightWithRetry()
 	if err != nil {
 		return nil, err
@@ -308,8 +323,46 @@ func (e *InscriptionExecutor) QueryValidatorsAtHeight(height uint64) ([]stakingt
 	if err != nil {
 		return nil, err
 	}
+	relayercommon.Logger.Infof("queried validators from inscription at height %d", height)
 	hist := result.Hist
 	return hist.Valset, nil
+}
+
+func (e *InscriptionExecutor) QueryCachedLatestValidators() ([]stakingtypes.Validator, error) {
+	if len(e.validators) != 0 {
+		return e.validators, nil
+	}
+	validators, err := e.queryLatestValidators()
+	if err != nil {
+		return nil, err
+	}
+	return validators, nil
+}
+
+func (e *InscriptionExecutor) UpdateCachedLatestValidators() {
+	ticker := time.NewTicker(UpdateCachedValidatorsInterval)
+	for {
+		validators, err := e.queryLatestValidators()
+		if err != nil {
+			relayercommon.Logger.Errorf("update latest inscription validators error, err=%s", err)
+			<-ticker.C
+			continue
+		}
+		e.validators = validators
+		<-ticker.C
+	}
+}
+
+func (e *InscriptionExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
+	validators, err := e.queryLatestValidators()
+	if err != nil {
+		return nil, err
+	}
+	var keys []string
+	for _, v := range validators {
+		keys = append(keys, hex.EncodeToString(v.GetRelayerBlsKey()))
+	}
+	return keys, nil
 }
 
 func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, error) {
@@ -327,18 +380,15 @@ func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, er
 func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64) (string, error) {
 	txConfig := authtx.NewTxConfig(Cdc(), authtx.DefaultSignModes)
 	txBuilder := txConfig.NewTxBuilder()
-
-	// Todo fix
-	oracleSeq, err := e.GetNextOracleSequence()
+	seq, err := e.GetNextOracleSequence()
 	if err != nil {
 		return "", err
 	}
-
 	msgClaim := &oracletypes.MsgClaim{}
 	msgClaim.FromAddress = e.address
 	msgClaim.Payload = payloadBts
 	msgClaim.VoteAddressSet = voteAddressSet
-	msgClaim.Sequence = oracleSeq
+	msgClaim.Sequence = seq
 	msgClaim.AggSignature = aggregatedSig
 	msgClaim.DestChainId = e.getDestChainId()
 	msgClaim.SrcChainId = e.getSrcChainId()

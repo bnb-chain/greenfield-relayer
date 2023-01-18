@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"math/big"
 	"os"
-
-	"github.com/ethereum/go-ethereum/common"
 )
 
 type Config struct {
@@ -50,17 +48,16 @@ type InscriptionConfig struct {
 }
 
 type BSCConfig struct {
-	KeyType                      string         `json:"key_type"`
-	AWSRegion                    string         `json:"aws_region"`
-	AWSSecretName                string         `json:"aws_secret_name"`
-	RPCAddrs                     []string       `json:"rpc_addrs"`
-	PrivateKey                   string         `json:"private_key"`
-	GasLimit                     uint64         `json:"gas_limit"`
-	GasPrice                     uint64         `json:"gas_price"`
-	NumberOfBlocksForFinality    uint64         `json:"number_of_blocks_for_finality"`
-	StartHeight                  uint64         `json:"start_height"`
-	ChainId                      uint16         `json:"chain_id"`
-	BSCCrossChainContractAddress common.Address `json:"bsc_cross_chain_contract_address"`
+	KeyType                   string   `json:"key_type"`
+	AWSRegion                 string   `json:"aws_region"`
+	AWSSecretName             string   `json:"aws_secret_name"`
+	RPCAddrs                  []string `json:"rpc_addrs"`
+	PrivateKey                string   `json:"private_key"`
+	GasLimit                  uint64   `json:"gas_limit"`
+	GasPrice                  uint64   `json:"gas_price"`
+	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
+	StartHeight               uint64   `json:"start_height"`
+	ChainId                   uint16   `json:"chain_id"`
 }
 
 func (cfg *BSCConfig) Validate() {
@@ -153,8 +150,8 @@ type DBConfig struct {
 }
 
 func (cfg *DBConfig) Validate() {
-	if cfg.Dialect != DBDialectMysql && cfg.Dialect != DBDialectSqlite3 {
-		panic(fmt.Sprintf("only %s and %s supported", DBDialectMysql, DBDialectSqlite3))
+	if cfg.Dialect != DBDialectMysql {
+		panic(fmt.Sprintf("only %s supported", DBDialectMysql))
 	}
 	if cfg.DBPath == "" {
 		panic("db path should not be empty")
