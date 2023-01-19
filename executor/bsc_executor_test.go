@@ -2,11 +2,12 @@ package executor
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/ethereum/go-ethereum"
 	ethereumcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestGetBlockHeight(t *testing.T) {
@@ -65,6 +66,7 @@ func TestSyncTendermintHeader(t *testing.T) {
 	require.NoError(t, err)
 	t.Log(hash.String())
 	nextHeight, err := e.GetLightClientLatestHeight()
+	require.NoError(t, err)
 	t.Log(nextHeight)
 	require.EqualValues(t, curLightClientHeight+1, nextHeight)
 }
@@ -73,6 +75,7 @@ func TestGetLogsFromHeader(t *testing.T) {
 	e, _ := InitExecutors()
 	client := e.GetRpcClient()
 	height, err := e.GetLatestBlockHeightWithRetry()
+	require.NoError(t, err)
 	header, err := e.GetBlockHeaderAtHeight(height)
 	require.NoError(t, err)
 	topics := [][]ethereumcommon.Hash{{ethereumcommon.HexToHash("0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a")}}

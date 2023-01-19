@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"github.com/bnb-chain/inscription-relayer/app"
 
 	"github.com/bnb-chain/inscription-relayer/common"

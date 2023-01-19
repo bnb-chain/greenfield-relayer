@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+
 	"github.com/bnb-chain/inscription-relayer/assembler"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db/dao"

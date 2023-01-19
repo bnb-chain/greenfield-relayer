@@ -2,9 +2,10 @@ package util
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/willf/bitset"
-	"testing"
 )
 
 func TestGetBlsPubKeyFromPrivKeyStr(t *testing.T) {

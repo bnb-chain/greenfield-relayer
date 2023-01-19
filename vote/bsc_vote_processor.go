@@ -243,11 +243,11 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	validVotesTotalCnt := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(RetryInterval)
 	for {
 		<-ticker.C
 		triedTimes++
-		if triedTimes > QueryVotepoolMaxRetryTimes {
+		if triedTimes >= QueryVotepoolMaxRetryTimes {
 			return nil
 		}
 		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.FromBscCrossChainEvent)
@@ -301,7 +301,6 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 		if validVotesTotalCnt > len(validators)*2/3 {
 			return nil
 		}
-
 		if !isLocalVoteIncluded {
 			v, err := DtoToEntity(localVote)
 			if err != nil {

@@ -39,7 +39,6 @@ func (l *InscriptionListener) Start() {
 }
 
 func (l *InscriptionListener) monitorValidators(curHeight uint64) {
-
 	for {
 		nextHeight, err := l.monitorValidatorsAtHeight(curHeight)
 		if err != nil {
@@ -207,7 +206,6 @@ func (l *InscriptionListener) monitorValidatorsAtHeight(curHeight uint64) (uint6
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
 		return curHeight, err
-
 	}
 
 	if curHeight <= lightClientLatestHeight {

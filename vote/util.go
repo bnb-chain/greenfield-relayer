@@ -39,7 +39,6 @@ func AggregateSignatureAndValidatorBitSet(votes []*model.Vote, validators interf
 		signatures = append(signatures, common.Hex2Bytes(v.Signature))
 	}
 	if reflect.TypeOf(validators).Elem() == reflect.TypeOf(executor.Validator{}) {
-
 		for idx, valInfo := range validators.([]executor.Validator) {
 			if _, ok := voteAddrSet[hex.EncodeToString(valInfo.BlsPublicKey[:])]; ok {
 				valBitSet.Set(uint(idx))

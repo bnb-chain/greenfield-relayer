@@ -181,7 +181,7 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 		return err
 	}
 
-	err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id)
+	err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators)
 	if err != nil {
 		return err
 	}
@@ -189,21 +189,17 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 }
 
 // queryMoreThanTwoThirdVotesForTx queries votes from votePool
-func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []executor.Validator, txId int64) error {
+func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []executor.Validator) error {
 	triedTimes := 0
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(RetryInterval)
 	for {
 		<-ticker.C
 		triedTimes++
 		// skip current tx if reach the max retry.
 		if triedTimes >= QueryVotepoolMaxRetryTimes {
-			if err := p.daoManager.InscriptionDao.UpdateTransactionStatus(txId, 5); err != nil {
-				relayercommon.Logger.Errorf("failed to update tx id=%d status", txId)
-				return err
-			}
 			return nil
 		}
 
@@ -216,7 +212,6 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 		if validVotesCountPerReq == 0 {
 			continue
 		}
-
 		isLocalVoteIncluded := false
 
 		for _, v := range queriedVotes {
@@ -232,7 +227,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 				continue
 			}
 
-			// it is local vote
+			// check if it is local vote
 			if bytes.Equal(v.PubKey[:], p.blsPublicKey) {
 				isLocalVoteIncluded = true
 				validVotesCountPerReq--

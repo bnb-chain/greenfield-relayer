@@ -2,6 +2,11 @@ package integrationtests
 
 import (
 	"encoding/hex"
+	"math/big"
+	"sort"
+	"testing"
+	"time"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
@@ -13,14 +18,10 @@ import (
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/votepool"
-	"math/big"
-	"sort"
-	"testing"
-	"time"
 )
 
 const (
-	//Change your relayers Bls private key when integration test using local env
+	// Change your relayers Bls private key when integration test using local env
 	Relayer1HexBlsPrivKey = "2969268e6722a8e16579e7a3380f83a2dd0b15478a2994cb0ac6480e1aead999" // for test only
 	Relayer2HexBlsPrivKey = "6f235c2c0d91ecdf961f4409061a785d456b9bc4b398e2a0940378397772cb0b"
 )
@@ -34,7 +35,7 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	inscriptionExecutor := app.BSCRelayer.InscriptionExecutor
 	daoManager := app.BSCRelayer.Listener.DaoManager
 
-	//Given: Prepare cross-chain packages to be sent. Define the channel id, oracle sequence and package sequence are
+	// Given: Prepare cross-chain packages to be sent. Define the channel id, oracle sequence and package sequence are
 	// retrieved from destination chain(Inscription),
 	channelId := uint8(1)
 	oracleSeq, err := inscriptionExecutor.GetNextReceiveOracleSequence()
@@ -81,7 +82,7 @@ func TestClaimPackagesSucceed(t *testing.T) {
 
 	// Then:  the oracle sequence is filled, sequences for cross-chain packages are all filled
 	pkgs, err := daoManager.BSCDao.GetPackagesByStatus(db.Filled)
-
+	require.NoError(t, err)
 	sort.Slice(pkgs, func(i, j int) bool {
 		return pkgs[i].PackageSequence < pkgs[j].PackageSequence
 	})
@@ -89,10 +90,11 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	require.EqualValues(t, endSeq, pkgs[packagesSize-1].PackageSequence)
 
 	nextSeq, err := inscriptionExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
+	require.NoError(t, err)
 	require.EqualValues(t, endSeq+1, nextSeq)
 	nextOracleSeq, err := inscriptionExecutor.GetNextReceiveOracleSequence()
+	require.NoError(t, err)
 	require.EqualValues(t, oracleSeq+1, nextOracleSeq)
-
 }
 
 func getPayload(ts uint64) []byte {

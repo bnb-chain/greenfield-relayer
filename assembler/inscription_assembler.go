@@ -2,8 +2,9 @@ package assembler
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/inscription-relayer/db/model"
 	"time"
+
+	"github.com/bnb-chain/inscription-relayer/db/model"
 
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"

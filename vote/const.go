@@ -4,7 +4,7 @@ import "time"
 
 const (
 	RetryInterval              = 1 * time.Second
-	QueryVotepoolMaxRetryTimes = 5
+	QueryVotepoolMaxRetryTimes = 10
 
 	VotePoolBroadcastMethodName   = "broadcast_vote"
 	VotePoolBroadcastParameterKey = "vote"

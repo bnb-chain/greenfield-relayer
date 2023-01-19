@@ -318,7 +318,6 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (header *relayercom
 }
 
 func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte) (common.Hash, error) {
-
 	fmt.Printf("bls sig hex: %s", hex.EncodeToString(blsSignature))
 	fmt.Printf("msg byte to hex : %s", hex.EncodeToString(msgBytes))
 	fmt.Printf("validatorSet : %s", validatorSet.String())
@@ -353,6 +352,9 @@ func (e *BSCExecutor) QueryLatestValidators() ([]Validator, error) {
 		return nil, err
 	}
 	blsKeys, err := e.getInscriptionLightClient().BlsPubKeys(callOpts)
+	if err != nil {
+		return nil, err
+	}
 
 	relayercommon.Logger.Infof("Queried relayers from BSC at height %d", latestHeight)
 

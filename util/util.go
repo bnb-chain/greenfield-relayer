@@ -44,9 +44,7 @@ func BitSetToBigInt(set *bitset.BitSet) *big.Int {
 	bts := make([]byte, 0)
 	for i := len(set.Bytes()) - 1; i >= 0; i-- {
 		bytes := Uint64ToBytes(set.Bytes()[i])
-		for _, b := range bytes {
-			bts = append(bts, b)
-		}
+		bts = append(bts, bytes...)
 	}
 	return new(big.Int).SetBytes(bts)
 }

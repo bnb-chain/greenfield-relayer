@@ -2,6 +2,7 @@ package integrationtests
 
 import (
 	"fmt"
+
 	"github.com/bnb-chain/inscription-relayer/app"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db/model"

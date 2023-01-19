@@ -53,7 +53,3 @@ func parseCrossChainPackageEvent(abi *abi.ABI, log *types.Log) (*CrossChainPacka
 	ev.ChannelId = uint8(big.NewInt(0).SetBytes(log.Topics[3].Bytes()).Uint64())
 	return &ev, nil
 }
-
-func validateChainIds() {
-
-}
