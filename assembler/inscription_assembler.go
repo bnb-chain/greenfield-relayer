@@ -83,7 +83,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
+	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.votePoolExecutor.GetBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
 	txRelayStartTime := tx.TxTime + InscriptionRelayingDelayInSecond
@@ -150,10 +150,6 @@ func (a *InscriptionAssembler) validateSequenceFilled(filled chan struct{}, errC
 		}
 		<-ticker.C
 	}
-}
-
-func (a *InscriptionAssembler) getBlsPrivateKey() string {
-	return a.config.VotePoolConfig.BlsPrivateKey
 }
 
 func (a *InscriptionAssembler) getMonitorChannels() []uint8 {

@@ -31,9 +31,11 @@ func NewInscriptionRelayer(listener *listener.InscriptionListener, inscriptionEx
 
 func (r *InscriptionRelayer) Start() {
 	go r.MonitorCrossChainEvents()
-	go r.SignAndBroadcast()
-	go r.CollectVotes()
-	go r.AssembleTransactions()
+	if r.InscriptionExecutor.IsValidator() {
+		go r.SignAndBroadcast()
+		go r.CollectVotes()
+		go r.AssembleTransactions()
+	}
 	go r.UpdateCachedLatestValidators()
 }
 

@@ -31,9 +31,11 @@ func NewBSCRelayer(listener *listener.BSCListener, inscriptionExecutor *executor
 
 func (r *BSCRelayer) Start() {
 	go r.MonitorCrossChainEvents()
-	go r.SignAndBroadcast()
-	go r.CollectVotes()
-	go r.AssemblePackages()
+	if r.InscriptionExecutor.IsValidator() {
+		go r.SignAndBroadcast()
+		go r.CollectVotes()
+		go r.AssemblePackages()
+	}
 	go r.UpdateCachedLatestValidators()
 }
 

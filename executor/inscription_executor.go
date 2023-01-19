@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/util"
 	"sync"
 	"time"
 
@@ -469,4 +470,14 @@ func (e *InscriptionExecutor) getDestChainId() uint32 {
 
 func (e *InscriptionExecutor) getSrcChainId() uint32 {
 	return uint32(e.config.BSCConfig.ChainId)
+}
+
+func (e *InscriptionExecutor) IsValidator() bool {
+	relayerBlsPubKeys, err := e.GetValidatorsBlsPublicKey()
+	if err != nil {
+		panic(err)
+	}
+	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(e.config.VotePoolConfig.BlsPrivateKey)
+	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
+	return relayerIdx != -1
 }

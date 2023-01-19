@@ -2,7 +2,6 @@ package vote
 
 import (
 	"context"
-
 	"github.com/bnb-chain/inscription-relayer/config"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/rpc/jsonrpc/client"
@@ -11,6 +10,7 @@ import (
 
 type VotePoolExecutor struct {
 	client *client.Client
+	cfg    *config.Config
 }
 
 func NewVotePoolExecutor(cfg *config.Config) *VotePoolExecutor {
@@ -20,6 +20,7 @@ func NewVotePoolExecutor(cfg *config.Config) *VotePoolExecutor {
 	}
 	return &VotePoolExecutor{
 		client: cli,
+		cfg:    cfg,
 	}
 }
 
@@ -43,4 +44,8 @@ func (e *VotePoolExecutor) BroadcastVote(v *votepool.Vote) error {
 		return err
 	}
 	return nil
+}
+
+func (e *VotePoolExecutor) GetBlsPrivateKey() string {
+	return e.cfg.VotePoolConfig.BlsPrivateKey
 }
