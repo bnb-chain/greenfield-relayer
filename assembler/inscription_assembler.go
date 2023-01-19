@@ -103,7 +103,6 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	}
 	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
-	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
 	filled := make(chan struct{})
 	errC := make(chan error)
 	go a.validateSequenceFilled(filled, errC, nextSequence, channelId)
@@ -125,7 +124,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 				if err != nil {
 					return err
 				}
-				common.Logger.Infof("delivery transaction to BSC with txHash %s", txHash.String())
+				common.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
 				err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Filled, txHash.String())
 				if err != nil {
 					common.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'filled'", tx.ChannelId, tx.Sequence)

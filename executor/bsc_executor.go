@@ -318,10 +318,6 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (header *relayercom
 }
 
 func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte) (common.Hash, error) {
-	fmt.Printf("bls sig hex: %s", hex.EncodeToString(blsSignature))
-	fmt.Printf("msg byte to hex : %s", hex.EncodeToString(msgBytes))
-	fmt.Printf("validatorSet : %s", validatorSet.String())
-
 	nonce, err := e.GetRpcClient().PendingNonceAt(context.Background(), e.txSender)
 	if err != nil {
 		return common.Hash{}, err
@@ -356,7 +352,7 @@ func (e *BSCExecutor) QueryLatestValidators() ([]Validator, error) {
 		return nil, err
 	}
 
-	relayercommon.Logger.Infof("Queried relayers from BSC at height %d", latestHeight)
+	relayercommon.Logger.Infof("Queried relayers from BSC lightclient at height %d", latestHeight)
 
 	relayers := make([]Validator, len(relayerAddresses))
 	nextRelayerBtsStartIdx := 0
@@ -410,7 +406,7 @@ func (e *BSCExecutor) GetLightClientLatestHeight() (uint64, error) {
 }
 
 func (e *BSCExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
-	validators, err := e.QueryLatestValidators()
+	validators, err := e.QueryCachedLatestValidators()
 	if err != nil {
 		return nil, err
 	}

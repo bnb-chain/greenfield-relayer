@@ -66,6 +66,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 
 	leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
 	if err != nil {
+		relayercommon.Logger.Errorf("failed to get least saved packages' height, error: %s", err.Error())
 		return err
 	}
 

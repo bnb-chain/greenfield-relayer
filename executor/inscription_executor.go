@@ -50,7 +50,7 @@ type InscriptionExecutor struct {
 	config             *config.Config
 	privateKey         *ethsecp256k1.PrivKey
 	address            string
-	validators         []stakingtypes.Validator // used for cache validators
+	validators         []stakingtypes.Validator // used to cache validators
 }
 
 func grpcConn(addr string) *grpc.ClientConn {
@@ -159,9 +159,7 @@ func (e *InscriptionExecutor) getAuthClient() authtypes.QueryClient {
 }
 
 func (e *InscriptionExecutor) GetBlockResultAtHeight(height int64) (*ctypes.ResultBlockResults, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	blockResults, err := e.getRpcClient().BlockResults(ctx, &height)
+	blockResults, err := e.getRpcClient().BlockResults(context.Background(), &height)
 	if err != nil {
 		return nil, err
 	}
@@ -169,9 +167,7 @@ func (e *InscriptionExecutor) GetBlockResultAtHeight(height int64) (*ctypes.Resu
 }
 
 func (e *InscriptionExecutor) GetBlockAtHeight(height int64) (*tmtypes.Block, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	block, err := e.getRpcClient().Block(ctx, &height)
+	block, err := e.getRpcClient().Block(context.Background(), &height)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +349,7 @@ func (e *InscriptionExecutor) UpdateCachedLatestValidators() {
 }
 
 func (e *InscriptionExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
-	validators, err := e.queryLatestValidators()
+	validators, err := e.QueryCachedLatestValidators()
 	if err != nil {
 		return nil, err
 	}

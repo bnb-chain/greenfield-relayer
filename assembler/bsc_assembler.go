@@ -107,7 +107,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		curRelayerRelayingStartTime = packagesRelayStartTime + FirstInturnRelayerRelayingWindowInSecond + int64(indexDiff-1)*InturnRelayerRelayingWindowInSecond
 	}
 	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
-	// Keep pooling the next delivery sequence from dest chain until relaying time meets, or interrupt when seq is filled
+
 	filled := make(chan struct{})
 	errC := make(chan error)
 	go a.validateSequenceFilled(filled, errC, nextSequence)

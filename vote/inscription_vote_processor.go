@@ -65,7 +65,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 
 	leastSavedTxHeight, err := p.daoManager.InscriptionDao.GetLeastSavedTransactionHeight()
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get least saved tx, error: %s", err.Error())
+		relayercommon.Logger.Errorf("failed to get least saved tx height, error: %s", err.Error())
 		return err
 	}
 	if leastSavedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
