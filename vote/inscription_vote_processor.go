@@ -181,7 +181,7 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 		return err
 	}
 
-	err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators)
+	err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 }
 
 // queryMoreThanTwoThirdVotesForTx queries votes from votePool
-func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []executor.Validator) error {
+func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []executor.Validator, txId int64) error {
 	triedTimes := 0
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
@@ -198,8 +198,13 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 	for {
 		<-ticker.C
 		triedTimes++
-		// skip current tx if reach the max retry.
+		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
+		// and check if sequence is filled
 		if triedTimes >= QueryVotepoolMaxRetryTimes {
+			if err := p.daoManager.InscriptionDao.UpdateTransactionStatus(txId, db.SelfVoted); err != nil {
+				relayercommon.Logger.Errorf("failed to transaction status to 'SelfVoted', packages' id=%d", txId)
+				return err
+			}
 			return nil
 		}
 

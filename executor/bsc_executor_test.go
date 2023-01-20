@@ -10,22 +10,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func InitBSCExecutor() *BSCExecutor {
+	cfg := InitTestConfig()
+	return NewBSCExecutor(cfg)
+}
+
 func TestGetBlockHeight(t *testing.T) {
-	e, _ := InitExecutors()
-	height, err := e.GetLatestBlockHeightWithRetry()
+	height, err := InitBSCExecutor().GetLatestBlockHeightWithRetry()
 	require.NoError(t, err)
 	t.Log(height)
 }
 
-func TestGetOracleSequence(t *testing.T) {
-	e, _ := InitExecutors()
-	seq, err := e.GetNextDeliveryOracleSequence()
+func TestGetNextReceiveSequence(t *testing.T) {
+	seq, err := InitBSCExecutor().GetNextReceiveSequenceForChannel(1)
 	require.NoError(t, err)
 	t.Log(seq)
 }
 
 func TestGetBlockHeader(t *testing.T) {
-	e, _ := InitExecutors()
+	e := InitBSCExecutor()
 	height, err := e.GetLatestBlockHeightWithRetry()
 	require.NoError(t, err)
 	header, err := e.GetBlockHeaderAtHeight(height)
@@ -35,23 +38,14 @@ func TestGetBlockHeader(t *testing.T) {
 	t.Log(string(json))
 }
 
-func TestGetSequence(t *testing.T) {
-	e, _ := InitExecutors()
-	seq, err := e.GetNextReceiveSequenceForChannel(1)
-	require.NoError(t, err)
-	t.Log(seq)
-}
-
 func TestGetLightClientHeight(t *testing.T) {
-	e, _ := InitExecutors()
-	height, err := e.GetLightClientLatestHeight()
+	height, err := InitBSCExecutor().GetLightClientLatestHeight()
 	require.NoError(t, err)
 	t.Log(height)
 }
 
 func TestQueryLatestValidators(t *testing.T) {
-	e, _ := InitExecutors()
-	relayers, err := e.QueryLatestValidators()
+	relayers, err := InitBSCExecutor().QueryLatestValidators()
 	require.NoError(t, err)
 	t.Log(relayers)
 }
@@ -72,7 +66,7 @@ func TestSyncTendermintHeader(t *testing.T) {
 }
 
 func TestGetLogsFromHeader(t *testing.T) {
-	e, _ := InitExecutors()
+	e := InitBSCExecutor()
 	client := e.GetRpcClient()
 	height, err := e.GetLatestBlockHeightWithRetry()
 	require.NoError(t, err)

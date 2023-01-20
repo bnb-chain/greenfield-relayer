@@ -200,19 +200,19 @@ func (p *BSCVoteProcessor) collectVotes() error {
 	}
 
 	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
-		var txIds []int64
+		var pkgIds []int64
 		oracleChannelId := relayercommon.OracleChannelId
 
 		for _, tx := range pkgsForSeq {
-			txIds = append(txIds, tx.Id)
+			pkgIds = append(pkgIds, tx.Id)
 		}
 
-		err := p.prepareEnoughValidVotesForPackages(oracleChannelId, seq)
+		err := p.prepareEnoughValidVotesForPackages(oracleChannelId, seq, pkgIds)
 		if err != nil {
 			return err
 		}
 
-		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(txIds, db.AllVoted)
+		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.AllVoted)
 		if err != nil {
 			return err
 		}
@@ -221,7 +221,7 @@ func (p *BSCVoteProcessor) collectVotes() error {
 }
 
 // prepareEnoughValidVotesForPackages will prepare fetch and validate votes result, store in votes
-func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayercommon.ChannelId, sequence uint64) error {
+func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayercommon.ChannelId, sequence uint64, pkgIds []int64) error {
 	localVote, err := p.daoManager.VoteDao.GetVoteByChannelIdAndSequenceAndPubKey(uint8(channelId), sequence, hex.EncodeToString(p.blsPublicKey))
 	if err != nil {
 		return err
@@ -231,7 +231,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayerc
 		return err
 	}
 	// Query from votePool until there are more than 2/3 votes
-	err = p.queryMoreThanTwoThirdValidVotes(localVote, validators)
+	err = p.queryMoreThanTwoThirdValidVotes(localVote, validators, pkgIds)
 	if err != nil {
 		return err
 	}
@@ -239,9 +239,9 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayerc
 }
 
 // queryMoreThanTwoThirdValidVotes queries votes from votePool
-func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []stakingtypes.Validator) error {
+func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []stakingtypes.Validator, pkgIds []int64) error {
 	triedTimes := 0
-	validVotesTotalCnt := 1 // assume local vote is valid
+	validVotesTotalCnt := 1
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(RetryInterval)
@@ -249,6 +249,10 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 		<-ticker.C
 		triedTimes++
 		if triedTimes >= QueryVotepoolMaxRetryTimes {
+			if err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.SelfVoted); err != nil {
+				relayercommon.Logger.Errorf("failed to update packages status to 'SelfVoted', packages' id=%v", pkgIds)
+				return err
+			}
 			return nil
 		}
 		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.FromBscCrossChainEvent)
