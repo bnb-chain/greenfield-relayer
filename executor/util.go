@@ -1,10 +1,8 @@
 package executor
 
 import (
-	"encoding/binary"
 	"encoding/hex"
 
-	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -14,14 +12,6 @@ import (
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	ethHd "github.com/evmos/ethermint/crypto/hd"
 )
-
-func BuildChannelSequenceKey(destChainId common.ChainId, chanelId common.ChannelId) []byte {
-	key := make([]byte, prefixLength+destChainIDLength+channelIDLength)
-	copy(key[:prefixLength], PrefixForReceiveSequenceKey)
-	binary.BigEndian.PutUint16(key[prefixLength:prefixLength+destChainIDLength], uint16(destChainId))
-	copy(key[prefixLength+destChainIDLength:], []byte{byte(chanelId)})
-	return key
-}
 
 func HexToEthSecp256k1PrivKey(hexString string) (*ethsecp256k1.PrivKey, error) {
 	bz, err := hex.DecodeString(hexString)

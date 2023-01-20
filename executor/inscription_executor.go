@@ -2,7 +2,6 @@ package executor
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	_ "encoding/json"
@@ -14,6 +13,7 @@ import (
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	crosschainypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -38,6 +38,7 @@ type InscriptionClient struct {
 	txClient           tx.ServiceClient
 	stakingQueryClient stakingtypes.QueryClient
 	authClient         authtypes.QueryClient
+	crossChainClient   crosschainypes.QueryClient
 	Provider           string
 	Height             uint64
 	UpdatedAt          time.Time
@@ -112,6 +113,7 @@ func initInscriptionClients(rpcAddrs, grpcAddrs []string) []*InscriptionClient {
 			txClient:           tx.NewServiceClient(conn),
 			stakingQueryClient: stakingtypes.NewQueryClient(conn),
 			authClient:         authtypes.NewQueryClient(conn),
+			crossChainClient:   crosschainypes.NewQueryClient(conn),
 			rpcClient:          NewRpcClient(rpcAddrs[i]),
 			Provider:           rpcAddrs[i],
 			UpdatedAt:          time.Now(),
@@ -157,6 +159,12 @@ func (e *InscriptionExecutor) getAuthClient() authtypes.QueryClient {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
 	return e.inscriptionClients[e.clientIdx].authClient
+}
+
+func (e *InscriptionExecutor) getCrossChainClient() crosschainypes.QueryClient {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.inscriptionClients[e.clientIdx].crossChainClient
 }
 
 func (e *InscriptionExecutor) GetBlockResultAtHeight(height int64) (*ctypes.ResultBlockResults, error) {
@@ -275,30 +283,26 @@ func (e *InscriptionExecutor) GetNextDeliverySequenceForChannel(channelID relaye
 }
 
 func (e *InscriptionExecutor) GetNextReceiveOracleSequence() (uint64, error) {
-	path := fmt.Sprintf("/store/%s/%s", SequenceStoreName, "key")
-	key := BuildChannelSequenceKey(relayercommon.ChainId(e.config.BSCConfig.ChainId), 0x00)
-	response, err := e.getRpcClient().ABCIQuery(context.Background(), path, key)
+	res, err := e.getCrossChainClient().ReceiveSequence(
+		context.Background(),
+		&crosschainypes.QueryReceiveSequenceRequest{ChannelId: uint32(relayercommon.OracleChannelId)},
+	)
 	if err != nil {
 		return 0, err
 	}
-	if response.Response.Value == nil {
-		return 0, nil
-	}
-	return binary.BigEndian.Uint64(response.Response.Value), nil
+	return res.Sequence, nil
 }
 
 // GetNextReceiveSequenceForChannel gets the sequence specifically for cross-chain package's channel
-func (e *InscriptionExecutor) GetNextReceiveSequenceForChannel(id relayercommon.ChannelId) (uint64, error) {
-	path := fmt.Sprintf("/store/crosschain/key")
-	key := BuildChannelSequenceKey(relayercommon.ChainId(e.config.BSCConfig.ChainId), id)
-	response, err := e.getRpcClient().ABCIQuery(context.Background(), path, key)
+func (e *InscriptionExecutor) GetNextReceiveSequenceForChannel(channelId relayercommon.ChannelId) (uint64, error) {
+	res, err := e.getCrossChainClient().ReceiveSequence(
+		context.Background(),
+		&crosschainypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},
+	)
 	if err != nil {
 		return 0, err
 	}
-	if response.Response.Value == nil {
-		return 0, nil
-	}
-	return binary.BigEndian.Uint64(response.Response.Value), nil
+	return res.Sequence, nil
 }
 
 func (e *InscriptionExecutor) queryLatestValidators() ([]stakingtypes.Validator, error) {
