@@ -3,6 +3,10 @@ package app
 import (
 	"fmt"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/inscription-relayer/assembler"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
@@ -11,9 +15,6 @@ import (
 	"github.com/bnb-chain/inscription-relayer/listener"
 	"github.com/bnb-chain/inscription-relayer/relayer"
 	"github.com/bnb-chain/inscription-relayer/vote"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 type App struct {

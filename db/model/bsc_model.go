@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/bnb-chain/inscription-relayer/db"
 	"gorm.io/gorm"
+
+	"github.com/bnb-chain/inscription-relayer/db"
 )
 
 type BscBlock struct {

@@ -1,6 +1,8 @@
 package vote
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	RetryInterval = 1 * time.Second

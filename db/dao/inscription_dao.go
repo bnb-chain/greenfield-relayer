@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"time"
 
+	"gorm.io/gorm"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
-	"gorm.io/gorm"
 )
 
 type InscriptionDao struct {

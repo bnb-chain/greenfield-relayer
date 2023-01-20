@@ -2,10 +2,12 @@ package vote
 
 import (
 	"context"
-	"github.com/bnb-chain/inscription-relayer/config"
+
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	"github.com/tendermint/tendermint/votepool"
+
+	"github.com/bnb-chain/inscription-relayer/config"
 )
 
 type VotePoolExecutor struct {

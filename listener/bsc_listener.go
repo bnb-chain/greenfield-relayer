@@ -6,17 +6,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"gorm.io/gorm"
 
+	"github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db/dao"
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/executor/crosschain"
 )
 

@@ -7,17 +7,18 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/votepool"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/util"
 	"github.com/bnb-chain/inscription-relayer/vote"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/votepool"
 )
 
 const (

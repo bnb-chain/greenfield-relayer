@@ -10,6 +10,12 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tendermint/tendermint/votepool"
+	"gorm.io/gorm"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db"
@@ -17,11 +23,6 @@ import (
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/util"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/tendermint/tendermint/votepool"
-	"gorm.io/gorm"
 )
 
 type InscriptionVoteProcessor struct {

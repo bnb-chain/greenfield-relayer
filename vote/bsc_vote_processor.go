@@ -8,9 +8,14 @@ import (
 	"sort"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/avast/retry-go/v4"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/tendermint/tendermint/votepool"
+	"gorm.io/gorm"
+
 	relayercommon "github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db"
@@ -18,11 +23,6 @@ import (
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/util"
-	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/tendermint/tendermint/votepool"
-	"gorm.io/gorm"
 )
 
 type BSCVoteProcessor struct {

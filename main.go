@@ -4,12 +4,12 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/bnb-chain/inscription-relayer/app"
-
-	"github.com/bnb-chain/inscription-relayer/common"
-	config "github.com/bnb-chain/inscription-relayer/config"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/bnb-chain/inscription-relayer/app"
+	"github.com/bnb-chain/inscription-relayer/common"
+	config "github.com/bnb-chain/inscription-relayer/config"
 )
 
 const (

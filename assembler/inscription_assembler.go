@@ -4,12 +4,11 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/bnb-chain/inscription-relayer/db/model"
-
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
+	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/util"
 	"github.com/bnb-chain/inscription-relayer/vote"

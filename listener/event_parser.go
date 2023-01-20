@@ -3,15 +3,15 @@ package listener
 import (
 	"encoding/hex"
 	"errors"
-	"github.com/bnb-chain/inscription-relayer/config"
 	"math/big"
 
-	"github.com/bnb-chain/inscription-relayer/db"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-
-	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/types"
+
+	"github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/inscription-relayer/db"
+	"github.com/bnb-chain/inscription-relayer/db/model"
 )
 
 func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, inscriptionChainId, bscChainId common.ChainId) (*model.BscRelayPackage, error) {

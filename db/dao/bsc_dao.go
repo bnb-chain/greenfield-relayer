@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/model"
-	"gorm.io/gorm"
 )
 
 type BSCDao struct {

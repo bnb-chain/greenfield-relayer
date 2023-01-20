@@ -4,14 +4,15 @@ import (
 	"encoding/hex"
 	"reflect"
 
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
 	"github.com/tendermint/tendermint/votepool"
 	"github.com/willf/bitset"
+
+	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/inscription-relayer/executor"
 )
 
 // VerifySignature verifies vote signature

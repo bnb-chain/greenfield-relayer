@@ -2,13 +2,14 @@ package executor
 
 import (
 	"context"
-	"github.com/bnb-chain/inscription-relayer/config"
 	"testing"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
 	ethereumcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bnb-chain/inscription-relayer/config"
 )
 
 func InitBSCExecutor() *BSCExecutor {

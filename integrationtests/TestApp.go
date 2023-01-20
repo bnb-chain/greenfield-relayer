@@ -3,11 +3,12 @@ package integrationtests
 import (
 	"fmt"
 
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/inscription-relayer/app"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db/model"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 func InitTestApp() app.App {
