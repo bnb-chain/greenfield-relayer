@@ -42,7 +42,7 @@ func (l *InscriptionListener) monitorValidators(curHeight uint64) {
 	for {
 		nextHeight, err := l.monitorValidatorsAtHeight(curHeight)
 		if err != nil {
-			time.Sleep(RetryInterval)
+			time.Sleep(relayercommon.RetryInterval)
 			continue
 		}
 		curHeight = nextHeight
@@ -53,7 +53,7 @@ func (l *InscriptionListener) poll(curHeight uint64) {
 	for {
 		nextHeight, err := l.pollHelper(curHeight)
 		if err != nil {
-			time.Sleep(RetryInterval)
+			time.Sleep(relayercommon.RetryInterval)
 			continue
 		}
 		curHeight = nextHeight
@@ -120,7 +120,7 @@ func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.Resul
 	for _, tx := range blockResults.TxsResults {
 		for _, event := range tx.Events {
 			relayTx := model.InscriptionRelayTransaction{}
-			if event.Type == EventTypeCrossChain {
+			if event.Type == config.EventTypeCrossChain {
 				for _, attr := range event.Attributes {
 					switch string(attr.Key) {
 					case "channel_id":

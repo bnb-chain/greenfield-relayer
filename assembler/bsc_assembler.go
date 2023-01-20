@@ -41,7 +41,7 @@ func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId common
 		err := a.process(channelId)
 		if err != nil {
 			common.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
-			time.Sleep(RetryInterval)
+			time.Sleep(common.RetryInterval)
 		}
 	}
 }
@@ -90,7 +90,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
-	packagesRelayStartTime := pkgTs + BSCRelayingDelayInSecond
+	packagesRelayStartTime := pkgTs + BSCRelayingDelayTime
 	common.Logger.Infof("packages will be relayed starting at %d", packagesRelayStartTime)
 
 	var indexDiff int
@@ -104,7 +104,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	if indexDiff == 0 {
 		curRelayerRelayingStartTime = packagesRelayStartTime
 	} else {
-		curRelayerRelayingStartTime = packagesRelayStartTime + FirstInturnRelayerRelayingWindowInSecond + int64(indexDiff-1)*InturnRelayerRelayingWindowInSecond
+		curRelayerRelayingStartTime = packagesRelayStartTime + FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*InTurnRelayerRelayingWindow
 	}
 	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
@@ -117,7 +117,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		case err = <-errC:
 			return err
 		case <-filled:
-			if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Filled); err != nil {
+			if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
 				common.Logger.Errorf("failed to update packages status %s", pkgIds)
 				return err
 			}
@@ -130,7 +130,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 					return err
 				}
 				common.Logger.Infof("claimed transaction with txHash %s", txHash)
-				err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Filled, txHash)
+				err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Delivered, txHash)
 				if err != nil {
 					common.Logger.Errorf("failed to update packages error %s", err.Error())
 					return err
@@ -142,7 +142,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 }
 
 func (a *BSCAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64) {
-	ticker := time.NewTicker(RetryInterval)
+	ticker := time.NewTicker(common.RetryInterval)
 	defer ticker.Stop()
 	for {
 		nextDeliverySequence, err := a.bscExecutor.GetNextDeliveryOracleSequence()

@@ -91,7 +91,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 		// in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
 		// transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
 		if tx.Sequence < nextDeliverySequence {
-			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Filled)
+			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Delivered)
 			if err != nil {
 				relayercommon.Logger.Errorf("failed to update packages error %s", err.Error())
 				return err
@@ -194,15 +194,15 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
-	ticker := time.NewTicker(RetryInterval)
+	ticker := time.NewTicker(VotePoolQueryRetryInterval)
 	for {
 		<-ticker.C
 		triedTimes++
 		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
 		// and check if sequence is filled
 		if triedTimes >= QueryVotepoolMaxRetryTimes {
-			if err := p.daoManager.InscriptionDao.UpdateTransactionStatus(txId, db.SelfVoted); err != nil {
-				relayercommon.Logger.Errorf("failed to transaction status to 'SelfVoted', packages' id=%d", txId)
+			if err := p.daoManager.InscriptionDao.UpdateTransactionStatus(txId, db.Saved); err != nil {
+				relayercommon.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
 				return err
 			}
 			return nil

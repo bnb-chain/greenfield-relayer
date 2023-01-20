@@ -27,7 +27,7 @@
     "private_key": "eef73c3bf9239fc0faf1dcd13dec43a7be2f0c361cbceadeabe7765e9e68c4e1",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
-    "number_of_blocks_for_finality": 0,
+    "number_of_blocks_for_finality": 10,
     "start_height": 0,
     "chain_id": 2
   },

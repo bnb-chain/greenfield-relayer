@@ -1,11 +1,8 @@
 package assembler
 
-import "time"
-
 var (
-	BSCRelayingDelayInSecond                 = int64(30)
-	InscriptionRelayingDelayInSecond         = int64(10)
-	FirstInturnRelayerRelayingWindowInSecond = int64(40)
-	InturnRelayerRelayingWindowInSecond      = int64(3)
-	RetryInterval                            = 1 * time.Second
+	BSCRelayingDelayTime             = int64(30) // in second
+	InscriptionRelayingDelayTime     = int64(10) // in second
+	FirstInTurnRelayerRelayingWindow = int64(40) // in second
+	InTurnRelayerRelayingWindow      = int64(3)  // in second
 )

@@ -3,6 +3,7 @@ package listener
 import (
 	"encoding/hex"
 	"errors"
+	"github.com/bnb-chain/inscription-relayer/config"
 	"math/big"
 
 	"github.com/bnb-chain/inscription-relayer/db"
@@ -10,13 +11,7 @@ import (
 
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-)
-
-var (
-	CrossChainPackageEventName = "CrossChainPackage"
-	CrossChainPackageEventHash = ethcommon.HexToHash("0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a")
 )
 
 func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, inscriptionChainId, bscChainId common.ChainId) (*model.BscRelayPackage, error) {
@@ -44,7 +39,7 @@ func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, inscripti
 func parseCrossChainPackageEvent(abi *abi.ABI, log *types.Log) (*CrossChainPackageEvent, error) {
 	var ev CrossChainPackageEvent
 
-	err := abi.UnpackIntoInterface(&ev, CrossChainPackageEventName, log.Data)
+	err := abi.UnpackIntoInterface(&ev, config.CrossChainPackageEventName, log.Data)
 	if err != nil {
 		return nil, err
 	}

@@ -118,7 +118,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			return err
 		}
 		if seq < nextDeliverySeqOnInscription {
-			err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Filled)
+			err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered)
 			if err != nil {
 				relayercommon.Logger.Errorf("failed to update packages error %s", err.Error())
 				return err
@@ -244,13 +244,13 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	validVotesTotalCnt := 1
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
-	ticker := time.NewTicker(RetryInterval)
+	ticker := time.NewTicker(VotePoolQueryRetryInterval)
 	for {
 		<-ticker.C
 		triedTimes++
 		if triedTimes >= QueryVotepoolMaxRetryTimes {
-			if err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.SelfVoted); err != nil {
-				relayercommon.Logger.Errorf("failed to update packages status to 'SelfVoted', packages' id=%v", pkgIds)
+			if err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Saved); err != nil {
+				relayercommon.Logger.Errorf("failed to update packages status to 'Saved', packages' id=%v", pkgIds)
 				return err
 			}
 			return nil

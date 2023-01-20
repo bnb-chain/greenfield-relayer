@@ -45,7 +45,7 @@ func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId co
 		err := a.process(channelId)
 		if err != nil {
 			common.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
-			time.Sleep(RetryInterval)
+			time.Sleep(common.RetryInterval)
 		}
 	}
 }
@@ -86,7 +86,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.votePoolExecutor.GetBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
-	txRelayStartTime := tx.TxTime + InscriptionRelayingDelayInSecond
+	txRelayStartTime := tx.TxTime + InscriptionRelayingDelayTime
 	common.Logger.Infof("tx will be relayed starting at %d", txRelayStartTime)
 
 	var indexDiff int
@@ -99,7 +99,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if indexDiff == 0 {
 		curRelayerRelayingStartTime = txRelayStartTime
 	} else {
-		curRelayerRelayingStartTime = txRelayStartTime + FirstInturnRelayerRelayingWindowInSecond + int64(indexDiff-1)*InturnRelayerRelayingWindowInSecond
+		curRelayerRelayingStartTime = txRelayStartTime + FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*InTurnRelayerRelayingWindow
 	}
 	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
@@ -112,7 +112,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 		case err = <-errC:
 			return err
 		case <-filled:
-			if err = a.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Filled); err != nil {
+			if err = a.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
 				common.Logger.Errorf("failed to update tx status %s", tx)
 				return err
 			}
@@ -125,7 +125,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 					return err
 				}
 				common.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
-				err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Filled, txHash.String())
+				err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String())
 				if err != nil {
 					common.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'filled'", tx.ChannelId, tx.Sequence)
 					return err
@@ -137,7 +137,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 }
 
 func (a *InscriptionAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID common.ChannelId) {
-	ticker := time.NewTicker(RetryInterval)
+	ticker := time.NewTicker(common.RetryInterval)
 	defer ticker.Stop()
 	for {
 		nextDeliverySequence, err := a.inscriptionExecutor.GetNextDeliverySequenceForChannel(channelID)

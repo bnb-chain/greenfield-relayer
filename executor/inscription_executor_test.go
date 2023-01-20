@@ -1,9 +1,8 @@
 package executor
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func InitInsExecutor() *InscriptionExecutor {

@@ -7,6 +7,7 @@ import (
 	_ "encoding/json"
 	"fmt"
 	"github.com/bnb-chain/inscription-relayer/util"
+	"google.golang.org/grpc/credentials/insecure"
 	"sync"
 	"time"
 
@@ -58,7 +59,7 @@ type InscriptionExecutor struct {
 func grpcConn(addr string) *grpc.ClientConn {
 	conn, err := grpc.Dial(
 		addr,
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		panic(err)

@@ -81,7 +81,7 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	time.Sleep(60 * time.Second)
 
 	// Then:  the oracle sequence is filled, sequences for cross-chain packages are all filled
-	pkgs, err := daoManager.BSCDao.GetPackagesByStatus(db.Filled)
+	pkgs, err := daoManager.BSCDao.GetPackagesByStatus(db.Delivered)
 	require.NoError(t, err)
 	sort.Slice(pkgs, func(i, j int) bool {
 		return pkgs[i].PackageSequence < pkgs[j].PackageSequence
@@ -149,6 +149,6 @@ func broadcastVotesFromOtherRelayers(daoManager *dao.DaoManager,
 		EventType: 2,
 		EventHash: vote.EventHash[:],
 	}
-	votePoolExecutor.BroadcastVote(mockVoteFromRelayer1)
-	votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
+	_ = votePoolExecutor.BroadcastVote(mockVoteFromRelayer1)
+	_ = votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
 }

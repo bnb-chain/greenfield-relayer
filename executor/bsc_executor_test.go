@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"github.com/bnb-chain/inscription-relayer/config"
 	"testing"
 	"time"
 
@@ -56,8 +57,8 @@ func TestSyncTendermintHeader(t *testing.T) {
 	require.NoError(t, err)
 	t.Log(curLightClientHeight)
 	hash, err := e.SyncTendermintLightClientHeader(curLightClientHeight + 1)
-	time.Sleep(10 * time.Second)
 	require.NoError(t, err)
+	time.Sleep(10 * time.Second)
 	t.Log(hash.String())
 	nextHeight, err := e.GetLightClientLatestHeight()
 	require.NoError(t, err)
@@ -77,7 +78,7 @@ func TestGetLogsFromHeader(t *testing.T) {
 	logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 		BlockHash: &blockHash,
 		Topics:    topics,
-		Addresses: []ethereumcommon.Address{CrossChainContractAddr},
+		Addresses: []ethereumcommon.Address{config.CrossChainContractAddr},
 	})
 	require.NoError(t, err)
 	t.Log(logs)

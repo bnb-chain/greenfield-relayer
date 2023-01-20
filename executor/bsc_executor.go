@@ -52,11 +52,11 @@ func initBSCClients(providers []string) []*BSCClient {
 		if err != nil {
 			panic("new eth client error")
 		}
-		inscriptionLightClient, err := inscriptionlightclient.NewInscriptionlightclient(InscriptionLightClientContractAddr, rpcClient)
+		inscriptionLightClient, err := inscriptionlightclient.NewInscriptionlightclient(config.InscriptionLightClientContractAddr, rpcClient)
 		if err != nil {
 			panic("new crossChain client error")
 		}
-		crossChainClient, err := crosschain.NewCrosschain(CrossChainContractAddr, rpcClient)
+		crossChainClient, err := crosschain.NewCrosschain(config.CrossChainContractAddr, rpcClient)
 		if err != nil {
 			panic("new inscription light client error")
 		}
@@ -228,7 +228,7 @@ func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, erro
 }
 
 func (e *BSCExecutor) GetNextReceiveSequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
-	crossChainInstance, err := crosschain.NewCrosschain(CrossChainContractAddr, e.GetRpcClient())
+	crossChainInstance, err := crosschain.NewCrosschain(config.CrossChainContractAddr, e.GetRpcClient())
 	if err != nil {
 		return 0, err
 	}
@@ -251,7 +251,10 @@ func (e *BSCExecutor) GetNextDeliveryOracleSequence() (uint64, error) {
 }
 
 func (e *BSCExecutor) getTransactor(nonce uint64) (*bind.TransactOpts, error) {
-	txOpts := bind.NewKeyedTransactor(e.privateKey)
+	txOpts, err := bind.NewKeyedTransactorWithChainID(e.privateKey, big.NewInt(int64(e.config.BSCConfig.ChainId)))
+	if err != nil {
+		return nil, err
+	}
 	txOpts.Nonce = big.NewInt(int64(nonce))
 	txOpts.Value = big.NewInt(0)
 	txOpts.GasLimit = e.config.BSCConfig.GasLimit
