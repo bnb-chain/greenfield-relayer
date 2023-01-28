@@ -248,7 +248,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	for {
 		<-ticker.C
 		triedTimes++
-		if triedTimes >= QueryVotepoolMaxRetryTimes {
+		if triedTimes > QueryVotepoolMaxRetryTimes {
 			if err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Saved); err != nil {
 				relayercommon.Logger.Errorf("failed to update packages status to 'Saved', packages' id=%v", pkgIds)
 				return err

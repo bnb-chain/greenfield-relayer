@@ -44,22 +44,22 @@ func NewApp(cfg *config.Config) *App {
 
 	votePoolExecutor := vote.NewVotePoolExecutor(cfg)
 
-	// listener
+	// listeners
 	inscriptionListener := listener.NewInscriptionListener(cfg, inscriptionExecutor, bscExecutor, daoManager)
 	bscListener := listener.NewBSCListener(cfg, bscExecutor, inscriptionExecutor, daoManager)
 
 	// vote signer
 	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.VotePoolConfig.BlsPrivateKey))
 
-	// voteProcessor
+	// voteProcessors
 	inscriptionVoteProcessor := vote.NewInscriptionVoteProcessor(cfg, daoManager, signer, inscriptionExecutor, votePoolExecutor)
 	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor, votePoolExecutor)
 
-	// assembler
+	// assemblers
 	inscriptionAssembler := assembler.NewInscriptionAssembler(cfg, inscriptionExecutor, daoManager, bscExecutor, votePoolExecutor)
 	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, votePoolExecutor, inscriptionExecutor)
 
-	// Validator
+	// relayers
 	insRelayer := relayer.NewInscriptionRelayer(inscriptionListener, inscriptionExecutor, bscExecutor, votePoolExecutor, inscriptionVoteProcessor, inscriptionAssembler)
 	bscRelayer := relayer.NewBSCRelayer(bscListener, inscriptionExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
 

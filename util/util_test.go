@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/hex"
+	"github.com/bnb-chain/inscription-relayer/vote"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,7 +23,7 @@ func TestQuotedStrToInt(t *testing.T) {
 }
 
 func TestBitSetToBigInt(t *testing.T) {
-	valBitSet := bitset.New(256)
+	valBitSet := bitset.New(vote.ValidatorsCapacity)
 	valBitSet.Set(255)
 
 	valBitSet.Set(0)

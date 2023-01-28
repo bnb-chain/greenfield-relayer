@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	RetryInterval = 1 * time.Second
+	RetryInterval      = 1 * time.Second
+	ValidatorsCapacity = 256
 
-	QueryVotepoolMaxRetryTimes = 10
+	QueryVotepoolMaxRetryTimes = 5
 
 	VotePoolBroadcastMethodName   = "broadcast_vote"
 	VotePoolBroadcastParameterKey = "vote"
@@ -15,5 +16,5 @@ const (
 	VotePoolQueryMethodName         = "query_vote"
 	VotePoolQueryParameterEventType = "event_type"
 	VotePoolQueryParameterEventHash = "event_hash"
-	VotePoolQueryRetryInterval      = 2 * time.Second
+	VotePoolQueryRetryInterval      = 5 * time.Second // retry every 5 second, total queries 6 times. Approximately equal to a vote expiration time
 )

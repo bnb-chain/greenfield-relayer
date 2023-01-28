@@ -85,7 +85,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.votePoolExecutor.GetBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
-	txRelayStartTime := tx.TxTime + InscriptionRelayingDelayTime
+	txRelayStartTime := tx.TxTime + a.config.RelayConfig.InscriptionToBSCRelayingDelayTime
 	common.Logger.Infof("tx will be relayed starting at %d", txRelayStartTime)
 
 	var indexDiff int
@@ -98,7 +98,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	if indexDiff == 0 {
 		curRelayerRelayingStartTime = txRelayStartTime
 	} else {
-		curRelayerRelayingStartTime = txRelayStartTime + FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*InTurnRelayerRelayingWindow
+		curRelayerRelayingStartTime = txRelayStartTime + a.config.RelayConfig.FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*a.config.RelayConfig.InTurnRelayerRelayingWindow
 	}
 	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 

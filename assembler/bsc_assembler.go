@@ -53,15 +53,15 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	}
 	var pkgIds []int64
 	pkgs, err := a.daoManager.BSCDao.GetAllVotedPackages(nextSequence)
+	if err != nil {
+		common.Logger.Errorf("failed to get all validator voted tx with channel id %d and sequence : %d", channelId, nextSequence)
+		return err
+	}
 	if len(pkgs) == 0 {
 		return nil
 	}
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
-	}
-	if err != nil {
-		common.Logger.Errorf("failed to get all validator voted tx with channel id %d and sequence : %d", channelId, nextSequence)
-		return err
 	}
 	// Get votes result for a packages, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(uint8(channelId), nextSequence)
@@ -90,7 +90,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
-	packagesRelayStartTime := pkgTs + BSCRelayingDelayTime
+	packagesRelayStartTime := pkgTs + a.config.RelayConfig.BSCToInscriptionRelayingDelayTime
 	common.Logger.Infof("packages will be relayed starting at %d", packagesRelayStartTime)
 
 	var indexDiff int
@@ -104,7 +104,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	if indexDiff == 0 {
 		curRelayerRelayingStartTime = packagesRelayStartTime
 	} else {
-		curRelayerRelayingStartTime = packagesRelayStartTime + FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*InTurnRelayerRelayingWindow
+		curRelayerRelayingStartTime = packagesRelayStartTime + a.config.RelayConfig.FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*a.config.RelayConfig.InTurnRelayerRelayingWindow
 	}
 	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 

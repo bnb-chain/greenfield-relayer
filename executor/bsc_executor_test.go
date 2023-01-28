@@ -8,8 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum"
 	ethereumcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
-	"github.com/bnb-chain/inscription-relayer/config"
 )
 
 func InitBSCExecutor() *BSCExecutor {
@@ -79,7 +77,7 @@ func TestGetLogsFromHeader(t *testing.T) {
 	logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 		BlockHash: &blockHash,
 		Topics:    topics,
-		Addresses: []ethereumcommon.Address{config.CrossChainContractAddr},
+		Addresses: []ethereumcommon.Address{ethereumcommon.HexToAddress(e.config.RelayConfig.CrossChainContractAddr)},
 	})
 	require.NoError(t, err)
 	t.Log(logs)

@@ -121,7 +121,7 @@ func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.Resul
 	for _, tx := range blockResults.TxsResults {
 		for _, event := range tx.Events {
 			relayTx := model.InscriptionRelayTransaction{}
-			if event.Type == config.EventTypeCrossChain {
+			if event.Type == l.config.RelayConfig.InscriptionEventTypeCrossChain {
 				for _, attr := range event.Attributes {
 					switch string(attr.Key) {
 					case "channel_id":

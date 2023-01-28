@@ -11,6 +11,7 @@ type Config struct {
 	InscriptionConfig InscriptionConfig `json:"inscription_config"`
 	BSCConfig         BSCConfig         `json:"bsc_config"`
 	VotePoolConfig    VotePoolConfig    `json:"vote_pool_config"`
+	RelayConfig       RelayConfig       `json:"relay_config"`
 	LogConfig         LogConfig         `json:"log_config"`
 	AdminConfig       AdminConfig       `json:"admin_config"`
 	AlertConfig       AlertConfig       `json:"alert_config"`
@@ -58,6 +59,19 @@ type BSCConfig struct {
 	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
 	StartHeight               uint64   `json:"start_height"`
 	ChainId                   uint16   `json:"chain_id"`
+}
+
+type RelayConfig struct {
+	BSCToInscriptionRelayingDelayTime int64 `json:"bsc_to_inscription_relaying_delay_time"` // in second
+	InscriptionToBSCRelayingDelayTime int64 `json:"inscription_to_bsc_relaying_delay_time"` // in second
+	FirstInTurnRelayerRelayingWindow  int64 `json:"first_in_turn_relayer_relaying_window"`  // in second
+	InTurnRelayerRelayingWindow       int64 `json:"in_turn_relayer_relaying_window"`        // in second
+
+	InscriptionEventTypeCrossChain     string `json:"inscription_event_type_cross_chain"`
+	BSCCrossChainPackageEventName      string `json:"bsc_cross_chain_package_event_name"`
+	CrossChainPackageEventHex          string `json:"cross_chain_package_event_hex"`
+	CrossChainContractAddr             string `json:"cross_chain_contract_addr"`
+	InscriptionLightClientContractAddr string `json:"inscription_light_client_contract_addr"`
 }
 
 func (cfg *BSCConfig) Validate() {

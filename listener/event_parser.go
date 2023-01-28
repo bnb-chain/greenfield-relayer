@@ -14,8 +14,8 @@ import (
 	"github.com/bnb-chain/inscription-relayer/db/model"
 )
 
-func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, inscriptionChainId, bscChainId common.ChainId) (*model.BscRelayPackage, error) {
-	ev, err := parseCrossChainPackageEvent(abi, log)
+func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, inscriptionChainId, bscChainId common.ChainId, config *config.RelayConfig) (*model.BscRelayPackage, error) {
+	ev, err := parseCrossChainPackageEvent(abi, log, config)
 	if err != nil {
 		return nil, err
 	}
@@ -36,10 +36,10 @@ func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, inscripti
 	return &p, nil
 }
 
-func parseCrossChainPackageEvent(abi *abi.ABI, log *types.Log) (*CrossChainPackageEvent, error) {
+func parseCrossChainPackageEvent(abi *abi.ABI, log *types.Log, config *config.RelayConfig) (*CrossChainPackageEvent, error) {
 	var ev CrossChainPackageEvent
 
-	err := abi.UnpackIntoInterface(&ev, config.CrossChainPackageEventName, log.Data)
+	err := abi.UnpackIntoInterface(&ev, config.BSCCrossChainPackageEventName, log.Data)
 	if err != nil {
 		return nil, err
 	}

@@ -45,18 +45,23 @@ type BSCExecutor struct {
 	relayers            []Validator // cached relayers
 }
 
-func initBSCClients(providers []string) []*BSCClient {
+func initBSCClients(config *config.Config) []*BSCClient {
 	bscClients := make([]*BSCClient, 0)
-	for _, provider := range providers {
+
+	for _, provider := range config.BSCConfig.RPCAddrs {
 		rpcClient, err := ethclient.Dial(provider)
 		if err != nil {
 			panic("new eth client error")
 		}
-		inscriptionLightClient, err := inscriptionlightclient.NewInscriptionlightclient(config.InscriptionLightClientContractAddr, rpcClient)
+		inscriptionLightClient, err := inscriptionlightclient.NewInscriptionlightclient(
+			common.HexToAddress(config.RelayConfig.InscriptionLightClientContractAddr),
+			rpcClient)
 		if err != nil {
 			panic("new crossChain client error")
 		}
-		crossChainClient, err := crosschain.NewCrosschain(config.CrossChainContractAddr, rpcClient)
+		crossChainClient, err := crosschain.NewCrosschain(
+			common.HexToAddress(config.RelayConfig.CrossChainContractAddr),
+			rpcClient)
 		if err != nil {
 			panic("new inscription light client error")
 		}
@@ -114,7 +119,7 @@ func NewBSCExecutor(cfg *config.Config) *BSCExecutor {
 	}
 	return &BSCExecutor{
 		clientIdx:  0,
-		bscClients: initBSCClients(cfg.BSCConfig.RPCAddrs),
+		bscClients: initBSCClients(cfg),
 		privateKey: privKey,
 		txSender:   txSender,
 		config:     cfg,
@@ -228,18 +233,11 @@ func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, erro
 }
 
 func (e *BSCExecutor) GetNextReceiveSequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
-	crossChainInstance, err := crosschain.NewCrosschain(config.CrossChainContractAddr, e.GetRpcClient())
-	if err != nil {
-		return 0, err
-	}
 	callOpts := &bind.CallOpts{
 		Pending: true,
 		Context: context.Background(),
 	}
-	if err != nil {
-		return 0, err
-	}
-	return crossChainInstance.ChannelReceiveSequenceMap(callOpts, uint8(channelID))
+	return e.getCrossChainClient().ChannelReceiveSequenceMap(callOpts, uint8(channelID))
 }
 
 func (e *BSCExecutor) GetNextDeliveryOracleSequence() (uint64, error) {

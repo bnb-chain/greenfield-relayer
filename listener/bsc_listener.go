@@ -6,18 +6,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"gorm.io/gorm"
-
 	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
 	"github.com/bnb-chain/inscription-relayer/db/model"
 	"github.com/bnb-chain/inscription-relayer/executor"
 	"github.com/bnb-chain/inscription-relayer/executor/crosschain"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type BSCListener struct {
@@ -118,7 +116,13 @@ func (l *BSCListener) monitorCrossChainPkgAtBlockHeight(latestPolledBlock *model
 	relayPkgs := make([]*model.BscRelayPackage, 0)
 	for _, log := range logs {
 		common.Logger.Infof("get log: %d, %s, %s", log.BlockNumber, log.Topics[0].String(), log.TxHash.String())
-		relayPkg, err := ParseRelayPackage(&l.crossChainAbi, &log, nextHeightHeader.Time, common.ChainId(l.config.InscriptionConfig.ChainId), common.ChainId(l.config.BSCConfig.ChainId))
+		relayPkg, err := ParseRelayPackage(&l.crossChainAbi,
+			&log, nextHeightHeader.Time,
+			common.ChainId(l.config.InscriptionConfig.ChainId),
+			common.ChainId(l.config.BSCConfig.ChainId),
+			&l.config.RelayConfig,
+		)
+
 		if err != nil {
 			common.Logger.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
 			continue
@@ -143,12 +147,12 @@ func (l *BSCListener) getLogsFromHeader(header *types.Header) ([]types.Log, erro
 	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	client := l.bscExecutor.GetRpcClient()
-	topics := [][]ethcommon.Hash{{config.CrossChainPackageEventHash}}
+	topics := [][]ethcommon.Hash{{l.getCrossChainPackageEventHash()}}
 	blockHash := header.Hash()
 	logs, err := client.FilterLogs(ctxWithTimeout, ethereum.FilterQuery{
 		BlockHash: &blockHash,
 		Topics:    topics,
-		Addresses: []ethcommon.Address{config.CrossChainContractAddr},
+		Addresses: []ethcommon.Address{l.getCrossChainContractAddress()},
 	})
 	if err != nil {
 		return nil, err
@@ -160,18 +164,8 @@ func (l *BSCListener) validateLatestPolledBlockIsForkedAndDelete(latestPolledBlo
 	parentBlockHash := header.ParentHash
 
 	if latestPolledBlock.Height != 0 && parentBlockHash.String() != latestPolledBlock.BlockHash {
-		// delete latestPolledBlock from DB
-		err := l.DaoManager.BSCDao.DB.Transaction(func(tx *gorm.DB) error {
-			err := l.DaoManager.BSCDao.DeleteBlockAtHeight(latestPolledBlock.Height)
-			if err != nil {
-				return err
-			}
-			err = l.DaoManager.BSCDao.DeletePackagesAtHeight(latestPolledBlock.Height)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+		// delete latestPolledBlock and its cross-chain packages from DB
+		err := l.DaoManager.BSCDao.DeleteBlockAndPackagesAtHeight(latestPolledBlock.Height)
 		if err != nil {
 			return true, err
 		}
@@ -179,4 +173,12 @@ func (l *BSCListener) validateLatestPolledBlockIsForkedAndDelete(latestPolledBlo
 		return true, nil
 	}
 	return false, nil
+}
+
+func (l *BSCListener) getCrossChainPackageEventHash() ethcommon.Hash {
+	return ethcommon.HexToHash(l.config.RelayConfig.CrossChainPackageEventHex)
+}
+
+func (l *BSCListener) getCrossChainContractAddress() ethcommon.Address {
+	return ethcommon.HexToAddress(l.config.RelayConfig.CrossChainContractAddr)
 }

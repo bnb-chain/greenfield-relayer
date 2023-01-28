@@ -201,7 +201,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 		triedTimes++
 		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
 		// and check if sequence is filled
-		if triedTimes >= QueryVotepoolMaxRetryTimes {
+		if triedTimes > QueryVotepoolMaxRetryTimes {
 			if err := p.daoManager.InscriptionDao.UpdateTransactionStatus(txId, db.Saved); err != nil {
 				relayercommon.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
 				return err

@@ -34,7 +34,7 @@ func VerifySignature(vote *votepool.Vote, eventHash []byte) error {
 func AggregateSignatureAndValidatorBitSet(votes []*model.Vote, validators interface{}) ([]byte, *bitset.BitSet, error) {
 	signatures := make([][]byte, 0, len(votes))
 	voteAddrSet := make(map[string]struct{}, len(votes))
-	valBitSet := bitset.New(256)
+	valBitSet := bitset.New(ValidatorsCapacity)
 	for _, v := range votes {
 		voteAddrSet[v.PubKey] = struct{}{}
 		signatures = append(signatures, common.Hex2Bytes(v.Signature))
