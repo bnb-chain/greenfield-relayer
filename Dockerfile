@@ -27,4 +27,4 @@ USER 1000
 VOLUME [ $INSCRIPTION_RELAYER_HOME ]
 
 # Run the app
-CMD ./build/inscription-relayer --config-type $CONFIG_TYPE --config-path $CONFIG_FILE_PATH --aws-region $AWS_REGION --aws-secret-key $AWS_SECRET_KEY
+CMD ./build/greenfield-relayer --config-type $CONFIG_TYPE --config-path $CONFIG_FILE_PATH --aws-region $AWS_REGION --aws-secret-key $AWS_SECRET_KEY

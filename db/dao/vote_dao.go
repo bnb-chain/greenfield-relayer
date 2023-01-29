@@ -3,7 +3,7 @@ package dao
 import (
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
 )
 
 type VoteDao struct {

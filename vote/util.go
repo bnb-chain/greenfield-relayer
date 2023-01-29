@@ -11,8 +11,8 @@ import (
 	"github.com/tendermint/tendermint/votepool"
 	"github.com/willf/bitset"
 
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/executor"
 )
 
 // VerifySignature verifies vote signature

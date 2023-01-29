@@ -1,18 +1,18 @@
 package executor
 
 import (
-	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/config"
 )
 
 func InitTestConfig() *config.Config {
 	return config.ParseConfigFromFile("../integrationtests/config/config_test.json")
 }
 
-func InitExecutors() (*BSCExecutor, *InscriptionExecutor) {
+func InitExecutors() (*BSCExecutor, *GreenfieldExecutor) {
 	cfg := InitTestConfig()
-	insExecutor := NewInscriptionExecutor(cfg)
+	insExecutor := NewGreenfieldExecutor(cfg)
 	bscExecutor := NewBSCExecutor(cfg)
 	insExecutor.SetBSCExecutor(bscExecutor)
-	bscExecutor.SetInscriptionExecutor(insExecutor)
+	bscExecutor.SetGreenfieldExecutor(insExecutor)
 	return bscExecutor, insExecutor
 }

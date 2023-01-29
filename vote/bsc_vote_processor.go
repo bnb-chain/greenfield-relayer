@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"sort"
 	"time"
 
@@ -17,13 +17,13 @@ import (
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
 
-	relayercommon "github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
-	"github.com/bnb-chain/inscription-relayer/util"
+	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db/dao"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
 type BSCVoteProcessor struct {
@@ -113,18 +113,18 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			pkgIds = append(pkgIds, pkg.Id)
 		}
 
-		// check if oracle sequence is filled on inscription, if so, update packages status to filled and skip to next oracle sequence
-		nextDeliverySeqOnInscription, err := p.bscExecutor.GetNextDeliveryOracleSequence()
+		// check if oracle sequence is filled on greenfield, if so, update packages status to filled and skip to next oracle sequence
+		nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequence()
 		if err != nil {
 			return err
 		}
-		if seq < nextDeliverySeqOnInscription {
+		if seq < nextDeliverySeqOnGreenfield {
 			err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered)
 			if err != nil {
 				logging.Logger.Errorf("failed to update packages error %s", err.Error())
 				return err
 			}
-			logging.Logger.Infof("packages' oracle sequence %d is less than nex delivery oracle sequence %d", seq, nextDeliverySeqOnInscription)
+			logging.Logger.Infof("packages' oracle sequence %d is less than nex delivery oracle sequence %d", seq, nextDeliverySeqOnGreenfield)
 			continue
 		}
 
@@ -132,7 +132,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		blsClaim := oracletypes.BlsClaim{
 			// chain ids are validated when packages persisted into DB, non-matched ones would be omitted
 			SrcChainId:  uint32(p.config.BSCConfig.ChainId),
-			DestChainId: uint32(p.config.InscriptionConfig.ChainId),
+			DestChainId: uint32(p.config.GreenfieldConfig.ChainId),
 			Timestamp:   uint64(pkgsForSeq[0].TxTime),
 			Sequence:    seq,
 			Payload:     encodedPayload,
@@ -227,7 +227,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayerc
 	if err != nil {
 		return err
 	}
-	validators, err := p.bscExecutor.InscriptionExecutor.QueryCachedLatestValidators()
+	validators, err := p.bscExecutor.GreenfieldExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
 	}

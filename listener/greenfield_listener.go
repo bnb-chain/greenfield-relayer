@@ -2,39 +2,39 @@ package listener
 
 import (
 	"bytes"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"strconv"
 	"time"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
-	"github.com/bnb-chain/inscription-relayer/util"
+	"github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db/dao"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
-type InscriptionListener struct {
-	config              *config.Config
-	inscriptionExecutor *executor.InscriptionExecutor
-	bscExecutor         *executor.BSCExecutor
-	DaoManager          *dao.DaoManager
+type GreenfieldListener struct {
+	config             *config.Config
+	greenfieldExecutor *executor.GreenfieldExecutor
+	bscExecutor        *executor.BSCExecutor
+	DaoManager         *dao.DaoManager
 }
 
-func NewInscriptionListener(cfg *config.Config, insExecutor *executor.InscriptionExecutor, bscExecutor *executor.BSCExecutor, dao *dao.DaoManager) *InscriptionListener {
-	return &InscriptionListener{
-		config:              cfg,
-		inscriptionExecutor: insExecutor,
-		bscExecutor:         bscExecutor,
-		DaoManager:          dao,
+func NewGreenfieldListener(cfg *config.Config, insExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor, dao *dao.DaoManager) *GreenfieldListener {
+	return &GreenfieldListener{
+		config:             cfg,
+		greenfieldExecutor: insExecutor,
+		bscExecutor:        bscExecutor,
+		DaoManager:         dao,
 	}
 }
 
-func (l *InscriptionListener) Start() {
+func (l *GreenfieldListener) Start() {
 	go func() {
 		for {
 			err := l.poll()
@@ -55,20 +55,20 @@ func (l *InscriptionListener) Start() {
 	}()
 }
 
-func (l *InscriptionListener) poll() error {
+func (l *GreenfieldListener) poll() error {
 	latestPolledBlock, err := l.getLatestPolledBlock()
 	if err != nil {
 		logging.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
 		return err
 	}
-	nextHeight := l.config.InscriptionConfig.StartHeight
+	nextHeight := l.config.GreenfieldConfig.StartHeight
 	latestPolledBlockHeight := latestPolledBlock.Height
 
 	if nextHeight <= latestPolledBlockHeight {
 		nextHeight = latestPolledBlockHeight + 1
 	}
 
-	latestBlockHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
+	latestBlockHeight, err := l.greenfieldExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
 		logging.Logger.Errorf("failed to get latest polled block height, error: %s", err.Error())
 		return err
@@ -91,33 +91,33 @@ func (l *InscriptionListener) poll() error {
 	return nil
 }
 
-func (l *InscriptionListener) getLatestPolledBlock() (*model.InscriptionBlock, error) {
-	block, err := l.DaoManager.InscriptionDao.GetLatestBlock()
+func (l *GreenfieldListener) getLatestPolledBlock() (*model.GreenfieldBlock, error) {
+	block, err := l.DaoManager.GreenfieldDao.GetLatestBlock()
 	if err != nil {
 		return nil, err
 	}
 	return block, nil
 }
 
-func (l *InscriptionListener) getBlockAndBlockResult(height uint64) (*ctypes.ResultBlockResults, *tmtypes.Block, error) {
-	logging.Logger.Infof("retrieve inscription block at height=%d", height)
-	blockResults, err := l.inscriptionExecutor.GetBlockResultAtHeight(int64(height))
+func (l *GreenfieldListener) getBlockAndBlockResult(height uint64) (*ctypes.ResultBlockResults, *tmtypes.Block, error) {
+	logging.Logger.Infof("retrieve greenfield block at height=%d", height)
+	blockResults, err := l.greenfieldExecutor.GetBlockResultAtHeight(int64(height))
 	if err != nil {
 		return nil, nil, err
 	}
-	block, err := l.inscriptionExecutor.GetBlockAtHeight(int64(height))
+	block, err := l.greenfieldExecutor.GetBlockAtHeight(int64(height))
 	if err != nil {
 		return nil, nil, err
 	}
 	return blockResults, block, nil
 }
 
-func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
-	txs := make([]*model.InscriptionRelayTransaction, 0)
+func (l *GreenfieldListener) monitorCrossChainEvents(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
+	txs := make([]*model.GreenfieldRelayTransaction, 0)
 	for _, tx := range blockResults.TxsResults {
 		for _, event := range tx.Events {
-			relayTx := model.InscriptionRelayTransaction{}
-			if event.Type == l.config.RelayConfig.InscriptionEventTypeCrossChain {
+			relayTx := model.GreenfieldRelayTransaction{}
+			if event.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
 				for _, attr := range event.Attributes {
 					switch string(attr.Key) {
 					case "channel_id":
@@ -186,16 +186,16 @@ func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.Resul
 		}
 	}
 
-	b := &model.InscriptionBlock{
+	b := &model.GreenfieldBlock{
 		Chain:     block.ChainID,
 		Height:    uint64(block.Height),
 		BlockTime: block.Time.Unix(),
 	}
-	return l.DaoManager.InscriptionDao.SaveBlockAndBatchTransactions(b, txs)
+	return l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs)
 }
 
-func (l *InscriptionListener) monitorValidators() error {
-	nextHeight := l.config.InscriptionConfig.StartHeight
+func (l *GreenfieldListener) monitorValidators() error {
+	nextHeight := l.config.GreenfieldConfig.StartHeight
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
 		return err
@@ -204,11 +204,11 @@ func (l *InscriptionListener) monitorValidators() error {
 		nextHeight = lightClientLatestHeight + 1
 	}
 	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
-	nextValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(nextHeight)
+	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
 	if err != nil {
 		return err
 	}
-	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(nextHeight - 1)
+	curValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight - 1)
 	if err != nil {
 		return err
 	}

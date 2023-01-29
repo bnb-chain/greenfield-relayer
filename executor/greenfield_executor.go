@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"sync"
 	"time"
 
@@ -30,12 +30,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	relayercommon "github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/util"
+	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
-type InscriptionClient struct {
+type GreenfieldClient struct {
 	rpcClient          rpcclient.Client
 	txClient           tx.ServiceClient
 	stakingQueryClient stakingtypes.QueryClient
@@ -46,15 +46,15 @@ type InscriptionClient struct {
 	UpdatedAt          time.Time
 }
 
-type InscriptionExecutor struct {
-	mutex              sync.RWMutex
-	BscExecutor        *BSCExecutor
-	clientIdx          int
-	inscriptionClients []*InscriptionClient
-	config             *config.Config
-	privateKey         *ethsecp256k1.PrivKey
-	address            string
-	validators         []stakingtypes.Validator // used to cache validators
+type GreenfieldExecutor struct {
+	mutex             sync.RWMutex
+	BscExecutor       *BSCExecutor
+	clientIdx         int
+	greenfieldClients []*GreenfieldClient
+	config            *config.Config
+	privateKey        *ethsecp256k1.PrivKey
+	address           string
+	validators        []stakingtypes.Validator // used to cache validators
 }
 
 func grpcConn(addr string) *grpc.ClientConn {
@@ -80,7 +80,7 @@ func NewRpcClient(addr string) *rpchttp.HTTP {
 	return rpcClient
 }
 
-func getInscriptionPrivateKey(cfg *config.InscriptionConfig) *ethsecp256k1.PrivKey {
+func getGreenfieldPrivateKey(cfg *config.GreenfieldConfig) *ethsecp256k1.PrivKey {
 	var privateKey string
 	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
 		result, err := config.GetSecret(cfg.AWSSecretName, cfg.AWSRegion)
@@ -106,12 +106,12 @@ func getInscriptionPrivateKey(cfg *config.InscriptionConfig) *ethsecp256k1.PrivK
 	return privKey
 }
 
-func initInscriptionClients(rpcAddrs, grpcAddrs []string) []*InscriptionClient {
-	inscriptionClients := make([]*InscriptionClient, 0)
+func initGreenfieldClients(rpcAddrs, grpcAddrs []string) []*GreenfieldClient {
+	greenfieldClients := make([]*GreenfieldClient, 0)
 
 	for i := 0; i < len(rpcAddrs); i++ {
 		conn := grpcConn(grpcAddrs[i])
-		inscriptionClients = append(inscriptionClients, &InscriptionClient{
+		greenfieldClients = append(greenfieldClients, &GreenfieldClient{
 			txClient:           tx.NewServiceClient(conn),
 			stakingQueryClient: stakingtypes.NewQueryClient(conn),
 			authClient:         authtypes.NewQueryClient(conn),
@@ -121,55 +121,55 @@ func initInscriptionClients(rpcAddrs, grpcAddrs []string) []*InscriptionClient {
 			UpdatedAt:          time.Now(),
 		})
 	}
-	return inscriptionClients
+	return greenfieldClients
 }
 
-func NewInscriptionExecutor(cfg *config.Config) *InscriptionExecutor {
-	privKey := getInscriptionPrivateKey(&cfg.InscriptionConfig)
-	return &InscriptionExecutor{
-		clientIdx:          0,
-		inscriptionClients: initInscriptionClients(cfg.InscriptionConfig.RPCAddrs, cfg.InscriptionConfig.GRPCAddrs),
-		privateKey:         privKey,
-		address:            privKey.PubKey().Address().String(),
-		config:             cfg,
+func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
+	privKey := getGreenfieldPrivateKey(&cfg.GreenfieldConfig)
+	return &GreenfieldExecutor{
+		clientIdx:         0,
+		greenfieldClients: initGreenfieldClients(cfg.GreenfieldConfig.RPCAddrs, cfg.GreenfieldConfig.GRPCAddrs),
+		privateKey:        privKey,
+		address:           privKey.PubKey().Address().String(),
+		config:            cfg,
 	}
 }
 
-func (e *InscriptionExecutor) SetBSCExecutor(bscE *BSCExecutor) {
+func (e *GreenfieldExecutor) SetBSCExecutor(bscE *BSCExecutor) {
 	e.BscExecutor = bscE
 }
 
-func (e *InscriptionExecutor) getRpcClient() rpcclient.Client {
+func (e *GreenfieldExecutor) getRpcClient() rpcclient.Client {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	return e.inscriptionClients[e.clientIdx].rpcClient
+	return e.greenfieldClients[e.clientIdx].rpcClient
 }
 
-func (e *InscriptionExecutor) getTxClient() tx.ServiceClient {
+func (e *GreenfieldExecutor) getTxClient() tx.ServiceClient {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	return e.inscriptionClients[e.clientIdx].txClient
+	return e.greenfieldClients[e.clientIdx].txClient
 }
 
-func (e *InscriptionExecutor) getStakingClient() stakingtypes.QueryClient {
+func (e *GreenfieldExecutor) getStakingClient() stakingtypes.QueryClient {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	return e.inscriptionClients[e.clientIdx].stakingQueryClient
+	return e.greenfieldClients[e.clientIdx].stakingQueryClient
 }
 
-func (e *InscriptionExecutor) getAuthClient() authtypes.QueryClient {
+func (e *GreenfieldExecutor) getAuthClient() authtypes.QueryClient {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	return e.inscriptionClients[e.clientIdx].authClient
+	return e.greenfieldClients[e.clientIdx].authClient
 }
 
-func (e *InscriptionExecutor) getCrossChainClient() crosschainypes.QueryClient {
+func (e *GreenfieldExecutor) getCrossChainClient() crosschainypes.QueryClient {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	return e.inscriptionClients[e.clientIdx].crossChainClient
+	return e.greenfieldClients[e.clientIdx].crossChainClient
 }
 
-func (e *InscriptionExecutor) GetBlockResultAtHeight(height int64) (*ctypes.ResultBlockResults, error) {
+func (e *GreenfieldExecutor) GetBlockResultAtHeight(height int64) (*ctypes.ResultBlockResults, error) {
 	blockResults, err := e.getRpcClient().BlockResults(context.Background(), &height)
 	if err != nil {
 		return nil, err
@@ -177,7 +177,7 @@ func (e *InscriptionExecutor) GetBlockResultAtHeight(height int64) (*ctypes.Resu
 	return blockResults, nil
 }
 
-func (e *InscriptionExecutor) GetBlockAtHeight(height int64) (*tmtypes.Block, error) {
+func (e *GreenfieldExecutor) GetBlockAtHeight(height int64) (*tmtypes.Block, error) {
 	block, err := e.getRpcClient().Block(context.Background(), &height)
 	if err != nil {
 		return nil, err
@@ -185,11 +185,11 @@ func (e *InscriptionExecutor) GetBlockAtHeight(height int64) (*tmtypes.Block, er
 	return block.Block, nil
 }
 
-func (e *InscriptionExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
+func (e *GreenfieldExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
 	return e.getLatestBlockHeightWithRetry(e.getRpcClient())
 }
 
-func (e *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpcclient.Client) (latestHeight uint64, err error) {
+func (e *GreenfieldExecutor) getLatestBlockHeightWithRetry(client rpcclient.Client) (latestHeight uint64, err error) {
 	return latestHeight, retry.Do(func() error {
 		latestHeightQueryCtx, cancelLatestHeightQueryCtx := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancelLatestHeightQueryCtx()
@@ -204,7 +204,7 @@ func (e *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpcclient.Cli
 		}))
 }
 
-func (e *InscriptionExecutor) getLatestBlockHeight(ctx context.Context, client rpcclient.Client) (uint64, error) {
+func (e *GreenfieldExecutor) getLatestBlockHeight(ctx context.Context, client rpcclient.Client) (uint64, error) {
 	status, err := client.Status(ctx)
 	if err != nil {
 		return 0, err
@@ -212,35 +212,35 @@ func (e *InscriptionExecutor) getLatestBlockHeight(ctx context.Context, client r
 	return uint64(status.SyncInfo.LatestBlockHeight), nil
 }
 
-func (e *InscriptionExecutor) UpdateClients() {
+func (e *GreenfieldExecutor) UpdateClients() {
 	ticker := time.NewTicker(SleepSecondForUpdateClient * time.Second)
 	for range ticker.C {
-		logging.Logger.Infof("start to monitor inscription data-seeds healthy")
-		for _, inscriptionClient := range e.inscriptionClients {
-			if time.Since(inscriptionClient.UpdatedAt).Seconds() > DataSeedDenyServiceThreshold {
-				msg := fmt.Sprintf("data seed %s is not accessable", inscriptionClient.Provider)
+		logging.Logger.Infof("start to monitor greenfield data-seeds healthy")
+		for _, greenfieldClient := range e.greenfieldClients {
+			if time.Since(greenfieldClient.UpdatedAt).Seconds() > DataSeedDenyServiceThreshold {
+				msg := fmt.Sprintf("data seed %s is not accessable", greenfieldClient.Provider)
 				logging.Logger.Error(msg)
 				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
 					e.config.AlertConfig.TelegramChatId, msg)
 			}
-			height, err := e.getLatestBlockHeightWithRetry(inscriptionClient.rpcClient)
+			height, err := e.getLatestBlockHeightWithRetry(greenfieldClient.rpcClient)
 			if err != nil {
 				logging.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue
 			}
-			inscriptionClient.Height = height
-			inscriptionClient.UpdatedAt = time.Now()
+			greenfieldClient.Height = height
+			greenfieldClient.UpdatedAt = time.Now()
 		}
 		highestHeight := uint64(0)
 		highestIdx := 0
-		for idx := 0; idx < len(e.inscriptionClients); idx++ {
-			if e.inscriptionClients[idx].Height > highestHeight {
-				highestHeight = e.inscriptionClients[idx].Height
+		for idx := 0; idx < len(e.greenfieldClients); idx++ {
+			if e.greenfieldClients[idx].Height > highestHeight {
+				highestHeight = e.greenfieldClients[idx].Height
 				highestIdx = idx
 			}
 		}
-		// current InscriptionClient block sync is fall behind, switch to the InscriptionClient with the highest block height
-		if e.inscriptionClients[e.clientIdx].Height+FallBehindThreshold < highestHeight {
+		// current GreenfieldClient block sync is fall behind, switch to the GreenfieldClient with the highest block height
+		if e.greenfieldClients[e.clientIdx].Height+FallBehindThreshold < highestHeight {
 			e.mutex.Lock()
 			e.clientIdx = highestIdx
 			e.mutex.Unlock()
@@ -248,7 +248,7 @@ func (e *InscriptionExecutor) UpdateClients() {
 	}
 }
 
-func (e *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommon.Header, error) {
+func (e *GreenfieldExecutor) QueryTendermintHeader(height int64) (*relayercommon.Header, error) {
 	commit, err := e.getRpcClient().Commit(context.Background(), &height)
 	if err != nil {
 		return nil, err
@@ -276,7 +276,7 @@ func (e *InscriptionExecutor) QueryTendermintHeader(height int64) (*relayercommo
 }
 
 // GetNextDeliverySequenceForChannel call dest chain(BSC) to return a sequence# which should be used.
-func (e *InscriptionExecutor) GetNextDeliverySequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
+func (e *GreenfieldExecutor) GetNextDeliverySequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
 	sequence, err := e.BscExecutor.GetNextReceiveSequenceForChannel(channelID)
 	if err != nil {
 		return 0, err
@@ -284,7 +284,7 @@ func (e *InscriptionExecutor) GetNextDeliverySequenceForChannel(channelID relaye
 	return sequence, nil
 }
 
-func (e *InscriptionExecutor) GetNextReceiveOracleSequence() (uint64, error) {
+func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 	res, err := e.getCrossChainClient().ReceiveSequence(
 		context.Background(),
 		&crosschainypes.QueryReceiveSequenceRequest{ChannelId: uint32(relayercommon.OracleChannelId)},
@@ -296,7 +296,7 @@ func (e *InscriptionExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 }
 
 // GetNextReceiveSequenceForChannel gets the sequence specifically for cross-chain package's channel
-func (e *InscriptionExecutor) GetNextReceiveSequenceForChannel(channelId relayercommon.ChannelId) (uint64, error) {
+func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId relayercommon.ChannelId) (uint64, error) {
 	res, err := e.getCrossChainClient().ReceiveSequence(
 		context.Background(),
 		&crosschainypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},
@@ -307,7 +307,7 @@ func (e *InscriptionExecutor) GetNextReceiveSequenceForChannel(channelId relayer
 	return res.Sequence, nil
 }
 
-func (e *InscriptionExecutor) queryLatestValidators() ([]stakingtypes.Validator, error) {
+func (e *GreenfieldExecutor) queryLatestValidators() ([]stakingtypes.Validator, error) {
 	height, err := e.GetLatestBlockHeightWithRetry()
 	if err != nil {
 		return nil, err
@@ -320,17 +320,17 @@ func (e *InscriptionExecutor) queryLatestValidators() ([]stakingtypes.Validator,
 	return result, nil
 }
 
-func (e *InscriptionExecutor) QueryValidatorsAtHeight(height uint64) ([]stakingtypes.Validator, error) {
+func (e *GreenfieldExecutor) QueryValidatorsAtHeight(height uint64) ([]stakingtypes.Validator, error) {
 	result, err := e.getStakingClient().HistoricalInfo(context.Background(), &stakingtypes.QueryHistoricalInfoRequest{Height: int64(height)})
 	if err != nil {
 		return nil, err
 	}
-	logging.Logger.Infof("queried validators from inscription at height %d", height)
+	logging.Logger.Infof("queried validators from greenfield at height %d", height)
 	hist := result.Hist
 	return hist.Valset, nil
 }
 
-func (e *InscriptionExecutor) QueryCachedLatestValidators() ([]stakingtypes.Validator, error) {
+func (e *GreenfieldExecutor) QueryCachedLatestValidators() ([]stakingtypes.Validator, error) {
 	if len(e.validators) != 0 {
 		return e.validators, nil
 	}
@@ -341,19 +341,19 @@ func (e *InscriptionExecutor) QueryCachedLatestValidators() ([]stakingtypes.Vali
 	return validators, nil
 }
 
-func (e *InscriptionExecutor) UpdateCachedLatestValidators() {
+func (e *GreenfieldExecutor) UpdateCachedLatestValidators() {
 	ticker := time.NewTicker(UpdateCachedValidatorsInterval)
 	for range ticker.C {
 		validators, err := e.queryLatestValidators()
 		if err != nil {
-			logging.Logger.Errorf("update latest inscription validators error, err=%s", err)
+			logging.Logger.Errorf("update latest greenfield validators error, err=%s", err)
 			continue
 		}
 		e.validators = validators
 	}
 }
 
-func (e *InscriptionExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
+func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 	validators, err := e.QueryCachedLatestValidators()
 	if err != nil {
 		return nil, err
@@ -365,7 +365,7 @@ func (e *InscriptionExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 	return keys, nil
 }
 
-func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, error) {
+func (e *GreenfieldExecutor) GetAccount(address string) (authtypes.AccountI, error) {
 	authRes, err := e.getAuthClient().Account(context.Background(), &authtypes.QueryAccountRequest{Address: address})
 	if err != nil {
 		return nil, err
@@ -377,7 +377,7 @@ func (e *InscriptionExecutor) GetAccount(address string) (authtypes.AccountI, er
 	return account, nil
 }
 
-func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64) (string, error) {
+func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64) (string, error) {
 	txConfig := authtx.NewTxConfig(Cdc(), authtx.DefaultSignModes)
 	txBuilder := txConfig.NewTxBuilder()
 	seq, err := e.GetNextReceiveOracleSequence()
@@ -398,7 +398,7 @@ func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []b
 	if err != nil {
 		return "", err
 	}
-	txBuilder.SetGasLimit(e.config.InscriptionConfig.GasLimit)
+	txBuilder.SetGasLimit(e.config.GreenfieldConfig.GasLimit)
 
 	acct, err := e.GetAccount(e.address)
 	if err != nil {
@@ -427,7 +427,7 @@ func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []b
 	sig = signing.SignatureV2{}
 
 	signerData := xauthsigning.SignerData{
-		ChainID:       e.config.InscriptionConfig.ChainIdString,
+		ChainID:       e.config.GreenfieldConfig.ChainIdString,
 		AccountNumber: accountNum,
 		Sequence:      accountSeq,
 	}
@@ -468,15 +468,15 @@ func (e *InscriptionExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []b
 	return txRes.TxResponse.TxHash, nil
 }
 
-func (e *InscriptionExecutor) getDestChainId() uint32 {
-	return uint32(e.config.InscriptionConfig.ChainId)
+func (e *GreenfieldExecutor) getDestChainId() uint32 {
+	return uint32(e.config.GreenfieldConfig.ChainId)
 }
 
-func (e *InscriptionExecutor) getSrcChainId() uint32 {
+func (e *GreenfieldExecutor) getSrcChainId() uint32 {
 	return uint32(e.config.BSCConfig.ChainId)
 }
 
-func (e *InscriptionExecutor) IsValidator() bool {
+func (e *GreenfieldExecutor) IsValidator() bool {
 	relayerBlsPubKeys, err := e.GetValidatorsBlsPublicKey()
 	if err != nil {
 		panic(err)

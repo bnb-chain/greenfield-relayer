@@ -2,7 +2,7 @@ package util
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/inscription-relayer/vote"
+	"github.com/bnb-chain/greenfield-relayer/vote"
 	"testing"
 
 	"github.com/stretchr/testify/require"

@@ -3,16 +3,16 @@ package listener
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"strings"
 	"time"
 
-	"github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
-	"github.com/bnb-chain/inscription-relayer/executor/crosschain"
+	"github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/db/dao"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/executor/crosschain"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -20,24 +20,24 @@ import (
 )
 
 type BSCListener struct {
-	config              *config.Config
-	bscExecutor         *executor.BSCExecutor
-	inscriptionExecutor *executor.InscriptionExecutor
-	DaoManager          *dao.DaoManager
-	crossChainAbi       abi.ABI
+	config             *config.Config
+	bscExecutor        *executor.BSCExecutor
+	greenfieldExecutor *executor.GreenfieldExecutor
+	DaoManager         *dao.DaoManager
+	crossChainAbi      abi.ABI
 }
 
-func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, insExecutor *executor.InscriptionExecutor, dao *dao.DaoManager) *BSCListener {
+func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, insExecutor *executor.GreenfieldExecutor, dao *dao.DaoManager) *BSCListener {
 	crossChainAbi, err := abi.JSON(strings.NewReader(crosschain.CrosschainMetaData.ABI))
 	if err != nil {
 		panic("marshal abi error")
 	}
 	return &BSCListener{
-		config:              cfg,
-		bscExecutor:         bscExecutor,
-		inscriptionExecutor: insExecutor,
-		DaoManager:          dao,
-		crossChainAbi:       crossChainAbi,
+		config:             cfg,
+		bscExecutor:        bscExecutor,
+		greenfieldExecutor: insExecutor,
+		DaoManager:         dao,
+		crossChainAbi:      crossChainAbi,
 	}
 }
 
@@ -117,7 +117,7 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		logging.Logger.Infof("get log: %d, %s, %s", log.BlockNumber, log.Topics[0].String(), log.TxHash.String())
 		relayPkg, err := ParseRelayPackage(&l.crossChainAbi,
 			&log, nextHeightBlockHeader.Time,
-			common.ChainId(l.config.InscriptionConfig.ChainId),
+			common.ChainId(l.config.GreenfieldConfig.ChainId),
 			common.ChainId(l.config.BSCConfig.ChainId),
 			&l.config.RelayConfig,
 		)

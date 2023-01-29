@@ -1,5 +1,5 @@
 {
-  "inscription_config": {
+  "greenfield_config": {
     "key_type": "local_private_key",
     "aws_region": "",
     "aws_secret_name": "",
@@ -15,7 +15,7 @@
     "start_height": 20911,
     "monitor_channel_list": [1],
     "gas_limit": 210000,
-    "chain_id_string": "inscription_9000-121"
+    "chain_id_string": "greenfield_9000-121"
   },
   "bsc_config": {
     "key_type": "local_private_key",
@@ -37,16 +37,16 @@
     "bls_private_key": "1afd9371ebe27dc75face6fb3602fc6d8b93bbd885d81bfcdac7ec2db8246f6f"
   },
   "relay_config": {
-    "bsc_to_inscription_relaying_delay_time": 30,
-    "inscription_to_bsc_relaying_delay_time": 10,
+    "bsc_to_greenfield_relaying_delay_time": 30,
+    "greenfield_to_bsc_relaying_delay_time": 10,
     "first_in_turn_relayer_relaying_window": 40,
     "in_turn_relayer_relaying_window": 3,
 
-    "inscription_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
+    "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
     "bsc_cross_chain_package_event_name": "CrossChainPackage",
     "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",
     "cross_chain_contract_addr": "0x2078fEEF78BD06AcDdb46619a681327aaEeeAE20",
-    "inscription_light_client_contract_addr": "0x71b750F84B4d1d72C17EcEba811fA6E4C8c9CfdC"
+    "greenfield_light_client_contract_addr": "0x71b750F84B4d1d72C17EcEba811fA6E4C8c9CfdC"
   },
   "log_config": {
     "level": "DEBUG",
@@ -63,7 +63,7 @@
   },
   "db_config": {
     "dialect": "mysql",
-    "db_path": "root:pass@/inscription?charset=utf8&parseTime=True&loc=Local"
+    "db_path": "root:pass@/greenfield?charset=utf8&parseTime=True&loc=Local"
   },
   "alert_config": {
     "enable_alert": true,

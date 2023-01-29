@@ -6,12 +6,12 @@ import (
 	"github.com/op/go-logging"
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/config"
 )
 
 var (
 	// Logger instance for quick declarative logging levels
-	Logger = logging.MustGetLogger("inscription-relayer")
+	Logger = logging.MustGetLogger("greenfield-relayer")
 	// log levels that are available
 	levels = map[string]logging.Level{
 		"CRITICAL": logging.CRITICAL,

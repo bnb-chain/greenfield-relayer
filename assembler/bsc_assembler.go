@@ -2,37 +2,37 @@ package assembler
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"time"
 
-	"github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/executor"
-	"github.com/bnb-chain/inscription-relayer/util"
-	"github.com/bnb-chain/inscription-relayer/vote"
+	"github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db/dao"
+	"github.com/bnb-chain/greenfield-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/util"
+	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
 type BSCAssembler struct {
-	config              *config.Config
-	inscriptionExecutor *executor.InscriptionExecutor
-	bscExecutor         *executor.BSCExecutor
-	daoManager          *dao.DaoManager
-	votePoolExecutor    *vote.VotePoolExecutor
+	config             *config.Config
+	greenfieldExecutor *executor.GreenfieldExecutor
+	bscExecutor        *executor.BSCExecutor
+	daoManager         *dao.DaoManager
+	votePoolExecutor   *vote.VotePoolExecutor
 }
 
-func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, votePoolExecutor *vote.VotePoolExecutor, inscriptionExecutor *executor.InscriptionExecutor) *BSCAssembler {
+func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, votePoolExecutor *vote.VotePoolExecutor, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
 	return &BSCAssembler{
-		config:              cfg,
-		bscExecutor:         executor,
-		daoManager:          dao,
-		votePoolExecutor:    votePoolExecutor,
-		inscriptionExecutor: inscriptionExecutor,
+		config:             cfg,
+		bscExecutor:        executor,
+		daoManager:         dao,
+		votePoolExecutor:   votePoolExecutor,
+		greenfieldExecutor: greenfieldExecutor,
 	}
 }
 
-// AssemblePackagesAndClaim assemble packages and then claim in Inscription
+// AssemblePackagesAndClaim assemble packages and then claim in Greenfield
 func (a *BSCAssembler) AssemblePackagesAndClaim() {
 	a.assemblePackagesAndClaimForOracleChannel(common.OracleChannelId)
 }
@@ -71,7 +71,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	validators, err := a.inscriptionExecutor.QueryCachedLatestValidators()
+	validators, err := a.greenfieldExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	relayerPubKeys, err := a.inscriptionExecutor.GetValidatorsBlsPublicKey()
+	relayerPubKeys, err := a.greenfieldExecutor.GetValidatorsBlsPublicKey()
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
-	packagesRelayStartTime := pkgTs + a.config.RelayConfig.BSCToInscriptionRelayingDelayTime
+	packagesRelayStartTime := pkgTs + a.config.RelayConfig.BSCToGreenfieldRelayingDelayTime
 	logging.Logger.Infof("packages will be relayed starting at %d", packagesRelayStartTime)
 
 	var indexDiff int
@@ -127,7 +127,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 			return nil
 		case <-ticker.C:
 			if time.Now().Unix() >= curRelayerRelayingStartTime {
-				txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].ClaimPayload, aggregatedSignature, valBitSet.Bytes(), pkgTs)
+				txHash, err := a.greenfieldExecutor.ClaimPackages(votes[0].ClaimPayload, aggregatedSignature, valBitSet.Bytes(), pkgTs)
 				if err != nil {
 					return err
 				}

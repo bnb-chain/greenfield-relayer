@@ -1,8 +1,8 @@
 VERSION=$(shell git describe --tags)
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_COMMIT_DATE=$(shell git log -n1 --pretty='format:%cd' --date=format:'%Y%m%d')
-REPO=github.com/bnb-chain/inscription-relayer
-IMAGE_NAME=ghcr.io/bnb-chain/inscription-relayer
+REPO=github.com/bnb-chain/greenfield-relayer
+IMAGE_NAME=ghcr.io/bnb-chain/greenfield-relayer
 
 ldflags = -X $(REPO)/version.AppVersion=$(VERSION) \
           -X $(REPO)/version.GitCommit=$(GIT_COMMIT) \
@@ -10,9 +10,9 @@ ldflags = -X $(REPO)/version.AppVersion=$(VERSION) \
 
 build:
 ifeq ($(OS),Windows_NT)
-	go build -o build/inscription-relayer.exe -ldflags="$(ldflags)" main.go
+	go build -o build/greenfield-relayer.exe -ldflags="$(ldflags)" main.go
 else
-	go build -o build/inscription-relayer -ldflags="$(ldflags)" main.go
+	go build -o build/greenfield-relayer -ldflags="$(ldflags)" main.go
 endif
 
 install:

@@ -8,18 +8,18 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db"
-	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
 )
 
-func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, inscriptionChainId, bscChainId common.ChainId, config *config.RelayConfig) (*model.BscRelayPackage, error) {
+func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, greenfieldChainId, bscChainId common.ChainId, config *config.RelayConfig) (*model.BscRelayPackage, error) {
 	ev, err := parseCrossChainPackageEvent(abi, log, config)
 	if err != nil {
 		return nil, err
 	}
-	if common.ChainId(ev.SrcChainId) != bscChainId || common.ChainId(ev.DstChainId) != inscriptionChainId {
+	if common.ChainId(ev.SrcChainId) != bscChainId || common.ChainId(ev.DstChainId) != greenfieldChainId {
 		return nil, fmt.Errorf("event log's chain id(s) not expected, SrcChainId=%d, DstChainId=%d", ev.SrcChainId, ev.DstChainId)
 	}
 	var p model.BscRelayPackage

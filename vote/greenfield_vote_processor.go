@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"math/big"
 	"time"
 
@@ -17,39 +17,39 @@ import (
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
 
-	relayercommon "github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
-	"github.com/bnb-chain/inscription-relayer/util"
+	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db/dao"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
-type InscriptionVoteProcessor struct {
-	votePoolExecutor    *VotePoolExecutor
-	daoManager          *dao.DaoManager
-	config              *config.Config
-	signer              *VoteSigner
-	inscriptionExecutor *executor.InscriptionExecutor
-	blsPublicKey        []byte
+type GreenfieldVoteProcessor struct {
+	votePoolExecutor   *VotePoolExecutor
+	daoManager         *dao.DaoManager
+	config             *config.Config
+	signer             *VoteSigner
+	greenfieldExecutor *executor.GreenfieldExecutor
+	blsPublicKey       []byte
 }
 
-func NewInscriptionVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
-	inscriptionExecutor *executor.InscriptionExecutor, votePoolExecutor *VotePoolExecutor) *InscriptionVoteProcessor {
+func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
+	greenfieldExecutor *executor.GreenfieldExecutor, votePoolExecutor *VotePoolExecutor) *GreenfieldVoteProcessor {
 
-	return &InscriptionVoteProcessor{
-		config:              cfg,
-		daoManager:          dao,
-		signer:              signer,
-		inscriptionExecutor: inscriptionExecutor,
-		votePoolExecutor:    votePoolExecutor,
-		blsPublicKey:        util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+	return &GreenfieldVoteProcessor{
+		config:             cfg,
+		daoManager:         dao,
+		signer:             signer,
+		greenfieldExecutor: greenfieldExecutor,
+		votePoolExecutor:   votePoolExecutor,
+		blsPublicKey:       util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
 	}
 }
 
 // SignAndBroadcast signs tx using the relayer's bls private key, then broadcasts the vote to Greenfield votepool
-func (p *InscriptionVoteProcessor) SignAndBroadcast() {
+func (p *GreenfieldVoteProcessor) SignAndBroadcast() {
 	for {
 		err := p.signAndBroadcast()
 		if err != nil {
@@ -58,22 +58,22 @@ func (p *InscriptionVoteProcessor) SignAndBroadcast() {
 	}
 }
 
-func (p *InscriptionVoteProcessor) signAndBroadcast() error {
-	latestHeight, err := p.inscriptionExecutor.GetLatestBlockHeightWithRetry()
+func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
+	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
 		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 		return err
 	}
 
-	leastSavedTxHeight, err := p.daoManager.InscriptionDao.GetLeastSavedTransactionHeight()
+	leastSavedTxHeight, err := p.daoManager.GreenfieldDao.GetLeastSavedTransactionHeight()
 	if err != nil {
 		logging.Logger.Errorf("failed to get least saved tx height, error: %s", err.Error())
 		return err
 	}
-	if leastSavedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
+	if leastSavedTxHeight+p.config.GreenfieldConfig.NumberOfBlocksForFinality > latestHeight {
 		return nil
 	}
-	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(db.Saved, leastSavedTxHeight)
+	txs, err := p.daoManager.GreenfieldDao.GetTransactionsByStatusAndHeight(db.Saved, leastSavedTxHeight)
 	if err != nil {
 		logging.Logger.Errorf("failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
 		return err
@@ -85,7 +85,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 
 	// for every tx, we are going to sign it and broadcast vote of it.
 	for _, tx := range txs {
-		nextDeliverySequence, err := p.inscriptionExecutor.GetNextDeliverySequenceForChannel(relayercommon.ChannelId(tx.ChannelId))
+		nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannel(relayercommon.ChannelId(tx.ChannelId))
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 		// in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
 		// transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
 		if tx.Sequence < nextDeliverySequence {
-			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Delivered)
+			err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered)
 			if err != nil {
 				logging.Logger.Errorf("failed to update packages error %s", err.Error())
 				return err
@@ -119,8 +119,8 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 		}
 
 		// After vote submitted to vote pool, persist vote Data and update the status of tx to 'SELF_VOTED'.
-		err = p.daoManager.InscriptionDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.SelfVoted)
+		err = p.daoManager.GreenfieldDao.DB.Transaction(func(dbTx *gorm.DB) error {
+			err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.SelfVoted)
 			if err != nil {
 				return err
 			}
@@ -143,7 +143,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 	return nil
 }
 
-func (p *InscriptionVoteProcessor) CollectVotes() {
+func (p *GreenfieldVoteProcessor) CollectVotes() {
 	for {
 		err := p.collectVotes()
 		if err != nil {
@@ -152,8 +152,8 @@ func (p *InscriptionVoteProcessor) CollectVotes() {
 	}
 }
 
-func (p *InscriptionVoteProcessor) collectVotes() error {
-	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(db.SelfVoted)
+func (p *GreenfieldVoteProcessor) collectVotes() error {
+	txs, err := p.daoManager.GreenfieldDao.GetTransactionsByStatus(db.SelfVoted)
 	if err != nil {
 		logging.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
 		return err
@@ -163,7 +163,7 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 		if err != nil {
 			return err
 		}
-		err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.AllVoted)
+		err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.AllVoted)
 		if err != nil {
 			return err
 		}
@@ -172,13 +172,13 @@ func (p *InscriptionVoteProcessor) collectVotes() error {
 }
 
 // prepareEnoughValidVotesForTx fetches and validate votes result, store in vote table
-func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.InscriptionRelayTransaction) error {
+func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.GreenfieldRelayTransaction) error {
 	localVote, err := p.daoManager.VoteDao.GetVoteByChannelIdAndSequenceAndPubKey(tx.ChannelId, tx.Sequence, hex.EncodeToString(p.blsPublicKey))
 	if err != nil {
 		return err
 	}
 
-	validators, err := p.inscriptionExecutor.BscExecutor.QueryCachedLatestValidators()
+	validators, err := p.greenfieldExecutor.BscExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func (p *InscriptionVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Inscri
 }
 
 // queryMoreThanTwoThirdVotesForTx queries votes from votePool
-func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []executor.Validator, txId int64) error {
+func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []executor.Validator, txId int64) error {
 	triedTimes := 0
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
@@ -202,7 +202,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
 		// and check if sequence is filled
 		if triedTimes > QueryVotepoolMaxRetryTimes {
-			if err := p.daoManager.InscriptionDao.UpdateTransactionStatus(txId, db.Saved); err != nil {
+			if err := p.daoManager.GreenfieldDao.UpdateTransactionStatus(txId, db.Saved); err != nil {
 				logging.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
 				return err
 			}
@@ -276,7 +276,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 	return nil
 }
 
-func (p *InscriptionVoteProcessor) constructVoteAndSign(aggregatedPayload []byte) *votepool.Vote {
+func (p *GreenfieldVoteProcessor) constructVoteAndSign(aggregatedPayload []byte) *votepool.Vote {
 	var v votepool.Vote
 	v.EventType = votepool.ToBscCrossChainEvent
 	v.EventHash = p.getEventHash(aggregatedPayload)
@@ -284,11 +284,11 @@ func (p *InscriptionVoteProcessor) constructVoteAndSign(aggregatedPayload []byte
 	return &v
 }
 
-func (p *InscriptionVoteProcessor) getEventHash(aggregatedPayload []byte) []byte {
+func (p *GreenfieldVoteProcessor) getEventHash(aggregatedPayload []byte) []byte {
 	return crypto.Keccak256Hash(aggregatedPayload).Bytes()
 }
 
-func (p *InscriptionVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []executor.Validator) bool {
+func (p *GreenfieldVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []executor.Validator) bool {
 	for _, validator := range validators {
 		if bytes.Equal(v.PubKey[:], validator.BlsPublicKey[:]) {
 			return true
@@ -299,7 +299,7 @@ func (p *InscriptionVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validator
 
 // aggregatePayloadForTx aggregate required fields by concatenating their bytes, this will be used as payload when
 // calling BSC smart contract, and also used to generate eventHash for broadcasting vote
-func (p *InscriptionVoteProcessor) aggregatePayloadForTx(tx *model.InscriptionRelayTransaction) ([]byte, error) {
+func (p *GreenfieldVoteProcessor) aggregatePayloadForTx(tx *model.GreenfieldRelayTransaction) ([]byte, error) {
 	var aggregatedPayload []byte
 
 	aggregatedPayload = append(aggregatedPayload, util.Uint16ToBytes(uint16(tx.SrcChainId))...)
@@ -329,7 +329,7 @@ func (p *InscriptionVoteProcessor) aggregatePayloadForTx(tx *model.InscriptionRe
 	return aggregatedPayload, nil
 }
 
-func (p *InscriptionVoteProcessor) txFeeToBytes(txFee string) ([]byte, error) {
+func (p *GreenfieldVoteProcessor) txFeeToBytes(txFee string) ([]byte, error) {
 	fee, ok := new(big.Int).SetString(txFee, 10)
 	if !ok {
 		return nil, errors.New("failed to convert tx fee")

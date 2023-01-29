@@ -6,7 +6,7 @@ services:
       - SYS_NICE
     restart: always
     environment:
-      - MYSQL_DATABASE=inscription
+      - MYSQL_DATABASE=greenfield
       - MYSQL_ROOT_PASSWORD=pass
     ports:
       - '3306:3306'

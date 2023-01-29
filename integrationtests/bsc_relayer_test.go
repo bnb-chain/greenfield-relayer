@@ -13,12 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/votepool"
 
-	relayercommon "github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/db"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/util"
-	"github.com/bnb-chain/inscription-relayer/vote"
+	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db/dao"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/util"
+	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
 const (
@@ -33,15 +33,15 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	go app.BSCRelayer.CollectVotesLoop()
 	go app.BSCRelayer.AssemblePackagesLoop()
 
-	inscriptionExecutor := app.BSCRelayer.InscriptionExecutor
+	greenfieldExecutor := app.BSCRelayer.GreenfieldExecutor
 	daoManager := app.BSCRelayer.Listener.DaoManager
 
 	// Given: Prepare cross-chain packages to be sent. Define the channel id, oracle sequence and package sequence are
-	// retrieved from destination chain(Inscription),
+	// retrieved from destination chain(Greenfield),
 	channelId := uint8(1)
-	oracleSeq, err := inscriptionExecutor.GetNextReceiveOracleSequence()
+	oracleSeq, err := greenfieldExecutor.GetNextReceiveOracleSequence()
 	require.NoError(t, err)
-	packageStartSeq, err := inscriptionExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
+	packageStartSeq, err := greenfieldExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
 	require.NoError(t, err)
 
 	relayPkgs := make([]*model.BscRelayPackage, 0)
@@ -69,7 +69,7 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	}
 
 	// When: Save packages with status 'Saved' into Database, there are processes to aggregate packages to submit vote to
-	// Inscription Votepool, gathering votes from votepool, and assembler them to claim in Inscription.
+	// Greenfield Votepool, gathering votes from votepool, and assembler them to claim in Greenfield.
 	err = daoManager.BSCDao.SaveBatchPackages(relayPkgs)
 	require.NoError(t, err)
 
@@ -90,10 +90,10 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	require.EqualValues(t, packageStartSeq, pkgs[0].PackageSequence)
 	require.EqualValues(t, endSeq, pkgs[packagesSize-1].PackageSequence)
 
-	nextSeq, err := inscriptionExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
+	nextSeq, err := greenfieldExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
 	require.NoError(t, err)
 	require.EqualValues(t, endSeq+1, nextSeq)
-	nextOracleSeq, err := inscriptionExecutor.GetNextReceiveOracleSequence()
+	nextOracleSeq, err := greenfieldExecutor.GetNextReceiveOracleSequence()
 	require.NoError(t, err)
 	require.EqualValues(t, oracleSeq+1, nextOracleSeq)
 }

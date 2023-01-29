@@ -6,7 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/votepool"
 
-	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
 )
 
 func DtoToEntity(v *model.Vote) (*votepool.Vote, error) {

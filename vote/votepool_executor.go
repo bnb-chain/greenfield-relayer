@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	"github.com/tendermint/tendermint/votepool"
 
-	"github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/config"
 )
 
 type VotePoolExecutor struct {

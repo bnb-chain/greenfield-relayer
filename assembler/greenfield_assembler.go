@@ -2,45 +2,45 @@ package assembler
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"time"
 
-	"github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db"
-	"github.com/bnb-chain/inscription-relayer/db/dao"
-	"github.com/bnb-chain/inscription-relayer/db/model"
-	"github.com/bnb-chain/inscription-relayer/executor"
-	"github.com/bnb-chain/inscription-relayer/util"
-	"github.com/bnb-chain/inscription-relayer/vote"
+	"github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db/dao"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/util"
+	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
-type InscriptionAssembler struct {
-	config              *config.Config
-	bscExecutor         *executor.BSCExecutor
-	inscriptionExecutor *executor.InscriptionExecutor
-	daoManager          *dao.DaoManager
-	votePoolExecutor    *vote.VotePoolExecutor
+type GreenfieldAssembler struct {
+	config             *config.Config
+	bscExecutor        *executor.BSCExecutor
+	greenfieldExecutor *executor.GreenfieldExecutor
+	daoManager         *dao.DaoManager
+	votePoolExecutor   *vote.VotePoolExecutor
 }
 
-func NewInscriptionAssembler(cfg *config.Config, executor *executor.InscriptionExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor, votePoolExecutor *vote.VotePoolExecutor) *InscriptionAssembler {
-	return &InscriptionAssembler{
-		config:              cfg,
-		inscriptionExecutor: executor,
-		daoManager:          dao,
-		bscExecutor:         bscExecutor,
-		votePoolExecutor:    votePoolExecutor,
+func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor, votePoolExecutor *vote.VotePoolExecutor) *GreenfieldAssembler {
+	return &GreenfieldAssembler{
+		config:             cfg,
+		greenfieldExecutor: executor,
+		daoManager:         dao,
+		bscExecutor:        bscExecutor,
+		votePoolExecutor:   votePoolExecutor,
 	}
 }
 
 // AssembleTransactionAndSend assemble a tx by gathering votes signature and then call the build-in smart-contract
-func (a *InscriptionAssembler) AssembleTransactionAndSend() {
+func (a *GreenfieldAssembler) AssembleTransactionAndSend() {
 	for _, c := range a.getMonitorChannels() {
 		go a.assembleTransactionAndSendForChannel(common.ChannelId(c))
 	}
 }
 
-func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId common.ChannelId) {
+func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId common.ChannelId) {
 	for {
 		err := a.process(channelId)
 		if err != nil {
@@ -50,17 +50,17 @@ func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId co
 	}
 }
 
-func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
-	nextSequence, err := a.inscriptionExecutor.GetNextDeliverySequenceForChannel(channelId)
+func (a *GreenfieldAssembler) process(channelId common.ChannelId) error {
+	nextSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannel(channelId)
 	if err != nil {
 		return err
 	}
 
-	tx, err := a.daoManager.InscriptionDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, db.AllVoted)
+	tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, db.AllVoted)
 	if err != nil {
 		return err
 	}
-	if (*tx == model.InscriptionRelayTransaction{}) {
+	if (*tx == model.GreenfieldRelayTransaction{}) {
 		return nil
 	}
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig
@@ -86,7 +86,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.votePoolExecutor.GetBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
-	txRelayStartTime := tx.TxTime + a.config.RelayConfig.InscriptionToBSCRelayingDelayTime
+	txRelayStartTime := tx.TxTime + a.config.RelayConfig.GreenfieldToBSCRelayingDelayTime
 	logging.Logger.Infof("tx will be relayed starting at %d", txRelayStartTime)
 
 	var indexDiff int
@@ -114,7 +114,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 		case err = <-errC:
 			return err
 		case <-filled:
-			if err = a.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
+			if err = a.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
 				logging.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'Delivered', error=%s", tx.ChannelId, tx.Sequence, err.Error())
 				return err
 			}
@@ -127,7 +127,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 					return err
 				}
 				logging.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
-				err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String())
+				err = a.daoManager.GreenfieldDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String())
 				if err != nil {
 					logging.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'Delivered', error=%s", tx.ChannelId, tx.Sequence, err.Error())
 					return err
@@ -138,11 +138,11 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	}
 }
 
-func (a *InscriptionAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID common.ChannelId) {
+func (a *GreenfieldAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID common.ChannelId) {
 	ticker := time.NewTicker(common.RetryInterval)
 	defer ticker.Stop()
 	for range ticker.C {
-		nextDeliverySequence, err := a.inscriptionExecutor.GetNextDeliverySequenceForChannel(channelID)
+		nextDeliverySequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannel(channelID)
 		if err != nil {
 			errC <- err
 		}
@@ -153,6 +153,6 @@ func (a *InscriptionAssembler) validateSequenceFilled(filled chan struct{}, errC
 	}
 }
 
-func (a *InscriptionAssembler) getMonitorChannels() []uint8 {
-	return a.config.InscriptionConfig.MonitorChannelList
+func (a *GreenfieldAssembler) getMonitorChannels() []uint8 {
+	return a.config.GreenfieldConfig.MonitorChannelList
 }

@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func InitInsExecutor() *InscriptionExecutor {
+func InitInsExecutor() *GreenfieldExecutor {
 	cfg := InitTestConfig()
-	return NewInscriptionExecutor(cfg)
+	return NewGreenfieldExecutor(cfg)
 }
 
 func TestGetLatestBlockHeightWithRetry(t *testing.T) {

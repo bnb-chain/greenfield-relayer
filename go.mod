@@ -1,4 +1,4 @@
-module github.com/bnb-chain/inscription-relayer
+module github.com/bnb-chain/greenfield-relayer
 
 go 1.19
 

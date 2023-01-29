@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/bnb-chain/inscription-relayer/app"
-	config "github.com/bnb-chain/inscription-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/app"
+	config "github.com/bnb-chain/greenfield-relayer/config"
 )
 
 const (
@@ -33,18 +33,18 @@ func initFlags() {
 }
 
 func printUsage() {
-	fmt.Print("usage: ./inscription-relayer --config-type local --config-path configFile\n")
-	fmt.Print("usage: ./inscription-relayer --config-type aws --aws-region awsRegin --aws-secret-key awsSecretKey\n")
+	fmt.Print("usage: ./greenfield-relayer --config-type local --config-path configFile\n")
+	fmt.Print("usage: ./greenfield-relayer --config-type aws --aws-region awsRegin --aws-secret-key awsSecretKey\n")
 }
 
 func main() {
 	initFlags()
 	configType := viper.GetString(flagConfigType)
+	configType = "local"
 	if configType != config.AWSConfig && configType != config.LocalConfig {
 		printUsage()
 		return
 	}
-
 	var cfg *config.Config
 
 	if configType == config.AWSConfig {
@@ -68,6 +68,8 @@ func main() {
 		cfg = config.ParseConfigFromJson(configContent)
 	} else {
 		configFilePath := viper.GetString(flagConfigPath)
+		configFilePath = "config/config.json"
+
 		if configFilePath == "" {
 			printUsage()
 			return

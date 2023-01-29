@@ -6,9 +6,9 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/inscription-relayer/app"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/app"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
 )
 
 func InitTestApp() app.App {
@@ -29,11 +29,11 @@ func InitTestApp() app.App {
 	if err != nil {
 		panic(err)
 	}
-	err = db.Migrator().DropTable(&model.InscriptionRelayTransaction{})
+	err = db.Migrator().DropTable(&model.GreenfieldRelayTransaction{})
 	if err != nil {
 		panic(err)
 	}
-	err = db.Migrator().DropTable(&model.InscriptionBlock{})
+	err = db.Migrator().DropTable(&model.GreenfieldBlock{})
 	if err != nil {
 		panic(err)
 	}

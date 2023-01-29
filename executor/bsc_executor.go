@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/bnb-chain/inscription-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"math/big"
 	"sync"
 	"time"
@@ -18,32 +18,32 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	relayercommon "github.com/bnb-chain/inscription-relayer/common"
-	"github.com/bnb-chain/inscription-relayer/config"
-	"github.com/bnb-chain/inscription-relayer/executor/crosschain"
-	"github.com/bnb-chain/inscription-relayer/executor/inscriptionlightclient"
+	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/executor/crosschain"
+	"github.com/bnb-chain/greenfield-relayer/executor/greenfieldlightclient"
 )
 
 type BSCClient struct {
-	rpcClient              *ethclient.Client
-	crossChainClient       *crosschain.Crosschain
-	inscriptionLightClient *inscriptionlightclient.Inscriptionlightclient
-	provider               string
-	height                 uint64
-	updatedAt              time.Time
+	rpcClient             *ethclient.Client
+	crossChainClient      *crosschain.Crosschain
+	greenfieldLightClient *greenfieldlightclient.Greenfieldlightclient
+	provider              string
+	height                uint64
+	updatedAt             time.Time
 }
 
 type BSCExecutor struct {
-	gasPriceMutex       sync.RWMutex
-	mutex               sync.RWMutex
-	InscriptionExecutor *InscriptionExecutor
-	clientIdx           int
-	bscClients          []*BSCClient
-	config              *config.Config
-	privateKey          *ecdsa.PrivateKey
-	txSender            common.Address
-	gasPrice            *big.Int
-	relayers            []Validator // cached relayers
+	gasPriceMutex      sync.RWMutex
+	mutex              sync.RWMutex
+	GreenfieldExecutor *GreenfieldExecutor
+	clientIdx          int
+	bscClients         []*BSCClient
+	config             *config.Config
+	privateKey         *ecdsa.PrivateKey
+	txSender           common.Address
+	gasPrice           *big.Int
+	relayers           []Validator // cached relayers
 }
 
 func initBSCClients(config *config.Config) []*BSCClient {
@@ -54,8 +54,8 @@ func initBSCClients(config *config.Config) []*BSCClient {
 		if err != nil {
 			panic("new eth client error")
 		}
-		inscriptionLightClient, err := inscriptionlightclient.NewInscriptionlightclient(
-			common.HexToAddress(config.RelayConfig.InscriptionLightClientContractAddr),
+		greenfieldLightClient, err := greenfieldlightclient.NewGreenfieldlightclient(
+			common.HexToAddress(config.RelayConfig.GreenfieldLightClientContractAddr),
 			rpcClient)
 		if err != nil {
 			panic("new crossChain client error")
@@ -64,14 +64,14 @@ func initBSCClients(config *config.Config) []*BSCClient {
 			common.HexToAddress(config.RelayConfig.CrossChainContractAddr),
 			rpcClient)
 		if err != nil {
-			panic("new inscription light client error")
+			panic("new greenfield light client error")
 		}
 		bscClients = append(bscClients, &BSCClient{
-			rpcClient:              rpcClient,
-			crossChainClient:       crossChainClient,
-			inscriptionLightClient: inscriptionLightClient,
-			provider:               provider,
-			updatedAt:              time.Now(),
+			rpcClient:             rpcClient,
+			crossChainClient:      crossChainClient,
+			greenfieldLightClient: greenfieldLightClient,
+			provider:              provider,
+			updatedAt:             time.Now(),
 		})
 	}
 	return bscClients
@@ -128,8 +128,8 @@ func NewBSCExecutor(cfg *config.Config) *BSCExecutor {
 	}
 }
 
-func (e *BSCExecutor) SetInscriptionExecutor(insE *InscriptionExecutor) {
-	e.InscriptionExecutor = insE
+func (e *BSCExecutor) SetGreenfieldExecutor(insE *GreenfieldExecutor) {
+	e.GreenfieldExecutor = insE
 }
 
 func (e *BSCExecutor) GetRpcClient() *ethclient.Client {
@@ -144,10 +144,10 @@ func (e *BSCExecutor) getCrossChainClient() *crosschain.Crosschain {
 	return e.bscClients[e.clientIdx].crossChainClient
 }
 
-func (e *BSCExecutor) getInscriptionLightClient() *inscriptionlightclient.Inscriptionlightclient {
+func (e *BSCExecutor) getGreenfieldLightClient() *greenfieldlightclient.Greenfieldlightclient {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	return e.bscClients[e.clientIdx].inscriptionLightClient
+	return e.bscClients[e.clientIdx].greenfieldLightClient
 }
 
 func (e *BSCExecutor) SwitchClient() {
@@ -242,7 +242,7 @@ func (e *BSCExecutor) GetNextReceiveSequenceForChannel(channelID relayercommon.C
 }
 
 func (e *BSCExecutor) GetNextDeliveryOracleSequence() (uint64, error) {
-	sequence, err := e.InscriptionExecutor.GetNextReceiveOracleSequence()
+	sequence, err := e.GreenfieldExecutor.GetNextReceiveOracleSequence()
 	if err != nil {
 		return 0, err
 	}
@@ -284,7 +284,7 @@ func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Has
 	if err != nil {
 		return common.Hash{}, err
 	}
-	tx, err := e.getInscriptionLightClient().SyncTendermintHeader(txOpts, headerBytes, height, header.BlsPubKeys, header.Relayers)
+	tx, err := e.getGreenfieldLightClient().SyncTendermintHeader(txOpts, headerBytes, height, header.BlsPubKeys, header.Relayers)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -293,7 +293,7 @@ func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Has
 
 func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *relayercommon.Header, err error) {
 	return header, retry.Do(func() error {
-		header, err = e.InscriptionExecutor.QueryTendermintHeader(height)
+		header, err = e.GreenfieldExecutor.QueryTendermintHeader(height)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -304,12 +304,12 @@ func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *rela
 }
 
 func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (header *relayercommon.Header, err error) {
-	latestHeigh, err := e.InscriptionExecutor.GetLatestBlockHeightWithRetry()
+	latestHeigh, err := e.GreenfieldExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
 		return nil, err
 	}
 	return header, retry.Do(func() error {
-		header, err = e.InscriptionExecutor.QueryTendermintHeader(int64(latestHeigh))
+		header, err = e.GreenfieldExecutor.QueryTendermintHeader(int64(latestHeigh))
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -337,11 +337,11 @@ func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSe
 }
 
 func (e *BSCExecutor) QueryLatestValidators() ([]Validator, error) {
-	relayerAddresses, err := e.getInscriptionLightClient().GetRelayers(nil)
+	relayerAddresses, err := e.getGreenfieldLightClient().GetRelayers(nil)
 	if err != nil {
 		return nil, err
 	}
-	blsKeys, err := e.getInscriptionLightClient().BlsPubKeys(nil)
+	blsKeys, err := e.getGreenfieldLightClient().BlsPubKeys(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -387,7 +387,7 @@ func (e *BSCExecutor) GetLightClientLatestHeight() (uint64, error) {
 		Pending: true,
 		Context: context.Background(),
 	}
-	latestHeight, err := e.getInscriptionLightClient().InsHeight(callOpts)
+	latestHeight, err := e.getGreenfieldLightClient().InsHeight(callOpts)
 	if err != nil {
 		return 0, err
 	}

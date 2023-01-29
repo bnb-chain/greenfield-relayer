@@ -3,7 +3,7 @@ package model
 import (
 	"gorm.io/gorm"
 
-	"github.com/bnb-chain/inscription-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db"
 )
 
 type BscBlock struct {

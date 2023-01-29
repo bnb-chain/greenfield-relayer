@@ -1,15 +1,15 @@
 package dao
 
 type DaoManager struct {
-	InscriptionDao *InscriptionDao
-	VoteDao        *VoteDao
-	BSCDao         *BSCDao
+	GreenfieldDao *GreenfieldDao
+	VoteDao       *VoteDao
+	BSCDao        *BSCDao
 }
 
-func NewDaoManager(inscriptionDao *InscriptionDao, bscDao *BSCDao, voteDao *VoteDao) *DaoManager {
+func NewDaoManager(greenfieldDao *GreenfieldDao, bscDao *BSCDao, voteDao *VoteDao) *DaoManager {
 	return &DaoManager{
-		InscriptionDao: inscriptionDao,
-		VoteDao:        voteDao,
-		BSCDao:         bscDao,
+		GreenfieldDao: greenfieldDao,
+		VoteDao:       voteDao,
+		BSCDao:        bscDao,
 	}
 }
