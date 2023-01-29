@@ -26,7 +26,7 @@ func NewVotePoolExecutor(cfg *config.Config) *VotePoolExecutor {
 	}
 }
 
-func (e *VotePoolExecutor) QueryVotes(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
+func (e *VotePoolExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
 	queryMap := make(map[string]interface{})
 	queryMap[VotePoolQueryParameterEventType] = int(eventType)
 	queryMap[VotePoolQueryParameterEventHash] = eventHash

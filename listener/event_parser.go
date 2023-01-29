@@ -2,7 +2,7 @@ package listener
 
 import (
 	"encoding/hex"
-	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -20,7 +20,7 @@ func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, inscripti
 		return nil, err
 	}
 	if common.ChainId(ev.SrcChainId) != bscChainId || common.ChainId(ev.DstChainId) != inscriptionChainId {
-		return nil, errors.New("event log's chain id not expected")
+		return nil, fmt.Errorf("event log's chain id(s) not expected, SrcChainId=%d, DstChainId=%d", ev.SrcChainId, ev.DstChainId)
 	}
 	var p model.BscRelayPackage
 	p.OracleSequence = ev.OracleSequence

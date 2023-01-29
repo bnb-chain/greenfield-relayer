@@ -2,13 +2,14 @@ package listener
 
 import (
 	"bytes"
+	"github.com/bnb-chain/inscription-relayer/logging"
 	"strconv"
 	"time"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	relayercommon "github.com/bnb-chain/inscription-relayer/common"
+	"github.com/bnb-chain/inscription-relayer/common"
 	"github.com/bnb-chain/inscription-relayer/config"
 	"github.com/bnb-chain/inscription-relayer/db"
 	"github.com/bnb-chain/inscription-relayer/db/dao"
@@ -34,64 +35,60 @@ func NewInscriptionListener(cfg *config.Config, insExecutor *executor.Inscriptio
 }
 
 func (l *InscriptionListener) Start() {
-	curHeight := l.config.InscriptionConfig.StartHeight
-	go l.poll(curHeight)
-	go l.monitorValidators(curHeight)
-}
-
-func (l *InscriptionListener) monitorValidators(curHeight uint64) {
-	for {
-		nextHeight, err := l.monitorValidatorsAtHeight(curHeight)
-		if err != nil {
-			time.Sleep(relayercommon.RetryInterval)
-			continue
+	go func() {
+		for {
+			err := l.poll()
+			if err != nil {
+				time.Sleep(common.RetryInterval)
+				continue
+			}
 		}
-		curHeight = nextHeight
-	}
-}
-
-func (l *InscriptionListener) poll(curHeight uint64) {
-	for {
-		nextHeight, err := l.pollHelper(curHeight)
-		if err != nil {
-			time.Sleep(relayercommon.RetryInterval)
-			continue
+	}()
+	go func() {
+		for {
+			err := l.monitorValidators()
+			if err != nil {
+				time.Sleep(common.RetryInterval)
+				continue
+			}
 		}
-		curHeight = nextHeight
-	}
+	}()
 }
 
-func (l *InscriptionListener) pollHelper(curHeight uint64) (uint64, error) {
+func (l *InscriptionListener) poll() error {
 	latestPolledBlock, err := l.getLatestPolledBlock()
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
-		return 0, err
+		logging.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
+		return err
 	}
+	nextHeight := l.config.InscriptionConfig.StartHeight
 	latestPolledBlockHeight := latestPolledBlock.Height
-	if curHeight <= latestPolledBlockHeight {
-		curHeight = latestPolledBlockHeight + 1
+
+	if nextHeight <= latestPolledBlockHeight {
+		nextHeight = latestPolledBlockHeight + 1
 	}
 
 	latestBlockHeight, err := l.inscriptionExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get latest block curHeight, error: %s", err.Error())
-		return 0, err
+		logging.Logger.Errorf("failed to get latest polled block height, error: %s", err.Error())
+		return err
 	}
 	if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
-		return curHeight, nil
+		time.Sleep(common.RetryInterval)
+		return nil
 	}
-	blockRes, block, err := l.getBlockAndBlockResult(curHeight)
+	blockRes, block, err := l.getBlockAndBlockResult(nextHeight)
 	if err != nil {
-		relayercommon.Logger.Errorf("encounter error when retrieve block and block result at curHeight %d, err=%s", curHeight, err.Error())
-		return 0, err
+		logging.Logger.Errorf("encounter error when retrieve block and block result at block height=%d, err=%s", nextHeight, err.Error())
+		return err
 	}
 
 	err = l.monitorCrossChainEvents(blockRes, block)
 	if err != nil {
-		relayercommon.Logger.Errorf("encounter error when monitor events at block %d, err=%s", curHeight, err.Error())
-		return 0, err
+		logging.Logger.Errorf("encounter error when monitor cross-chain events at blockHeight=%d, err=%s", nextHeight, err.Error())
+		return err
 	}
-	return curHeight + 1, nil
+	return nil
 }
 
 func (l *InscriptionListener) getLatestPolledBlock() (*model.InscriptionBlock, error) {
@@ -103,7 +100,7 @@ func (l *InscriptionListener) getLatestPolledBlock() (*model.InscriptionBlock, e
 }
 
 func (l *InscriptionListener) getBlockAndBlockResult(height uint64) (*ctypes.ResultBlockResults, *tmtypes.Block, error) {
-	relayercommon.Logger.Infof("retrieve inscription block at height=%d", height)
+	logging.Logger.Infof("retrieve inscription block at height=%d", height)
 	blockResults, err := l.inscriptionExecutor.GetBlockResultAtHeight(int64(height))
 	if err != nil {
 		return nil, nil, err
@@ -117,7 +114,6 @@ func (l *InscriptionListener) getBlockAndBlockResult(height uint64) (*ctypes.Res
 
 func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
 	txs := make([]*model.InscriptionRelayTransaction, 0)
-
 	for _, tx := range blockResults.TxsResults {
 		for _, event := range tx.Events {
 			relayTx := model.InscriptionRelayTransaction{}
@@ -179,10 +175,9 @@ func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.Resul
 						}
 						relayTx.AckRelayerFee = feeStr
 					default:
-						relayercommon.Logger.Errorf("unexpected attr, key is %s", attr.Key)
+						logging.Logger.Errorf("unexpected attr, key is %s", attr.Key)
 					}
 				}
-
 				relayTx.Status = db.Saved
 				relayTx.Height = uint64(block.Height)
 				relayTx.UpdatedTime = time.Now().Unix()
@@ -199,57 +194,48 @@ func (l *InscriptionListener) monitorCrossChainEvents(blockResults *ctypes.Resul
 	return l.DaoManager.InscriptionDao.SaveBlockAndBatchTransactions(b, txs)
 }
 
-func (l *InscriptionListener) monitorValidatorsAtHeight(curHeight uint64) (uint64, error) {
-	if curHeight == 1 {
-		return curHeight + 1, nil
-	}
-
+func (l *InscriptionListener) monitorValidators() error {
+	nextHeight := l.config.InscriptionConfig.StartHeight
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
-		return curHeight, err
+		return err
 	}
-
-	if curHeight <= lightClientLatestHeight {
-		return lightClientLatestHeight + 1, nil
+	if nextHeight <= lightClientLatestHeight {
+		nextHeight = lightClientLatestHeight + 1
 	}
-
-	relayercommon.Logger.Infof("monitoring validator at height %d", curHeight)
-	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(curHeight)
+	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
+	nextValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(nextHeight)
 	if err != nil {
-		return curHeight, err
+		return err
 	}
-
-	prevValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(curHeight - 1)
+	curValidators, err := l.inscriptionExecutor.QueryValidatorsAtHeight(nextHeight - 1)
 	if err != nil {
-		return curHeight, err
+		return err
 	}
 
-	if len(curValidators) != len(prevValidators) {
-		relayercommon.Logger.Infof("syncing tendermint header at height %d", curHeight)
-		txHash, err := l.bscExecutor.SyncTendermintLightClientHeader(curHeight)
+	if len(nextValidators) != len(curValidators) {
+		logging.Logger.Infof("syncing tendermint header at height %d", nextHeight)
+		txHash, err := l.bscExecutor.SyncTendermintLightClientHeader(nextHeight)
 		if err != nil {
-			return curHeight, err
+			return err
 		}
-		relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", curHeight, txHash.String())
-		return curHeight + 1, nil
+		logging.Logger.Infof("synced tendermint header at height %d with txHash %s", nextHeight, txHash.String())
+		return nil
 	}
 
-	for idx, curVal := range curValidators {
-		prevVal := prevValidators[idx]
-
-		// validators should be in same order if there is no change to existing validators
-		if curVal.OperatorAddress != prevVal.OperatorAddress ||
-			!bytes.Equal(curVal.ConsensusPubkey.Value, prevVal.ConsensusPubkey.Value) ||
-			!bytes.Equal(curVal.RelayerBlsKey, prevVal.RelayerBlsKey) ||
-			curVal.RelayerAddress != prevVal.RelayerAddress {
-			relayercommon.Logger.Infof("syncing tendermint header at height %d", curHeight)
-			txHash, err := l.bscExecutor.SyncTendermintLightClientHeader(curHeight)
+	for idx, nextVal := range nextValidators {
+		curVal := curValidators[idx]
+		if nextVal.OperatorAddress != curVal.OperatorAddress ||
+			!bytes.Equal(nextVal.RelayerBlsKey, curVal.RelayerBlsKey) ||
+			nextVal.RelayerAddress != curVal.RelayerAddress {
+			logging.Logger.Infof("syncing tendermint header at height %d", nextHeight)
+			txHash, err := l.bscExecutor.SyncTendermintLightClientHeader(nextHeight)
 			if err != nil {
-				return curHeight, err
+				return err
 			}
-			relayercommon.Logger.Infof("synced tendermint header at height %d with txHash %s", curHeight, txHash.String())
-			return curHeight + 1, nil
+			logging.Logger.Infof("synced tendermint header at height %d with txHash %s", nextHeight, txHash.String())
+			return nil
 		}
 	}
-	return curHeight + 1, nil
+	return nil
 }

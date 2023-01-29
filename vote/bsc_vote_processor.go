@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/logging"
 	"sort"
 	"time"
 
@@ -60,13 +61,13 @@ func (p *BSCVoteProcessor) SignAndBroadcast() {
 func (p *BSCVoteProcessor) signAndBroadcast() error {
 	latestHeight, err := p.bscExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
+		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 		return err
 	}
 
 	leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get least saved packages' height, error: %s", err.Error())
+		logging.Logger.Errorf("failed to get least saved packages' height, error: %s", err.Error())
 		return err
 	}
 
@@ -75,7 +76,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 	}
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(db.Saved, leastSavedPkgHeight)
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
+		logging.Logger.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
 		return err
 	}
 
@@ -120,10 +121,10 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		if seq < nextDeliverySeqOnInscription {
 			err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered)
 			if err != nil {
-				relayercommon.Logger.Errorf("failed to update packages error %s", err.Error())
+				logging.Logger.Errorf("failed to update packages error %s", err.Error())
 				return err
 			}
-			relayercommon.Logger.Infof("packages' oracle sequence %d is less than nex delivery oracle sequence %d", seq, nextDeliverySeqOnInscription)
+			logging.Logger.Infof("packages' oracle sequence %d is less than nex delivery oracle sequence %d", seq, nextDeliverySeqOnInscription)
 			continue
 		}
 
@@ -141,7 +142,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			return fmt.Errorf("encode packages error, err=%s", err.Error())
 		}
 		channelId := relayercommon.OracleChannelId
-		v := p.constructVoteAndSign(eventHash[:])
+		v := p.constructSignedVote(eventHash[:])
 
 		// broadcast v
 		if err = retry.Do(func() error {
@@ -190,7 +191,7 @@ func (p *BSCVoteProcessor) CollectVotes() {
 func (p *BSCVoteProcessor) collectVotes() error {
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatus(db.SelfVoted)
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
+		logging.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
 		return err
 	}
 
@@ -245,19 +246,18 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
-	for {
-		<-ticker.C
+	for range ticker.C {
 		triedTimes++
 		if triedTimes > QueryVotepoolMaxRetryTimes {
 			if err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Saved); err != nil {
-				relayercommon.Logger.Errorf("failed to update packages status to 'Saved', packages' id=%v", pkgIds)
+				logging.Logger.Errorf("failed to update packages status to 'Saved', packages' id=%v", pkgIds)
 				return err
 			}
 			return nil
 		}
-		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.FromBscCrossChainEvent)
+		queriedVotes, err := p.votePoolExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
 		if err != nil {
-			relayercommon.Logger.Errorf("encounter error when query votes. will retry.")
+			logging.Logger.Errorf("encounter error when query votes.")
 			return err
 		}
 
@@ -270,13 +270,13 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 
 		for _, v := range queriedVotes {
 			if !p.isVotePubKeyValid(v, validators) {
-				relayercommon.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
+				logging.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
 				validVotesCntPerReq--
 				continue
 			}
 
 			if err := VerifySignature(v, localVote.EventHash[:]); err != nil {
-				relayercommon.Logger.Errorf("verify vote's signature failed,  err=%s", err)
+				logging.Logger.Errorf("verify vote's signature failed,  err=%s", err)
 				validVotesCntPerReq--
 				continue
 			}
@@ -318,9 +318,10 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 		}
 		continue
 	}
+	return nil
 }
 
-func (p *BSCVoteProcessor) constructVoteAndSign(eventHash []byte) *votepool.Vote {
+func (p *BSCVoteProcessor) constructSignedVote(eventHash []byte) *votepool.Vote {
 	var v votepool.Vote
 	v.EventType = votepool.FromBscCrossChainEvent
 	v.EventHash = eventHash

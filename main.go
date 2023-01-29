@@ -3,12 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-
+	"github.com/bnb-chain/inscription-relayer/logging"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/bnb-chain/inscription-relayer/app"
-	"github.com/bnb-chain/inscription-relayer/common"
 	config "github.com/bnb-chain/inscription-relayer/config"
 )
 
@@ -82,7 +81,7 @@ func main() {
 		return
 	}
 
-	common.InitLogger(&cfg.LogConfig)
+	logging.InitLogger(&cfg.LogConfig)
 
 	if cfg.DBConfig.DBPath == "" {
 		panic("DB config is not present in config file, please follow instruction to specify it")

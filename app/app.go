@@ -70,6 +70,6 @@ func NewApp(cfg *config.Config) *App {
 }
 
 func (a *App) Start() {
-	go a.InscriptionRelayer.Start()
-	go a.BSCRelayer.Start()
+	a.InscriptionRelayer.Start()
+	a.BSCRelayer.Start()
 }

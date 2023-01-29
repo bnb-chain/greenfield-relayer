@@ -31,6 +31,7 @@ func VerifySignature(vote *votepool.Vote, eventHash []byte) error {
 	return nil
 }
 
+// AggregateSignatureAndValidatorBitSet aggregates signature from multiple votes, and marks the bitset of validators who contribute votes
 func AggregateSignatureAndValidatorBitSet(votes []*model.Vote, validators interface{}) ([]byte, *bitset.BitSet, error) {
 	signatures := make([][]byte, 0, len(votes))
 	voteAddrSet := make(map[string]struct{}, len(votes))

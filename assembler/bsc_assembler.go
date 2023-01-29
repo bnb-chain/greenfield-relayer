@@ -2,6 +2,7 @@ package assembler
 
 import (
 	"encoding/hex"
+	"github.com/bnb-chain/inscription-relayer/logging"
 	"time"
 
 	"github.com/bnb-chain/inscription-relayer/common"
@@ -40,7 +41,7 @@ func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId common
 	for {
 		err := a.process(channelId)
 		if err != nil {
-			common.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
+			logging.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
 			time.Sleep(common.RetryInterval)
 		}
 	}
@@ -54,7 +55,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	var pkgIds []int64
 	pkgs, err := a.daoManager.BSCDao.GetAllVotedPackages(nextSequence)
 	if err != nil {
-		common.Logger.Errorf("failed to get all validator voted tx with channel id %d and sequence : %d", channelId, nextSequence)
+		logging.Logger.Errorf("failed to get all validator voted tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err
 	}
 	if len(pkgs) == 0 {
@@ -66,7 +67,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	// Get votes result for a packages, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(uint8(channelId), nextSequence)
 	if err != nil {
-		common.Logger.Errorf("failed to get votes result for packages for channel %d and sequence %d", channelId, nextSequence)
+		logging.Logger.Errorf("failed to get votes result for packages for channel %d and sequence %d", channelId, nextSequence)
 		return err
 	}
 
@@ -91,7 +92,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
 	packagesRelayStartTime := pkgTs + a.config.RelayConfig.BSCToInscriptionRelayingDelayTime
-	common.Logger.Infof("packages will be relayed starting at %d", packagesRelayStartTime)
+	logging.Logger.Infof("packages will be relayed starting at %d", packagesRelayStartTime)
 
 	var indexDiff int
 	if relayerIdx >= firstInturnRelayerIdx {
@@ -106,10 +107,12 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 	} else {
 		curRelayerRelayingStartTime = packagesRelayStartTime + a.config.RelayConfig.FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*a.config.RelayConfig.InTurnRelayerRelayingWindow
 	}
-	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
+	logging.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
 	filled := make(chan struct{})
 	errC := make(chan error)
+	ticker := time.NewTicker(common.RetryInterval)
+
 	go a.validateSequenceFilled(filled, errC, nextSequence)
 
 	for {
@@ -118,21 +121,20 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 			return err
 		case <-filled:
 			if err = a.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
-				common.Logger.Errorf("failed to update packages status %s", pkgIds)
+				logging.Logger.Errorf("failed to update packages status to 'Delivered', package Ids =%v", pkgIds)
 				return err
 			}
 			return nil
-		default:
+		case <-ticker.C:
 			if time.Now().Unix() >= curRelayerRelayingStartTime {
-				common.Logger.Infof("claiming transaction at %d", time.Now().Unix())
 				txHash, err := a.inscriptionExecutor.ClaimPackages(votes[0].ClaimPayload, aggregatedSignature, valBitSet.Bytes(), pkgTs)
 				if err != nil {
 					return err
 				}
-				common.Logger.Infof("claimed transaction with txHash %s", txHash)
+				logging.Logger.Infof("claimed transaction with txHash %s", txHash)
 				err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Delivered, txHash)
 				if err != nil {
-					common.Logger.Errorf("failed to update packages error %s", err.Error())
+					logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
 					return err
 				}
 				return nil
@@ -144,16 +146,15 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 func (a *BSCAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64) {
 	ticker := time.NewTicker(common.RetryInterval)
 	defer ticker.Stop()
-	for {
+	for range ticker.C {
 		nextDeliverySequence, err := a.bscExecutor.GetNextDeliveryOracleSequence()
 		if err != nil {
 			errC <- err
 		}
 		if sequence < nextDeliverySequence {
-			common.Logger.Infof("Oracle sequence %d has been filled ", sequence)
+			logging.Logger.Infof("Oracle sequence %d has been filled ", sequence)
 			filled <- struct{}{}
 		}
-		<-ticker.C
 	}
 }
 

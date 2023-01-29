@@ -29,9 +29,9 @@ const (
 
 func TestClaimPackagesSucceed(t *testing.T) {
 	app := InitTestApp()
-	go app.BSCRelayer.SignAndBroadcast()
-	go app.BSCRelayer.CollectVotes()
-	go app.BSCRelayer.AssemblePackages()
+	go app.BSCRelayer.SignAndBroadcastVoteLoop()
+	go app.BSCRelayer.CollectVotesLoop()
+	go app.BSCRelayer.AssemblePackagesLoop()
 
 	inscriptionExecutor := app.BSCRelayer.InscriptionExecutor
 	daoManager := app.BSCRelayer.Listener.DaoManager

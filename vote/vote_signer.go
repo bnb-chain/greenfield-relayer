@@ -23,7 +23,7 @@ func NewVoteSigner(pk []byte) *VoteSigner {
 	}
 }
 
-// SignVote sign a vote, data is used to signed to generate the signature
+// SignVote signs a vote by relayer's private key
 func (signer *VoteSigner) SignVote(vote *votepool.Vote) {
 	vote.PubKey = append(vote.PubKey, signer.pubKey.Marshal()...)
 	signature := signer.privKey.Sign(vote.EventHash[:])

@@ -30,32 +30,35 @@ func NewBSCRelayer(listener *listener.BSCListener, inscriptionExecutor *executor
 }
 
 func (r *BSCRelayer) Start() {
-	go r.MonitorCrossChainEvents()
-	if r.InscriptionExecutor.IsValidator() {
-		go r.SignAndBroadcast()
-		go r.CollectVotes()
-		go r.AssemblePackages()
-	}
-	go r.UpdateCachedLatestValidators()
+	go r.MonitorEventsLoop()
+	go r.SignAndBroadcastVoteLoop()
+	go r.CollectVotesLoop()
+	go r.AssemblePackagesLoop()
+	go r.UpdateCachedLatestValidatorsLoop()
+	go r.UpdateClientLoop()
 }
 
-// MonitorCrossChainEvents will monitor cross chain events for every block and persist into DB
-func (r *BSCRelayer) MonitorCrossChainEvents() {
+// MonitorEventsLoop will monitor cross chain events for every block and persist into DB
+func (r *BSCRelayer) MonitorEventsLoop() {
 	r.Listener.Start()
 }
 
-func (r *BSCRelayer) SignAndBroadcast() {
+func (r *BSCRelayer) SignAndBroadcastVoteLoop() {
 	r.voteProcessor.SignAndBroadcast()
 }
 
-func (r *BSCRelayer) CollectVotes() {
+func (r *BSCRelayer) CollectVotesLoop() {
 	r.voteProcessor.CollectVotes()
 }
 
-func (r *BSCRelayer) AssemblePackages() {
+func (r *BSCRelayer) AssemblePackagesLoop() {
 	r.assembler.AssemblePackagesAndClaim()
 }
 
-func (r *BSCRelayer) UpdateCachedLatestValidators() {
+func (r *BSCRelayer) UpdateCachedLatestValidatorsLoop() {
 	r.bscExecutor.UpdateCachedLatestValidators() // cache validators queried from inscription, update it every 1 minute
+}
+
+func (r *BSCRelayer) UpdateClientLoop() {
+	r.bscExecutor.UpdateClients()
 }

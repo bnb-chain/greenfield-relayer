@@ -55,12 +55,6 @@ func Uint16ToBytes(num uint16) []byte {
 	return bt
 }
 
-func Uint32ToBytes(num uint32) []byte {
-	bt := make([]byte, 4)
-	binary.BigEndian.PutUint32(bt, num)
-	return bt
-}
-
 func Uint64ToBytes(num uint64) []byte {
 	bt := make([]byte, 8)
 	binary.BigEndian.PutUint64(bt, num)

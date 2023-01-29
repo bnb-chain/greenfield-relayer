@@ -30,32 +30,33 @@ func NewInscriptionRelayer(listener *listener.InscriptionListener, inscriptionEx
 }
 
 func (r *InscriptionRelayer) Start() {
-	go r.MonitorCrossChainEvents()
-	if r.InscriptionExecutor.IsValidator() {
-		go r.SignAndBroadcast()
-		go r.CollectVotes()
-		go r.AssembleTransactions()
-	}
-	go r.UpdateCachedLatestValidators()
+	go r.MonitorEventsLoop()
+	go r.SignAndBroadcastLoop()
+	go r.CollectVotesLoop()
+	go r.AssembleTransactionsLoop()
+	go r.UpdateCachedLatestValidatorsLoop()
 }
 
-// MonitorCrossChainEvents will monitor cross chain events for every block and persist into DB
-func (r *InscriptionRelayer) MonitorCrossChainEvents() {
+// MonitorEventsLoop will monitor cross chain events for every block and persist into DB
+func (r *InscriptionRelayer) MonitorEventsLoop() {
 	r.Listener.Start()
 }
 
-func (r *InscriptionRelayer) SignAndBroadcast() {
+func (r *InscriptionRelayer) SignAndBroadcastLoop() {
 	r.voteProcessor.SignAndBroadcast()
 }
 
-func (r *InscriptionRelayer) CollectVotes() {
+func (r *InscriptionRelayer) CollectVotesLoop() {
 	r.voteProcessor.CollectVotes()
 }
 
-func (r *InscriptionRelayer) AssembleTransactions() {
+func (r *InscriptionRelayer) AssembleTransactionsLoop() {
 	r.inscriptionAssembler.AssembleTransactionAndSend()
 }
 
-func (r *InscriptionRelayer) UpdateCachedLatestValidators() {
+func (r *InscriptionRelayer) UpdateCachedLatestValidatorsLoop() {
 	r.InscriptionExecutor.UpdateCachedLatestValidators() // cache validators queried from inscription, update it every 1 minute
+}
+func (r *InscriptionRelayer) UpdateClientLoop() {
+	r.InscriptionExecutor.UpdateClients()
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/logging"
 	"math/big"
 	"time"
 
@@ -34,9 +35,9 @@ type InscriptionVoteProcessor struct {
 	blsPublicKey        []byte
 }
 
-func NewInscriptionVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, inscriptionExecutor *executor.InscriptionExecutor,
-	votePoolExecutor *VotePoolExecutor,
-) *InscriptionVoteProcessor {
+func NewInscriptionVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
+	inscriptionExecutor *executor.InscriptionExecutor, votePoolExecutor *VotePoolExecutor) *InscriptionVoteProcessor {
+
 	return &InscriptionVoteProcessor{
 		config:              cfg,
 		daoManager:          dao,
@@ -47,7 +48,7 @@ func NewInscriptionVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer
 	}
 }
 
-// SignAndBroadcast Will sign using the bls private key, broadcast the vote to votepool
+// SignAndBroadcast signs tx using the relayer's bls private key, then broadcasts the vote to Greenfield votepool
 func (p *InscriptionVoteProcessor) SignAndBroadcast() {
 	for {
 		err := p.signAndBroadcast()
@@ -60,13 +61,13 @@ func (p *InscriptionVoteProcessor) SignAndBroadcast() {
 func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 	latestHeight, err := p.inscriptionExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
+		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 		return err
 	}
 
 	leastSavedTxHeight, err := p.daoManager.InscriptionDao.GetLeastSavedTransactionHeight()
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get least saved tx height, error: %s", err.Error())
+		logging.Logger.Errorf("failed to get least saved tx height, error: %s", err.Error())
 		return err
 	}
 	if leastSavedTxHeight+p.config.InscriptionConfig.NumberOfBlocksForFinality > latestHeight {
@@ -74,7 +75,7 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 	}
 	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatusAndHeight(db.Saved, leastSavedTxHeight)
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
+		logging.Logger.Errorf("failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
 		return err
 	}
 
@@ -94,10 +95,10 @@ func (p *InscriptionVoteProcessor) signAndBroadcast() error {
 		if tx.Sequence < nextDeliverySequence {
 			err = p.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Delivered)
 			if err != nil {
-				relayercommon.Logger.Errorf("failed to update packages error %s", err.Error())
+				logging.Logger.Errorf("failed to update packages error %s", err.Error())
 				return err
 			}
-			relayercommon.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
+			logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
 			continue
 		}
 		aggregatedPayload, err := p.aggregatePayloadForTx(tx)
@@ -154,7 +155,7 @@ func (p *InscriptionVoteProcessor) CollectVotes() {
 func (p *InscriptionVoteProcessor) collectVotes() error {
 	txs, err := p.daoManager.InscriptionDao.GetTransactionsByStatus(db.SelfVoted)
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
+		logging.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
 		return err
 	}
 	for _, tx := range txs {
@@ -196,22 +197,21 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
-	for {
-		<-ticker.C
+	for range ticker.C {
 		triedTimes++
 		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
 		// and check if sequence is filled
 		if triedTimes > QueryVotepoolMaxRetryTimes {
 			if err := p.daoManager.InscriptionDao.UpdateTransactionStatus(txId, db.Saved); err != nil {
-				relayercommon.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
+				logging.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
 				return err
 			}
 			return nil
 		}
 
-		queriedVotes, err := p.votePoolExecutor.QueryVotes(localVote.EventHash, votepool.ToBscCrossChainEvent)
+		queriedVotes, err := p.votePoolExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
 		if err != nil {
-			relayercommon.Logger.Errorf("encounter error when query votes. will retry.")
+			logging.Logger.Errorf("encounter error when query votes. will retry.")
 			return err
 		}
 		validVotesCountPerReq := len(queriedVotes)
@@ -222,13 +222,13 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 
 		for _, v := range queriedVotes {
 			if !p.isVotePubKeyValid(v, validators) {
-				relayercommon.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
+				logging.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
 				validVotesCountPerReq--
 				continue
 			}
 
 			if err := VerifySignature(v, localVote.EventHash); err != nil {
-				relayercommon.Logger.Errorf("verify vote's signature failed,  err=%s", err)
+				logging.Logger.Errorf("verify vote's signature failed,  err=%s", err)
 				validVotesCountPerReq--
 				continue
 			}
@@ -273,6 +273,7 @@ func (p *InscriptionVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mo
 		}
 		continue
 	}
+	return nil
 }
 
 func (p *InscriptionVoteProcessor) constructVoteAndSign(aggregatedPayload []byte) *votepool.Vote {
@@ -311,7 +312,7 @@ func (p *InscriptionVoteProcessor) aggregatePayloadForTx(tx *model.InscriptionRe
 	// relayerfee big.Int
 	relayerFeeBts, err := p.txFeeToBytes(tx.RelayerFee)
 	if err != nil {
-		relayercommon.Logger.Errorf("failed to convert tx relayerFee %s from string to big.Int", tx.AckRelayerFee)
+		logging.Logger.Errorf("failed to convert tx relayerFee %s from string to big.Int", tx.AckRelayerFee)
 		return nil, err
 	}
 	aggregatedPayload = append(aggregatedPayload, relayerFeeBts...)
@@ -319,7 +320,7 @@ func (p *InscriptionVoteProcessor) aggregatePayloadForTx(tx *model.InscriptionRe
 	if tx.PackageType == uint32(sdk.SynCrossChainPackageType) {
 		ackRelayerFeeBts, err := p.txFeeToBytes(tx.AckRelayerFee)
 		if err != nil {
-			relayercommon.Logger.Errorf("failed to convert tx ackRelayerFee %s from string to big.Int", tx.AckRelayerFee)
+			logging.Logger.Errorf("failed to convert tx ackRelayerFee %s from string to big.Int", tx.AckRelayerFee)
 			return nil, err
 		}
 		aggregatedPayload = append(aggregatedPayload, ackRelayerFeeBts...)

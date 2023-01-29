@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/logging"
 	"math/big"
 	"sync"
 	"time"
@@ -156,7 +157,7 @@ func (e *BSCExecutor) SwitchClient() {
 	if e.clientIdx >= len(e.bscClients) {
 		e.clientIdx = 0
 	}
-	relayercommon.Logger.Infof("switch to provider: %s", e.config.BSCConfig.RPCAddrs[e.clientIdx])
+	logging.Logger.Infof("switch to provider: %s", e.config.BSCConfig.RPCAddrs[e.clientIdx])
 }
 
 func (e *BSCExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
@@ -171,7 +172,7 @@ func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (l
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			relayercommon.Logger.Infof("failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			logging.Logger.Infof("failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -186,18 +187,19 @@ func (e *BSCExecutor) getLatestBlockHeight(client *ethclient.Client) (uint64, er
 }
 
 func (e *BSCExecutor) UpdateClients() {
-	for {
-		relayercommon.Logger.Infof("start to monitor bsc data-seeds healthy")
+	ticker := time.NewTicker(SleepSecondForUpdateClient * time.Second)
+	for range ticker.C {
+		logging.Logger.Infof("start to monitor bsc data-seeds healthy")
 		for _, bscClient := range e.bscClients {
 			if time.Since(bscClient.updatedAt).Seconds() > DataSeedDenyServiceThreshold {
 				msg := fmt.Sprintf("data seed %s is not accessable", bscClient.provider)
-				relayercommon.Logger.Error(msg)
+				logging.Logger.Error(msg)
 				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
 					e.config.AlertConfig.TelegramChatId, msg)
 			}
 			height, err := e.getLatestBlockHeight(bscClient.rpcClient)
 			if err != nil {
-				relayercommon.Logger.Errorf("get latest block height error, err=%s", err.Error())
+				logging.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue
 			}
 			bscClient.height = height
@@ -218,7 +220,6 @@ func (e *BSCExecutor) UpdateClients() {
 			e.clientIdx = highestIdx
 			e.mutex.Unlock()
 		}
-		time.Sleep(SleepSecondForUpdateClient * time.Second)
 	}
 }
 
@@ -298,7 +299,7 @@ func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *rela
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			relayercommon.Logger.Infof("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			logging.Logger.Infof("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -314,7 +315,7 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (header *relayercom
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			relayercommon.Logger.Infof("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			logging.Logger.Infof("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -336,25 +337,14 @@ func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSe
 }
 
 func (e *BSCExecutor) QueryLatestValidators() ([]Validator, error) {
-	latestHeight, err := e.GetLatestBlockHeightWithRetry()
+	relayerAddresses, err := e.getInscriptionLightClient().GetRelayers(nil)
 	if err != nil {
 		return nil, err
 	}
-	callOpts := &bind.CallOpts{
-		BlockNumber: big.NewInt(int64(latestHeight)),
-		Context:     context.Background(),
-	}
-	relayerAddresses, err := e.getInscriptionLightClient().GetRelayers(callOpts)
+	blsKeys, err := e.getInscriptionLightClient().BlsPubKeys(nil)
 	if err != nil {
 		return nil, err
 	}
-	blsKeys, err := e.getInscriptionLightClient().BlsPubKeys(callOpts)
-	if err != nil {
-		return nil, err
-	}
-
-	relayercommon.Logger.Infof("Queried relayers from BSC lightclient at height %d", latestHeight)
-
 	relayers := make([]Validator, len(relayerAddresses))
 	nextRelayerBtsStartIdx := 0
 
@@ -382,15 +372,13 @@ func (e *BSCExecutor) QueryCachedLatestValidators() ([]Validator, error) {
 
 func (e *BSCExecutor) UpdateCachedLatestValidators() {
 	ticker := time.NewTicker(UpdateCachedValidatorsInterval)
-	for {
+	for range ticker.C {
 		relayers, err := e.QueryLatestValidators()
 		if err != nil {
-			relayercommon.Logger.Errorf("update latest bsc relayers error, err=%s", err)
-			<-ticker.C
+			logging.Logger.Errorf("update latest bsc relayers error, err=%s", err)
 			continue
 		}
 		e.relayers = relayers
-		<-ticker.C
 	}
 }
 

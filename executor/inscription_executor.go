@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"github.com/bnb-chain/inscription-relayer/logging"
 	"sync"
 	"time"
 
@@ -199,7 +200,7 @@ func (e *InscriptionExecutor) getLatestBlockHeightWithRetry(client rpcclient.Cli
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			relayercommon.Logger.Infof("failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			logging.Logger.Infof("failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -212,18 +213,19 @@ func (e *InscriptionExecutor) getLatestBlockHeight(ctx context.Context, client r
 }
 
 func (e *InscriptionExecutor) UpdateClients() {
-	for {
-		relayercommon.Logger.Infof("start to monitor inscription data-seeds healthy")
+	ticker := time.NewTicker(SleepSecondForUpdateClient * time.Second)
+	for range ticker.C {
+		logging.Logger.Infof("start to monitor inscription data-seeds healthy")
 		for _, inscriptionClient := range e.inscriptionClients {
 			if time.Since(inscriptionClient.UpdatedAt).Seconds() > DataSeedDenyServiceThreshold {
 				msg := fmt.Sprintf("data seed %s is not accessable", inscriptionClient.Provider)
-				relayercommon.Logger.Error(msg)
+				logging.Logger.Error(msg)
 				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
 					e.config.AlertConfig.TelegramChatId, msg)
 			}
 			height, err := e.getLatestBlockHeightWithRetry(inscriptionClient.rpcClient)
 			if err != nil {
-				relayercommon.Logger.Errorf("get latest block height error, err=%s", err.Error())
+				logging.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue
 			}
 			inscriptionClient.Height = height
@@ -243,7 +245,6 @@ func (e *InscriptionExecutor) UpdateClients() {
 			e.clientIdx = highestIdx
 			e.mutex.Unlock()
 		}
-		time.Sleep(SleepSecondForUpdateClient * time.Second)
 	}
 }
 
@@ -324,7 +325,7 @@ func (e *InscriptionExecutor) QueryValidatorsAtHeight(height uint64) ([]stakingt
 	if err != nil {
 		return nil, err
 	}
-	relayercommon.Logger.Infof("queried validators from inscription at height %d", height)
+	logging.Logger.Infof("queried validators from inscription at height %d", height)
 	hist := result.Hist
 	return hist.Valset, nil
 }
@@ -342,15 +343,13 @@ func (e *InscriptionExecutor) QueryCachedLatestValidators() ([]stakingtypes.Vali
 
 func (e *InscriptionExecutor) UpdateCachedLatestValidators() {
 	ticker := time.NewTicker(UpdateCachedValidatorsInterval)
-	for {
+	for range ticker.C {
 		validators, err := e.queryLatestValidators()
 		if err != nil {
-			relayercommon.Logger.Errorf("update latest inscription validators error, err=%s", err)
-			<-ticker.C
+			logging.Logger.Errorf("update latest inscription validators error, err=%s", err)
 			continue
 		}
 		e.validators = validators
-		<-ticker.C
 	}
 }
 

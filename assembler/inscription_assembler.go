@@ -2,6 +2,7 @@ package assembler
 
 import (
 	"encoding/hex"
+	"github.com/bnb-chain/inscription-relayer/logging"
 	"time"
 
 	"github.com/bnb-chain/inscription-relayer/common"
@@ -43,7 +44,7 @@ func (a *InscriptionAssembler) assembleTransactionAndSendForChannel(channelId co
 	for {
 		err := a.process(channelId)
 		if err != nil {
-			common.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
+			logging.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
 			time.Sleep(common.RetryInterval)
 		}
 	}
@@ -65,7 +66,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
 	if err != nil {
-		common.Logger.Errorf("failed to get votes for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
+		logging.Logger.Errorf("failed to get votes for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 		return err
 	}
 	validators, err := a.bscExecutor.QueryCachedLatestValidators()
@@ -86,7 +87,7 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
 	txRelayStartTime := tx.TxTime + a.config.RelayConfig.InscriptionToBSCRelayingDelayTime
-	common.Logger.Infof("tx will be relayed starting at %d", txRelayStartTime)
+	logging.Logger.Infof("tx will be relayed starting at %d", txRelayStartTime)
 
 	var indexDiff int
 	if relayerIdx >= firstInturnRelayerIdx {
@@ -100,10 +101,12 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 	} else {
 		curRelayerRelayingStartTime = txRelayStartTime + a.config.RelayConfig.FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*a.config.RelayConfig.InTurnRelayerRelayingWindow
 	}
-	common.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
+	logging.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
 
 	filled := make(chan struct{})
 	errC := make(chan error)
+	ticker := time.NewTicker(common.RetryInterval)
+
 	go a.validateSequenceFilled(filled, errC, nextSequence, channelId)
 
 	for {
@@ -112,21 +115,21 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 			return err
 		case <-filled:
 			if err = a.daoManager.InscriptionDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
-				common.Logger.Errorf("failed to update tx status %s", tx)
+				logging.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'Delivered', error=%s", tx.ChannelId, tx.Sequence, err.Error())
 				return err
 			}
 			return nil
-		default:
+		case <-ticker.C:
 			if time.Now().Unix() >= curRelayerRelayingStartTime {
-				common.Logger.Infof("relaying transaction with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
+				logging.Logger.Infof("relaying transaction with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 				txHash, err := a.bscExecutor.CallBuildInSystemContract(aggregatedSignature, util.BitSetToBigInt(valBitSet), votes[0].ClaimPayload)
 				if err != nil {
 					return err
 				}
-				common.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
+				logging.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
 				err = a.daoManager.InscriptionDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String())
 				if err != nil {
-					common.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'filled'", tx.ChannelId, tx.Sequence)
+					logging.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'Delivered', error=%s", tx.ChannelId, tx.Sequence, err.Error())
 					return err
 				}
 				return nil
@@ -138,16 +141,15 @@ func (a *InscriptionAssembler) process(channelId common.ChannelId) error {
 func (a *InscriptionAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID common.ChannelId) {
 	ticker := time.NewTicker(common.RetryInterval)
 	defer ticker.Stop()
-	for {
+	for range ticker.C {
 		nextDeliverySequence, err := a.inscriptionExecutor.GetNextDeliverySequenceForChannel(channelID)
 		if err != nil {
 			errC <- err
 		}
 		if sequence < nextDeliverySequence {
-			common.Logger.Infof("sequence %d for channel %d has already been filled ", sequence, channelID)
+			logging.Logger.Infof("sequence %d for channel %d has already been filled ", sequence, channelID)
 			filled <- struct{}{}
 		}
-		<-ticker.C
 	}
 }
 
