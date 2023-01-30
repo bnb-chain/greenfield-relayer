@@ -25,10 +25,10 @@ type GreenfieldListener struct {
 	DaoManager         *dao.DaoManager
 }
 
-func NewGreenfieldListener(cfg *config.Config, insExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor, dao *dao.DaoManager) *GreenfieldListener {
+func NewGreenfieldListener(cfg *config.Config, gnfdExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor, dao *dao.DaoManager) *GreenfieldListener {
 	return &GreenfieldListener{
 		config:             cfg,
-		greenfieldExecutor: insExecutor,
+		greenfieldExecutor: gnfdExecutor,
 		bscExecutor:        bscExecutor,
 		DaoManager:         dao,
 	}

@@ -6,13 +6,13 @@ import (
 
 type Vote struct {
 	Id           int64
-	PubKey       string `gorm:"NOT NULL;index:idx_vote_channel_id_sequence_pub_key"`
 	Signature    string `gorm:"NOT NULL"`
 	EventType    uint32 `gorm:"NOT NULL"`
 	ClaimPayload []byte `gorm:"NOT NULL"`
 	EventHash    []byte `gorm:"NOT NULL"`
 	Sequence     uint64 `gorm:"NOT NULL;index:idx_vote_channel_id_sequence_pub_key"`
 	ChannelId    uint8  `gorm:"NOT NULL;index:idx_vote_channel_id_sequence_pub_key"`
+	PubKey       string `gorm:"NOT NULL;index:idx_vote_channel_id_sequence_pub_key"`
 	CreatedTime  int64  `gorm:"NOT NULL"`
 }
 

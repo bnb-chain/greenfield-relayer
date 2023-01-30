@@ -20,15 +20,15 @@ func (*BscBlock) TableName() string {
 
 type BscRelayPackage struct {
 	Id              int64
-	ChannelId       uint8  `gorm:"NOT NULL;index:idx_bsc_relay_package_channel_seq"`
-	OracleSequence  uint64 `gorm:"NOT NULL;index:idx_bsc_relay_package_channel_seq"`
+	ChannelId       uint8  `gorm:"NOT NULL"`
+	OracleSequence  uint64 `gorm:"NOT NULL"`
 	PackageSequence uint64 `gorm:"NOT NULL"`
 	PayLoad         string `gorm:"type:text"`
 	TxIndex         uint   `gorm:"NOT NULL"`
 	TxHash          string `gorm:"NOT NULL"`
 	ClaimTxHash     string
-	Status          db.TxStatus `gorm:"NOT NULL;index:idx_bsc_relay_package_status"`
-	Height          uint64      `gorm:"NOT NULL;index:idx_bsc_relay_package_height"`
+	Height          uint64      `gorm:"NOT NULL;index:idx_bsc_relay_package_height_status"`
+	Status          db.TxStatus `gorm:"NOT NULL;index:idx_bsc_relay_package_height_status"`
 	TxTime          int64       `gorm:"NOT NULL"`
 	UpdatedTime     int64       `gorm:"NOT NULL"`
 }

@@ -60,12 +60,12 @@ func NewApp(cfg *config.Config) *App {
 	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, votePoolExecutor, greenfieldExecutor)
 
 	// relayers
-	insRelayer := relayer.NewGreenfieldRelayer(greenfieldListener, greenfieldExecutor, bscExecutor, votePoolExecutor, greenfieldVoteProcessor, greenfieldAssembler)
+	gnfdRelayer := relayer.NewGreenfieldRelayer(greenfieldListener, greenfieldExecutor, bscExecutor, votePoolExecutor, greenfieldVoteProcessor, greenfieldAssembler)
 	bscRelayer := relayer.NewBSCRelayer(bscListener, greenfieldExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
 
 	return &App{
 		BSCRelayer:        bscRelayer,
-		GreenfieldRelayer: insRelayer,
+		GreenfieldRelayer: gnfdRelayer,
 	}
 }
 

@@ -27,7 +27,7 @@ type BSCListener struct {
 	crossChainAbi      abi.ABI
 }
 
-func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, insExecutor *executor.GreenfieldExecutor, dao *dao.DaoManager) *BSCListener {
+func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, gnfdExecutor *executor.GreenfieldExecutor, dao *dao.DaoManager) *BSCListener {
 	crossChainAbi, err := abi.JSON(strings.NewReader(crosschain.CrosschainMetaData.ABI))
 	if err != nil {
 		panic("marshal abi error")
@@ -35,7 +35,7 @@ func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, insEx
 	return &BSCListener{
 		config:             cfg,
 		bscExecutor:        bscExecutor,
-		greenfieldExecutor: insExecutor,
+		greenfieldExecutor: gnfdExecutor,
 		DaoManager:         dao,
 		crossChainAbi:      crossChainAbi,
 	}

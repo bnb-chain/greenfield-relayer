@@ -135,8 +135,8 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 	}
 }
 
-func (e *GreenfieldExecutor) SetBSCExecutor(bscE *BSCExecutor) {
-	e.BscExecutor = bscE
+func (e *GreenfieldExecutor) SetBSCExecutor(be *BSCExecutor) {
+	e.BscExecutor = be
 }
 
 func (e *GreenfieldExecutor) getRpcClient() rpcclient.Client {

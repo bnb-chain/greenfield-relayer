@@ -10,9 +10,9 @@ func InitTestConfig() *config.Config {
 
 func InitExecutors() (*BSCExecutor, *GreenfieldExecutor) {
 	cfg := InitTestConfig()
-	insExecutor := NewGreenfieldExecutor(cfg)
+	gnfdExecutor := NewGreenfieldExecutor(cfg)
 	bscExecutor := NewBSCExecutor(cfg)
-	insExecutor.SetBSCExecutor(bscExecutor)
-	bscExecutor.SetGreenfieldExecutor(insExecutor)
-	return bscExecutor, insExecutor
+	gnfdExecutor.SetBSCExecutor(bscExecutor)
+	bscExecutor.SetGreenfieldExecutor(gnfdExecutor)
+	return bscExecutor, gnfdExecutor
 }
