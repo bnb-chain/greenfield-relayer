@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"sync"
 	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/avast/retry-go/v4"
 	clitx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -17,13 +19,13 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	crosschainypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
+	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	"github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	libclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -40,7 +42,7 @@ type GreenfieldClient struct {
 	txClient           tx.ServiceClient
 	stakingQueryClient stakingtypes.QueryClient
 	authClient         authtypes.QueryClient
-	crossChainClient   crosschainypes.QueryClient
+	crossChainClient   crosschaintypes.QueryClient
 	Provider           string
 	Height             uint64
 	UpdatedAt          time.Time
@@ -68,12 +70,12 @@ func grpcConn(addr string) *grpc.ClientConn {
 	return conn
 }
 
-func NewRpcClient(addr string) *rpchttp.HTTP {
+func NewRpcClient(addr string) *http.HTTP {
 	httpClient, err := libclient.DefaultHTTPClient(addr)
 	if err != nil {
 		panic(err)
 	}
-	rpcClient, err := rpchttp.NewWithClient(addr, "/websocket", httpClient)
+	rpcClient, err := http.NewWithClient(addr, "/websocket", httpClient)
 	if err != nil {
 		panic(err)
 	}
@@ -115,7 +117,7 @@ func initGreenfieldClients(rpcAddrs, grpcAddrs []string) []*GreenfieldClient {
 			txClient:           tx.NewServiceClient(conn),
 			stakingQueryClient: stakingtypes.NewQueryClient(conn),
 			authClient:         authtypes.NewQueryClient(conn),
-			crossChainClient:   crosschainypes.NewQueryClient(conn),
+			crossChainClient:   crosschaintypes.NewQueryClient(conn),
 			rpcClient:          NewRpcClient(rpcAddrs[i]),
 			Provider:           rpcAddrs[i],
 			UpdatedAt:          time.Now(),
@@ -163,7 +165,7 @@ func (e *GreenfieldExecutor) getAuthClient() authtypes.QueryClient {
 	return e.greenfieldClients[e.clientIdx].authClient
 }
 
-func (e *GreenfieldExecutor) getCrossChainClient() crosschainypes.QueryClient {
+func (e *GreenfieldExecutor) getCrossChainClient() crosschaintypes.QueryClient {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
 	return e.greenfieldClients[e.clientIdx].crossChainClient
@@ -248,7 +250,7 @@ func (e *GreenfieldExecutor) UpdateClients() {
 	}
 }
 
-func (e *GreenfieldExecutor) QueryTendermintHeader(height int64) (*relayercommon.Header, error) {
+func (e *GreenfieldExecutor) QueryTendermintHeader(height int64) (*types.Header, error) {
 	commit, err := e.getRpcClient().Commit(context.Background(), &height)
 	if err != nil {
 		return nil, err
@@ -265,7 +267,7 @@ func (e *GreenfieldExecutor) QueryTendermintHeader(height int64) (*relayercommon
 		relayerAddrs = append(relayerAddrs, common.HexToAddress(v.RelayerAddress))
 	}
 
-	header := &relayercommon.Header{
+	header := &types.Header{
 		SignedHeader: commit.SignedHeader,
 		Height:       uint64(height),
 		BlsPubKeys:   blsPubKeysBts,
@@ -276,7 +278,7 @@ func (e *GreenfieldExecutor) QueryTendermintHeader(height int64) (*relayercommon
 }
 
 // GetNextDeliverySequenceForChannel call dest chain(BSC) to return a sequence# which should be used.
-func (e *GreenfieldExecutor) GetNextDeliverySequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
+func (e *GreenfieldExecutor) GetNextDeliverySequenceForChannel(channelID types.ChannelId) (uint64, error) {
 	sequence, err := e.BscExecutor.GetNextReceiveSequenceForChannel(channelID)
 	if err != nil {
 		return 0, err
@@ -287,7 +289,7 @@ func (e *GreenfieldExecutor) GetNextDeliverySequenceForChannel(channelID relayer
 func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 	res, err := e.getCrossChainClient().ReceiveSequence(
 		context.Background(),
-		&crosschainypes.QueryReceiveSequenceRequest{ChannelId: uint32(relayercommon.OracleChannelId)},
+		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(relayercommon.OracleChannelId)},
 	)
 	if err != nil {
 		return 0, err
@@ -296,10 +298,10 @@ func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 }
 
 // GetNextReceiveSequenceForChannel gets the sequence specifically for cross-chain package's channel
-func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId relayercommon.ChannelId) (uint64, error) {
+func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.ChannelId) (uint64, error) {
 	res, err := e.getCrossChainClient().ReceiveSequence(
 		context.Background(),
-		&crosschainypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},
+		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},
 	)
 	if err != nil {
 		return 0, err

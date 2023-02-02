@@ -5,9 +5,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"sort"
 	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/avast/retry-go/v4"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -222,7 +224,7 @@ func (p *BSCVoteProcessor) collectVotes() error {
 }
 
 // prepareEnoughValidVotesForPackages will prepare fetch and validate votes result, store in votes
-func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId relayercommon.ChannelId, sequence uint64, pkgIds []int64) error {
+func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.ChannelId, sequence uint64, pkgIds []int64) error {
 	localVote, err := p.daoManager.VoteDao.GetVoteByChannelIdAndSequenceAndPubKey(uint8(channelId), sequence, hex.EncodeToString(p.blsPublicKey))
 	if err != nil {
 		return err

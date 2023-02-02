@@ -5,10 +5,10 @@
 
 Start the Mysql container in detach mode
 ```shell script
-$ docker-compose -f integrationtests/docker/docker-compose.yml up --detach
+$ docker-compose -f integrationtest/docker/docker-compose.yml up --detach
 ```
 
 Shut down the container after test
 ```shell script
-$ docker-compose -f integrationtests/docker/docker-compose.yml down
+$ docker-compose -f integrationtest/docker/docker-compose.yml down
 ```

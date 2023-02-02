@@ -2,6 +2,7 @@ package vote
 
 import (
 	"encoding/hex"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"reflect"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -12,7 +13,6 @@ import (
 	"github.com/willf/bitset"
 
 	"github.com/bnb-chain/greenfield-relayer/db/model"
-	"github.com/bnb-chain/greenfield-relayer/executor"
 )
 
 // VerifySignature verifies vote signature
@@ -40,8 +40,8 @@ func AggregateSignatureAndValidatorBitSet(votes []*model.Vote, validators interf
 		voteAddrSet[v.PubKey] = struct{}{}
 		signatures = append(signatures, common.Hex2Bytes(v.Signature))
 	}
-	if reflect.TypeOf(validators).Elem() == reflect.TypeOf(executor.Validator{}) {
-		for idx, valInfo := range validators.([]executor.Validator) {
+	if reflect.TypeOf(validators).Elem() == reflect.TypeOf(types.Validator{}) {
+		for idx, valInfo := range validators.([]types.Validator) {
 			if _, ok := voteAddrSet[hex.EncodeToString(valInfo.BlsPublicKey[:])]; ok {
 				valBitSet.Set(uint(idx))
 			}

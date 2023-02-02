@@ -1,7 +1,12 @@
 # greenfield-relayer
 
 Greenfield Relayer is a bidirectional relaying tool serving communication
-requirement between Greenfield and BSC. It is a standalone process that can only be run by Greenfield validators. The relayer watches cross chain events happen on BSC and Greenfield independently and persist them into the database, after a few blocks confirmation to reach finality, the relayer will sign a message by the BLS key to confirm the event, and broadcast the signed event which called vote through the p2p network on Greenfield network. Once enough votes from the Greenfield relayer are collected, the relayer will assemble a cross chain package transaction and submit it to the BSC or Greenfield network
+requirement between Greenfield and BSC. It is a standalone process that can only be run by Greenfield validators. 
+The relayer watches cross chain events happen on BSC and Greenfield independently and persist them into the database, 
+after a few blocks confirmation to reach finality, the relayer will sign a message by the BLS private key to confirm the event, 
+and broadcast the signed event which called "the vote" through the p2p network on Greenfield network. Once enough votes from 
+the Greenfield relayer are collected, the relayer will assemble a cross chain package transaction and submit it to the 
+BSC or Greenfield network
 
 
 ## Build

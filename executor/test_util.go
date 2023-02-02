@@ -5,7 +5,7 @@ import (
 )
 
 func InitTestConfig() *config.Config {
-	return config.ParseConfigFromFile("../integrationtests/config/config_test.json")
+	return config.ParseConfigFromFile("../integrationtest/config/config_test.json")
 }
 
 func InitExecutors() (*BSCExecutor, *GreenfieldExecutor) {

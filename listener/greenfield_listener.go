@@ -2,9 +2,10 @@ package listener
 
 import (
 	"bytes"
-	"github.com/bnb-chain/greenfield-relayer/logging"
 	"strconv"
 	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"

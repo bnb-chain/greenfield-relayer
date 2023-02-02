@@ -57,6 +57,7 @@ func (r *GreenfieldRelayer) AssembleTransactionsLoop() {
 func (r *GreenfieldRelayer) UpdateCachedLatestValidatorsLoop() {
 	r.GreenfieldExecutor.UpdateCachedLatestValidators() // cache validators queried from greenfield, update it every 1 minute
 }
+
 func (r *GreenfieldRelayer) UpdateClientLoop() {
 	r.GreenfieldExecutor.UpdateClients()
 }

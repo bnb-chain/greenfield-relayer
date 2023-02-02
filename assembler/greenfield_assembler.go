@@ -2,8 +2,10 @@ package assembler
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -36,11 +38,11 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 // AssembleTransactionAndSend assemble a tx by gathering votes signature and then call the build-in smart-contract
 func (a *GreenfieldAssembler) AssembleTransactionAndSend() {
 	for _, c := range a.getMonitorChannels() {
-		go a.assembleTransactionAndSendForChannel(common.ChannelId(c))
+		go a.assembleTransactionAndSendForChannel(types.ChannelId(c))
 	}
 }
 
-func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId common.ChannelId) {
+func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId types.ChannelId) {
 	for {
 		err := a.process(channelId)
 		if err != nil {
@@ -50,7 +52,7 @@ func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId com
 	}
 }
 
-func (a *GreenfieldAssembler) process(channelId common.ChannelId) error {
+func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 	nextSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannel(channelId)
 	if err != nil {
 		return err
@@ -138,7 +140,7 @@ func (a *GreenfieldAssembler) process(channelId common.ChannelId) error {
 	}
 }
 
-func (a *GreenfieldAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID common.ChannelId) {
+func (a *GreenfieldAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID types.ChannelId) {
 	ticker := time.NewTicker(common.RetryInterval)
 	defer ticker.Stop()
 	for range ticker.C {

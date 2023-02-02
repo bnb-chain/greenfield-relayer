@@ -1,7 +1,8 @@
-package integrationtests
+package integrationtest
 
 import (
 	"encoding/hex"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"math/big"
 	"sort"
 	"testing"
@@ -41,7 +42,7 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	channelId := uint8(1)
 	oracleSeq, err := greenfieldExecutor.GetNextReceiveOracleSequence()
 	require.NoError(t, err)
-	packageStartSeq, err := greenfieldExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
+	packageStartSeq, err := greenfieldExecutor.GetNextReceiveSequenceForChannel(types.ChannelId(channelId))
 	require.NoError(t, err)
 
 	relayPkgs := make([]*model.BscRelayPackage, 0)
@@ -90,7 +91,7 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	require.EqualValues(t, packageStartSeq, pkgs[0].PackageSequence)
 	require.EqualValues(t, endSeq, pkgs[packagesSize-1].PackageSequence)
 
-	nextSeq, err := greenfieldExecutor.GetNextReceiveSequenceForChannel(relayercommon.ChannelId(channelId))
+	nextSeq, err := greenfieldExecutor.GetNextReceiveSequenceForChannel(types.ChannelId(channelId))
 	require.NoError(t, err)
 	require.EqualValues(t, endSeq+1, nextSeq)
 	nextOracleSeq, err := greenfieldExecutor.GetNextReceiveOracleSequence()

@@ -6,10 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/logging"
+	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 	"math/big"
 	"sync"
 	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -43,7 +45,7 @@ type BSCExecutor struct {
 	privateKey         *ecdsa.PrivateKey
 	txSender           common.Address
 	gasPrice           *big.Int
-	relayers           []Validator // cached relayers
+	relayers           []rtypes.Validator // cached relayers
 }
 
 func initBSCClients(config *config.Config) []*BSCClient {
@@ -233,7 +235,7 @@ func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, erro
 	return header, nil
 }
 
-func (e *BSCExecutor) GetNextReceiveSequenceForChannel(channelID relayercommon.ChannelId) (uint64, error) {
+func (e *BSCExecutor) GetNextReceiveSequenceForChannel(channelID rtypes.ChannelId) (uint64, error) {
 	callOpts := &bind.CallOpts{
 		Pending: true,
 		Context: context.Background(),
@@ -291,7 +293,7 @@ func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Has
 	return tx.Hash(), nil
 }
 
-func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *relayercommon.Header, err error) {
+func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *rtypes.Header, err error) {
 	return header, retry.Do(func() error {
 		header, err = e.GreenfieldExecutor.QueryTendermintHeader(height)
 		return err
@@ -303,7 +305,7 @@ func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *rela
 		}))
 }
 
-func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (header *relayercommon.Header, err error) {
+func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (header *rtypes.Header, err error) {
 	latestHeigh, err := e.GreenfieldExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
 		return nil, err
@@ -336,7 +338,7 @@ func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSe
 	return tx.Hash(), nil
 }
 
-func (e *BSCExecutor) QueryLatestValidators() ([]Validator, error) {
+func (e *BSCExecutor) QueryLatestValidators() ([]rtypes.Validator, error) {
 	relayerAddresses, err := e.getGreenfieldLightClient().GetRelayers(nil)
 	if err != nil {
 		return nil, err
@@ -345,11 +347,11 @@ func (e *BSCExecutor) QueryLatestValidators() ([]Validator, error) {
 	if err != nil {
 		return nil, err
 	}
-	relayers := make([]Validator, len(relayerAddresses))
+	relayers := make([]rtypes.Validator, len(relayerAddresses))
 	nextRelayerBtsStartIdx := 0
 
 	for i, addr := range relayerAddresses {
-		r := Validator{
+		r := rtypes.Validator{
 			RelayerAddress: addr,
 			BlsPublicKey:   blsKeys[nextRelayerBtsStartIdx : nextRelayerBtsStartIdx+RelayerBytesLength][:],
 		}
@@ -359,7 +361,7 @@ func (e *BSCExecutor) QueryLatestValidators() ([]Validator, error) {
 	return relayers, nil
 }
 
-func (e *BSCExecutor) QueryCachedLatestValidators() ([]Validator, error) {
+func (e *BSCExecutor) QueryCachedLatestValidators() ([]rtypes.Validator, error) {
 	if len(e.relayers) != 0 {
 		return e.relayers, nil
 	}

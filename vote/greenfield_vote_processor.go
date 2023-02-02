@@ -6,9 +6,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"math/big"
 	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/avast/retry-go/v4"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,8 +38,8 @@ type GreenfieldVoteProcessor struct {
 }
 
 func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
-	greenfieldExecutor *executor.GreenfieldExecutor, votePoolExecutor *VotePoolExecutor) *GreenfieldVoteProcessor {
-
+	greenfieldExecutor *executor.GreenfieldExecutor, votePoolExecutor *VotePoolExecutor,
+) *GreenfieldVoteProcessor {
 	return &GreenfieldVoteProcessor{
 		config:             cfg,
 		daoManager:         dao,
@@ -85,7 +87,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 	// for every tx, we are going to sign it and broadcast vote of it.
 	for _, tx := range txs {
-		nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannel(relayercommon.ChannelId(tx.ChannelId))
+		nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannel(types.ChannelId(tx.ChannelId))
 		if err != nil {
 			return err
 		}
@@ -191,7 +193,7 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 }
 
 // queryMoreThanTwoThirdVotesForTx queries votes from votePool
-func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []executor.Validator, txId int64) error {
+func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []types.Validator, txId int64) error {
 	triedTimes := 0
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
@@ -288,7 +290,7 @@ func (p *GreenfieldVoteProcessor) getEventHash(aggregatedPayload []byte) []byte 
 	return crypto.Keccak256Hash(aggregatedPayload).Bytes()
 }
 
-func (p *GreenfieldVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []executor.Validator) bool {
+func (p *GreenfieldVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []types.Validator) bool {
 	for _, validator := range validators {
 		if bytes.Equal(v.PubKey[:], validator.BlsPublicKey[:]) {
 			return true

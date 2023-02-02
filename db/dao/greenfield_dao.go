@@ -2,11 +2,11 @@ package dao
 
 import (
 	"database/sql"
+	relayercommon "github.com/bnb-chain/greenfield-relayer/types"
 	"time"
 
 	"gorm.io/gorm"
 
-	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/db"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 )

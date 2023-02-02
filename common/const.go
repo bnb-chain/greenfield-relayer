@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -15,5 +16,5 @@ var (
 )
 
 const (
-	OracleChannelId ChannelId = 0
+	OracleChannelId types.ChannelId = 0
 )

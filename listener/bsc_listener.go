@@ -3,9 +3,11 @@ package listener
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/logging"
+	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 	"strings"
 	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -117,11 +119,10 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		logging.Logger.Infof("get log: %d, %s, %s", log.BlockNumber, log.Topics[0].String(), log.TxHash.String())
 		relayPkg, err := ParseRelayPackage(&l.crossChainAbi,
 			&log, nextHeightBlockHeader.Time,
-			common.ChainId(l.config.GreenfieldConfig.ChainId),
-			common.ChainId(l.config.BSCConfig.ChainId),
+			rtypes.ChainId(l.config.GreenfieldConfig.ChainId),
+			rtypes.ChainId(l.config.BSCConfig.ChainId),
 			&l.config.RelayConfig,
 		)
-
 		if err != nil {
 			logging.Logger.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
 			continue

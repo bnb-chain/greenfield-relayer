@@ -2,8 +2,10 @@ package assembler
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -37,7 +39,7 @@ func (a *BSCAssembler) AssemblePackagesAndClaim() {
 	a.assemblePackagesAndClaimForOracleChannel(common.OracleChannelId)
 }
 
-func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId common.ChannelId) {
+func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.ChannelId) {
 	for {
 		err := a.process(channelId)
 		if err != nil {
@@ -47,7 +49,7 @@ func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId common
 	}
 }
 
-func (a *BSCAssembler) process(channelId common.ChannelId) error {
+func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	nextSequence, err := a.bscExecutor.GetNextDeliveryOracleSequence()
 	if err != nil {
 		return err
@@ -85,7 +87,7 @@ func (a *BSCAssembler) process(channelId common.ChannelId) error {
 		return err
 	}
 
-	// packages for same oracle sequence share a timestamp
+	// packages for same oracle sequence share one timestamp
 	pkgTs := pkgs[0].TxTime
 
 	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())

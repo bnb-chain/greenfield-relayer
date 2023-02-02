@@ -186,7 +186,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientTransactorRaw) Transact(opts 
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) APPCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "APP_CHANNELID")
-
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -194,7 +193,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) APPCHANNELID(opts *bi
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
-
 }
 
 // APPCHANNELID is a free data retrieval call binding the contract method 0x63ee4ac4.
@@ -217,7 +215,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) APPCHANNELID()
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) BLSPUBKEYLENGTH(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "BLS_PUBKEY_LENGTH")
-
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -225,7 +222,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) BLSPUBKEYLENGTH(opts 
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
-
 }
 
 // BLSPUBKEYLENGTH is a free data retrieval call binding the contract method 0x0c20fe41.
@@ -248,7 +244,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) BLSPUBKEYLENGT
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) CODEOK(opts *bind.CallOpts) (uint32, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "CODE_OK")
-
 	if err != nil {
 		return *new(uint32), err
 	}
@@ -256,7 +251,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) CODEOK(opts *bind.Cal
 	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
 
 	return out0, err
-
 }
 
 // CODEOK is a free data retrieval call binding the contract method 0xab51bb96.
@@ -279,7 +273,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) CODEOK() (uint
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) ERRORFAILDECODE(opts *bind.CallOpts) (uint32, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "ERROR_FAIL_DECODE")
-
 	if err != nil {
 		return *new(uint32), err
 	}
@@ -287,7 +280,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) ERRORFAILDECODE(opts 
 	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
 
 	return out0, err
-
 }
 
 // ERRORFAILDECODE is a free data retrieval call binding the contract method 0x0bee7a67.
@@ -310,7 +302,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) ERRORFAILDECOD
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) GOVCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "GOV_CHANNELID")
-
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -318,7 +309,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) GOVCHANNELID(opts *bi
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
-
 }
 
 // GOVCHANNELID is a free data retrieval call binding the contract method 0x96713da9.
@@ -341,7 +331,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GOVCHANNELID()
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) LIGHTCLIENTCONTRACT(opts *bind.CallOpts) (common.Address, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "LIGHT_CLIENT_CONTRACT")
-
 	if err != nil {
 		return *new(common.Address), err
 	}
@@ -349,7 +338,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) LIGHTCLIENTCONTRACT(o
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
 	return out0, err
-
 }
 
 // LIGHTCLIENTCONTRACT is a free data retrieval call binding the contract method 0xdf8193da.
@@ -372,7 +360,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) LIGHTCLIENTCON
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) PACKAGEVERIFYCONTRACT(opts *bind.CallOpts) (common.Address, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "PACKAGE_VERIFY_CONTRACT")
-
 	if err != nil {
 		return *new(common.Address), err
 	}
@@ -380,7 +367,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) PACKAGEVERIFYCONTRACT
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
 	return out0, err
-
 }
 
 // PACKAGEVERIFYCONTRACT is a free data retrieval call binding the contract method 0x86a780c5.
@@ -403,7 +389,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) PACKAGEVERIFYC
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) TRANSFERINCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "TRANSFER_IN_CHANNELID")
-
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -411,7 +396,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) TRANSFERINCHANNELID(o
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
-
 }
 
 // TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0x70fd5bad.
@@ -434,7 +418,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) TRANSFERINCHAN
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) TRANSFEROUTCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "TRANSFER_OUT_CHANNELID")
-
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -442,7 +425,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) TRANSFEROUTCHANNELID(
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
-
 }
 
 // TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0xfc3e5908.
@@ -465,7 +447,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) TRANSFEROUTCHA
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) VALIDATORSETCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "VALIDATORSET_CHANNELID")
-
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -473,7 +454,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) VALIDATORSETCHANNELID
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
-
 }
 
 // VALIDATORSETCHANNELID is a free data retrieval call binding the contract method 0x99770281.
@@ -496,7 +476,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) VALIDATORSETCH
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) BlsPubKeys(opts *bind.CallOpts) ([]byte, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "blsPubKeys")
-
 	if err != nil {
 		return *new([]byte), err
 	}
@@ -504,7 +483,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) BlsPubKeys(opts *bind
 	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
 
 	return out0, err
-
 }
 
 // BlsPubKeys is a free data retrieval call binding the contract method 0xbb9dae06.
@@ -527,7 +505,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) BlsPubKeys() (
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) GetRelayers(opts *bind.CallOpts) ([]common.Address, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "getRelayers")
-
 	if err != nil {
 		return *new([]common.Address), err
 	}
@@ -535,7 +512,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) GetRelayers(opts *bin
 	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
 
 	return out0, err
-
 }
 
 // GetRelayers is a free data retrieval call binding the contract method 0x179ff4b2.
@@ -558,7 +534,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GetRelayers() 
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) InsHeight(opts *bind.CallOpts) (uint64, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "insHeight")
-
 	if err != nil {
 		return *new(uint64), err
 	}
@@ -566,7 +541,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) InsHeight(opts *bind.
 	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
 
 	return out0, err
-
 }
 
 // InsHeight is a free data retrieval call binding the contract method 0xc7234309.
@@ -589,7 +563,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) InsHeight() (u
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) Relayers(opts *bind.CallOpts, arg0 *big.Int) (common.Address, error) {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "relayers", arg0)
-
 	if err != nil {
 		return *new(common.Address), err
 	}
@@ -597,7 +570,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) Relayers(opts *bind.C
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
 	return out0, err
-
 }
 
 // Relayers is a free data retrieval call binding the contract method 0x9a48e7f9.
@@ -620,13 +592,11 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) Relayers(arg0 
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) VerifyPackage(opts *bind.CallOpts, _pkgKey []byte, _payload []byte, _blsSignature []byte, _validatorSetBitMap *big.Int) error {
 	var out []interface{}
 	err := _Greenfieldlightclient.contract.Call(opts, &out, "verifyPackage", _pkgKey, _payload, _blsSignature, _validatorSetBitMap)
-
 	if err != nil {
 		return err
 	}
 
 	return err
-
 }
 
 // VerifyPackage is a free data retrieval call binding the contract method 0xfcdbebc5.

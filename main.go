@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -40,7 +41,6 @@ func printUsage() {
 func main() {
 	initFlags()
 	configType := viper.GetString(flagConfigType)
-	configType = "local"
 	if configType != config.AWSConfig && configType != config.LocalConfig {
 		printUsage()
 		return
@@ -68,7 +68,6 @@ func main() {
 		cfg = config.ParseConfigFromJson(configContent)
 	} else {
 		configFilePath := viper.GetString(flagConfigPath)
-		configFilePath = "config/config.json"
 
 		if configFilePath == "" {
 			printUsage()
