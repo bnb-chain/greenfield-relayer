@@ -103,7 +103,7 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		return nil
 	}
 	// check if the latest polled block in Db is forked, if so, delete it.
-	isForked, err := l.validateIsForkedBlockAndDelete(latestPolledBlock, nextHeightBlockHeader.ParentHash)
+	isForked, err := l.validateIsForkedBlockAndDelete(latestPolledBlock, nextHeight, nextHeightBlockHeader.ParentHash)
 	if err != nil {
 		return err
 	}
@@ -159,8 +159,8 @@ func (l *BSCListener) getLogsFromHeader(header *types.Header) ([]types.Log, erro
 	return logs, nil
 }
 
-func (l *BSCListener) validateIsForkedBlockAndDelete(latestPolledBlock *model.BscBlock, parentHash ethcommon.Hash) (bool, error) {
-	if latestPolledBlock.Height != 0 && parentHash.String() != latestPolledBlock.BlockHash {
+func (l *BSCListener) validateIsForkedBlockAndDelete(latestPolledBlock *model.BscBlock, nextHeight uint64, parentHash ethcommon.Hash) (bool, error) {
+	if latestPolledBlock.Height != 0 && (latestPolledBlock.Height+1 == nextHeight) && parentHash.String() != latestPolledBlock.BlockHash {
 		// delete latestPolledBlock and its cross-chain packages from DB
 		err := l.DaoManager.BSCDao.DeleteBlockAndPackagesAtHeight(latestPolledBlock.Height)
 		if err != nil {

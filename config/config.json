@@ -28,7 +28,7 @@
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,
-    "start_height": 0,
+    "start_height": 25072,
     "chain_id": 2
   },
   "vote_pool_config": {
