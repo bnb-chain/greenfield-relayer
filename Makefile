@@ -23,7 +23,6 @@ else
 endif
 
 build_docker:
-	#go mod vendor # temporary, should be removed after open source
 	docker build . -t ${IMAGE_NAME}
 
 .PHONY: build install build_docker
