@@ -21,8 +21,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/tendermint/tendermint/rpc/client/http"
@@ -34,18 +32,16 @@ import (
 
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
-	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
 type GreenfieldClient struct {
-	rpcClient          rpcclient.Client
-	txClient           tx.ServiceClient
-	stakingQueryClient stakingtypes.QueryClient
-	authClient         authtypes.QueryClient
-	crossChainClient   crosschaintypes.QueryClient
-	Provider           string
-	Height             uint64
-	UpdatedAt          time.Time
+	rpcClient        rpcclient.Client
+	txClient         tx.ServiceClient
+	authClient       authtypes.QueryClient
+	crossChainClient crosschaintypes.QueryClient
+	Provider         string
+	Height           uint64
+	UpdatedAt        time.Time
 }
 
 type GreenfieldExecutor struct {
@@ -56,7 +52,7 @@ type GreenfieldExecutor struct {
 	config            *config.Config
 	privateKey        *ethsecp256k1.PrivKey
 	address           string
-	validators        []stakingtypes.Validator // used to cache validators
+	validators        []*tmtypes.Validator // used to cache validators
 }
 
 func grpcConn(addr string) *grpc.ClientConn {
@@ -114,13 +110,12 @@ func initGreenfieldClients(rpcAddrs, grpcAddrs []string) []*GreenfieldClient {
 	for i := 0; i < len(rpcAddrs); i++ {
 		conn := grpcConn(grpcAddrs[i])
 		greenfieldClients = append(greenfieldClients, &GreenfieldClient{
-			txClient:           tx.NewServiceClient(conn),
-			stakingQueryClient: stakingtypes.NewQueryClient(conn),
-			authClient:         authtypes.NewQueryClient(conn),
-			crossChainClient:   crosschaintypes.NewQueryClient(conn),
-			rpcClient:          NewRpcClient(rpcAddrs[i]),
-			Provider:           rpcAddrs[i],
-			UpdatedAt:          time.Now(),
+			txClient:         tx.NewServiceClient(conn),
+			authClient:       authtypes.NewQueryClient(conn),
+			crossChainClient: crosschaintypes.NewQueryClient(conn),
+			rpcClient:        NewRpcClient(rpcAddrs[i]),
+			Provider:         rpcAddrs[i],
+			UpdatedAt:        time.Now(),
 		})
 	}
 	return greenfieldClients
@@ -151,12 +146,6 @@ func (e *GreenfieldExecutor) getTxClient() tx.ServiceClient {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
 	return e.greenfieldClients[e.clientIdx].txClient
-}
-
-func (e *GreenfieldExecutor) getStakingClient() stakingtypes.QueryClient {
-	e.mutex.RLock()
-	defer e.mutex.RUnlock()
-	return e.greenfieldClients[e.clientIdx].stakingQueryClient
 }
 
 func (e *GreenfieldExecutor) getAuthClient() authtypes.QueryClient {
@@ -214,7 +203,7 @@ func (e *GreenfieldExecutor) getLatestBlockHeight(ctx context.Context, client rp
 	return uint64(status.SyncInfo.LatestBlockHeight), nil
 }
 
-func (e *GreenfieldExecutor) UpdateClients() {
+func (e *GreenfieldExecutor) UpdateClientLoop() {
 	ticker := time.NewTicker(SleepSecondForUpdateClient * time.Second)
 	for range ticker.C {
 		logging.Logger.Infof("start to monitor greenfield data-seeds healthy")
@@ -250,31 +239,26 @@ func (e *GreenfieldExecutor) UpdateClients() {
 	}
 }
 
-func (e *GreenfieldExecutor) QueryTendermintHeader(height int64) (*types.Header, error) {
+func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, error) {
+	validators, err := e.getRpcClient().Validators(context.Background(), &height, nil, nil)
 	commit, err := e.getRpcClient().Commit(context.Background(), &height)
 	if err != nil {
 		return nil, err
 	}
-	validators, err := e.QueryValidatorsAtHeight(uint64(height))
+	validatorSet := tmtypes.NewValidatorSet(validators.Validators)
 	if err != nil {
 		return nil, err
 	}
-
-	var blsPubKeysBts []byte
-	var relayerAddrs []common.Address
-	for _, v := range validators {
-		blsPubKeysBts = append(blsPubKeysBts, v.RelayerBlsKey...)
-		relayerAddrs = append(relayerAddrs, common.HexToAddress(v.RelayerAddress))
+	lightBlock := tmtypes.LightBlock{
+		SignedHeader: &commit.SignedHeader,
+		ValidatorSet: validatorSet,
 	}
 
-	header := &types.Header{
-		SignedHeader: commit.SignedHeader,
-		Height:       uint64(height),
-		BlsPubKeys:   blsPubKeysBts,
-		Relayers:     relayerAddrs,
+	protoBlock, err := lightBlock.ToProto()
+	if err != nil {
+		return nil, err
 	}
-
-	return header, nil
+	return protoBlock.Marshal()
 }
 
 // GetNextDeliverySequenceForChannel call dest chain(BSC) to return a sequence# which should be used.
@@ -309,30 +293,25 @@ func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.Ch
 	return res.Sequence, nil
 }
 
-func (e *GreenfieldExecutor) queryLatestValidators() ([]stakingtypes.Validator, error) {
-	height, err := e.GetLatestBlockHeightWithRetry()
+func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, error) {
+	validators, err := e.getRpcClient().Validators(context.Background(), nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	result, err := e.QueryValidatorsAtHeight(height)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return validators.Validators, nil
 }
 
-func (e *GreenfieldExecutor) QueryValidatorsAtHeight(height uint64) ([]stakingtypes.Validator, error) {
-	result, err := e.getStakingClient().HistoricalInfo(context.Background(), &stakingtypes.QueryHistoricalInfoRequest{Height: int64(height)})
+func (e *GreenfieldExecutor) QueryValidatorsAtHeight(height uint64) ([]*tmtypes.Validator, error) {
+	atHeight := int64(height)
+	validators, err := e.getRpcClient().Validators(context.Background(), &atHeight, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	logging.Logger.Infof("queried validators from greenfield at height %d", height)
-	hist := result.Hist
-	return hist.Valset, nil
+	return validators.Validators, nil
+
 }
 
-func (e *GreenfieldExecutor) QueryCachedLatestValidators() ([]stakingtypes.Validator, error) {
+func (e *GreenfieldExecutor) QueryCachedLatestValidators() ([]*tmtypes.Validator, error) {
 	if len(e.validators) != 0 {
 		return e.validators, nil
 	}
@@ -343,7 +322,7 @@ func (e *GreenfieldExecutor) QueryCachedLatestValidators() ([]stakingtypes.Valid
 	return validators, nil
 }
 
-func (e *GreenfieldExecutor) UpdateCachedLatestValidators() {
+func (e *GreenfieldExecutor) UpdateCachedLatestValidatorsLoop() {
 	ticker := time.NewTicker(UpdateCachedValidatorsInterval)
 	for range ticker.C {
 		validators, err := e.queryLatestValidators()
@@ -362,7 +341,7 @@ func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 	}
 	var keys []string
 	for _, v := range validators {
-		keys = append(keys, hex.EncodeToString(v.GetRelayerBlsKey()))
+		keys = append(keys, hex.EncodeToString(v.RelayerBlsKey))
 	}
 	return keys, nil
 }
@@ -476,14 +455,4 @@ func (e *GreenfieldExecutor) getDestChainId() uint32 {
 
 func (e *GreenfieldExecutor) getSrcChainId() uint32 {
 	return uint32(e.config.BSCConfig.ChainId)
-}
-
-func (e *GreenfieldExecutor) IsValidator() bool {
-	relayerBlsPubKeys, err := e.GetValidatorsBlsPublicKey()
-	if err != nil {
-		panic(err)
-	}
-	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(e.config.VotePoolConfig.BlsPrivateKey)
-	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
-	return relayerIdx != -1
 }

@@ -16,5 +16,6 @@ var (
 )
 
 const (
-	OracleChannelId types.ChannelId = 0
+	GreenfieldStartHeight                 = 1
+	OracleChannelId       types.ChannelId = 0
 )

@@ -35,7 +35,7 @@ func NewGreenfieldListener(cfg *config.Config, gnfdExecutor *executor.Greenfield
 	}
 }
 
-func (l *GreenfieldListener) Start() {
+func (l *GreenfieldListener) StartLoop() {
 	go func() {
 		for {
 			err := l.poll()
@@ -57,35 +57,16 @@ func (l *GreenfieldListener) Start() {
 }
 
 func (l *GreenfieldListener) poll() error {
-	latestPolledBlock, err := l.getLatestPolledBlock()
+	nextHeight, err := l.calNextHeight()
 	if err != nil {
-		logging.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
 		return err
-	}
-	nextHeight := l.config.GreenfieldConfig.StartHeight
-	latestPolledBlockHeight := latestPolledBlock.Height
-
-	if nextHeight <= latestPolledBlockHeight {
-		nextHeight = latestPolledBlockHeight + 1
-	}
-
-	latestBlockHeight, err := l.greenfieldExecutor.GetLatestBlockHeightWithRetry()
-	if err != nil {
-		logging.Logger.Errorf("failed to get latest polled block height, error: %s", err.Error())
-		return err
-	}
-	if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
-		time.Sleep(common.RetryInterval)
-		return nil
 	}
 	blockRes, block, err := l.getBlockAndBlockResult(nextHeight)
 	if err != nil {
 		logging.Logger.Errorf("encounter error when retrieve block and block result at block height=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
-
-	err = l.monitorCrossChainEvents(blockRes, block)
-	if err != nil {
+	if err = l.monitorCrossChainEvents(blockRes, block); err != nil {
 		logging.Logger.Errorf("encounter error when monitor cross-chain events at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
@@ -196,13 +177,13 @@ func (l *GreenfieldListener) monitorCrossChainEvents(blockResults *ctypes.Result
 }
 
 func (l *GreenfieldListener) monitorValidators() error {
-	nextHeight := l.config.GreenfieldConfig.StartHeight
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
+	if lightClientLatestHeight == 0 {
+		return l.sync(common.GreenfieldStartHeight)
+	}
+	nextHeight, err := l.calNextHeight()
 	if err != nil {
 		return err
-	}
-	if nextHeight <= lightClientLatestHeight {
-		nextHeight = lightClientLatestHeight + 1
 	}
 	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
 	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
@@ -213,30 +194,52 @@ func (l *GreenfieldListener) monitorValidators() error {
 	if err != nil {
 		return err
 	}
-
 	if len(nextValidators) != len(curValidators) {
-		logging.Logger.Infof("syncing tendermint header at height %d", nextHeight)
-		txHash, err := l.bscExecutor.SyncTendermintLightClientHeader(nextHeight)
-		if err != nil {
-			return err
-		}
-		logging.Logger.Infof("synced tendermint header at height %d with txHash %s", nextHeight, txHash.String())
-		return nil
+		return l.sync(nextHeight)
 	}
-
 	for idx, nextVal := range nextValidators {
 		curVal := curValidators[idx]
-		if nextVal.OperatorAddress != curVal.OperatorAddress ||
+		if !bytes.Equal(nextVal.Address.Bytes(), curVal.Address.Bytes()) ||
 			!bytes.Equal(nextVal.RelayerBlsKey, curVal.RelayerBlsKey) ||
-			nextVal.RelayerAddress != curVal.RelayerAddress {
-			logging.Logger.Infof("syncing tendermint header at height %d", nextHeight)
-			txHash, err := l.bscExecutor.SyncTendermintLightClientHeader(nextHeight)
-			if err != nil {
-				return err
-			}
-			logging.Logger.Infof("synced tendermint header at height %d with txHash %s", nextHeight, txHash.String())
-			return nil
+			!bytes.Equal(nextVal.RelayerAddress, curVal.RelayerAddress) {
+			return l.sync(nextHeight)
 		}
 	}
+	return nil
+}
+
+func (l *GreenfieldListener) calNextHeight() (uint64, error) {
+	latestPolledBlock, err := l.getLatestPolledBlock()
+	if err != nil {
+		logging.Logger.Errorf("failed to get latest block from db, error: %s", err.Error())
+		return 0, err
+	}
+	latestPolledBlockHeight := latestPolledBlock.Height
+
+	nextHeight := l.config.GreenfieldConfig.StartHeight
+	if nextHeight <= latestPolledBlockHeight {
+		nextHeight = latestPolledBlockHeight + 1
+	}
+
+	latestBlockHeight, err := l.greenfieldExecutor.GetLatestBlockHeightWithRetry()
+	if err != nil {
+		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
+		return 0, err
+	}
+	// pauses relayer for a bit since it already caught the newest block
+	if int64(nextHeight) == int64(latestBlockHeight) {
+		time.Sleep(common.RetryInterval)
+		return nextHeight, nil
+	}
+	return nextHeight, nil
+}
+
+func (l *GreenfieldListener) sync(nextHeight uint64) error {
+	logging.Logger.Infof("syncing tendermint light block at height %d", nextHeight)
+	//txHash, err := l.bscExecutor.SyncTendermintLightBlock(nextHeight)
+	//if err != nil {
+	//	return err
+	//}
+	//logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
 	return nil
 }

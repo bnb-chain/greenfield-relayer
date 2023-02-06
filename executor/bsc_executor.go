@@ -188,7 +188,7 @@ func (e *BSCExecutor) getLatestBlockHeight(client *ethclient.Client) (uint64, er
 	return block.Number().Uint64(), nil
 }
 
-func (e *BSCExecutor) UpdateClients() {
+func (e *BSCExecutor) UpdateClientLoop() {
 	ticker := time.NewTicker(SleepSecondForUpdateClient * time.Second)
 	for range ticker.C {
 		logging.Logger.Infof("start to monitor bsc data-seeds healthy")
@@ -269,7 +269,7 @@ func (e *BSCExecutor) getGasPrice() *big.Int {
 	return e.gasPrice
 }
 
-func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Hash, error) {
+func (e *BSCExecutor) SyncTendermintLightBlock(height uint64) (common.Hash, error) {
 	nonce, err := e.GetRpcClient().PendingNonceAt(context.Background(), e.txSender)
 	if err != nil {
 		return common.Hash{}, err
@@ -278,24 +278,20 @@ func (e *BSCExecutor) SyncTendermintLightClientHeader(height uint64) (common.Has
 	if err != nil {
 		return common.Hash{}, err
 	}
-	header, err := e.QueryTendermintHeaderWithRetry(int64(height))
+	lightBlock, err := e.QueryTendermintLightBlockWithRetry(int64(height))
 	if err != nil {
 		return common.Hash{}, err
 	}
-	headerBytes, err := header.SignedHeader.ToProto().Marshal()
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := e.getGreenfieldLightClient().SyncTendermintHeader(txOpts, headerBytes, height, header.BlsPubKeys, header.Relayers)
+	tx, err := e.getGreenfieldLightClient().SyncLightBlock(txOpts, lightBlock, height)
 	if err != nil {
 		return common.Hash{}, err
 	}
 	return tx.Hash(), nil
 }
 
-func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *rtypes.Header, err error) {
-	return header, retry.Do(func() error {
-		header, err = e.GreenfieldExecutor.QueryTendermintHeader(height)
+func (e *BSCExecutor) QueryTendermintLightBlockWithRetry(height int64) (lightBlock []byte, err error) {
+	return lightBlock, retry.Do(func() error {
+		lightBlock, err = e.GreenfieldExecutor.QueryTendermintLightBlock(height)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -305,13 +301,13 @@ func (e *BSCExecutor) QueryTendermintHeaderWithRetry(height int64) (header *rtyp
 		}))
 }
 
-func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (header *rtypes.Header, err error) {
+func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte, err error) {
 	latestHeigh, err := e.GreenfieldExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
 		return nil, err
 	}
-	return header, retry.Do(func() error {
-		header, err = e.GreenfieldExecutor.QueryTendermintHeader(int64(latestHeigh))
+	return lightBlock, retry.Do(func() error {
+		lightBlock, err = e.GreenfieldExecutor.QueryTendermintLightBlock(int64(latestHeigh))
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -338,6 +334,7 @@ func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSe
 	return tx.Hash(), nil
 }
 
+// used for gnfd -> bsc
 func (e *BSCExecutor) QueryLatestValidators() ([]rtypes.Validator, error) {
 	relayerAddresses, err := e.getGreenfieldLightClient().GetRelayers(nil)
 	if err != nil {
@@ -361,6 +358,7 @@ func (e *BSCExecutor) QueryLatestValidators() ([]rtypes.Validator, error) {
 	return relayers, nil
 }
 
+// Used for gnfd -> bsc
 func (e *BSCExecutor) QueryCachedLatestValidators() ([]rtypes.Validator, error) {
 	if len(e.relayers) != 0 {
 		return e.relayers, nil
@@ -372,7 +370,7 @@ func (e *BSCExecutor) QueryCachedLatestValidators() ([]rtypes.Validator, error) 
 	return relayers, nil
 }
 
-func (e *BSCExecutor) UpdateCachedLatestValidators() {
+func (e *BSCExecutor) UpdateCachedLatestValidatorsLoop() {
 	ticker := time.NewTicker(UpdateCachedValidatorsInterval)
 	for range ticker.C {
 		relayers, err := e.QueryLatestValidators()
@@ -389,7 +387,7 @@ func (e *BSCExecutor) GetLightClientLatestHeight() (uint64, error) {
 		Pending: true,
 		Context: context.Background(),
 	}
-	latestHeight, err := e.getGreenfieldLightClient().InsHeight(callOpts)
+	latestHeight, err := e.getGreenfieldLightClient().Height(callOpts)
 	if err != nil {
 		return 0, err
 	}

@@ -43,7 +43,7 @@ func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, gnfdE
 	}
 }
 
-func (l *BSCListener) Start() {
+func (l *BSCListener) StartLoop() {
 	for {
 		err := l.poll()
 		if err != nil {

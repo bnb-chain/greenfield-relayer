@@ -19,7 +19,7 @@ func IndexOf(element string, data []string) int {
 	return -1
 }
 
-func GetBlsPubKeyFromPrivKeyStr(privKeyStr string) []byte {
+func BlsPubKeyFromPrivKeyStr(privKeyStr string) []byte {
 	privKey, err := blst.SecretKeyFromBytes(common.Hex2Bytes(privKeyStr))
 	if err != nil {
 		panic(err)

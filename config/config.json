@@ -9,11 +9,11 @@
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "eef73c3bf9239fc0faf1dcd13dec43a7be2f0c361cbceadeabe7765e9e68c4e1",
+    "private_key": "ab463aca3d2965233da3d1d6108aa521274c5ddc2369ff72970a52a451863fbf",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
-    "start_height": 20911,
-    "monitor_channel_list": [1],
+    "start_height": 25000,
+    "monitor_channel_list": [1,2,3],
     "gas_limit": 210000,
     "chain_id_string": "greenfield_9000-121"
   },
@@ -24,17 +24,17 @@
     "rpc_addrs": [
       "http://127.0.0.1:8545"
     ],
-    "private_key": "eef73c3bf9239fc0faf1dcd13dec43a7be2f0c361cbceadeabe7765e9e68c4e1",
+    "private_key": "ab463aca3d2965233da3d1d6108aa521274c5ddc2369ff72970a52a451863fbf",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,
-    "start_height": 1999,
+    "start_height": 0,
     "chain_id": 2
   },
   "vote_pool_config": {
     "rpc_addr":
       "http://127.0.0.1:26750",
-    "bls_private_key": "1afd9371ebe27dc75face6fb3602fc6d8b93bbd885d81bfcdac7ec2db8246f6f"
+    "bls_private_key": "4f1f561f5835d0f310d3cf072821155834653ab5f417ff0905eaab3023d56b1e"
   },
   "relay_config": {
     "bsc_to_greenfield_relaying_delay_time": 30,
@@ -45,8 +45,8 @@
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
     "bsc_cross_chain_package_event_name": "CrossChainPackage",
     "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",
-    "cross_chain_contract_addr": "0x2078fEEF78BD06AcDdb46619a681327aaEeeAE20",
-    "greenfield_light_client_contract_addr": "0x71b750F84B4d1d72C17EcEba811fA6E4C8c9CfdC"
+    "cross_chain_contract_addr": "0x5F14633530b57aA94D4062e1CE035Fd72Be11497",
+    "greenfield_light_client_contract_addr": "0xbE675119B1A0598AeFe14AC75Ac474E6c70B907f"
   },
   "log_config": {
     "level": "DEBUG",

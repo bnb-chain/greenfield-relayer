@@ -14,12 +14,12 @@ import (
 	"github.com/avast/retry-go/v4"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/rlp"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
 
-	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
@@ -38,19 +38,18 @@ type BSCVoteProcessor struct {
 }
 
 func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *VotePoolExecutor,
-) *BSCVoteProcessor {
+	votePoolExecutor *VotePoolExecutor) *BSCVoteProcessor {
 	return &BSCVoteProcessor{
 		config:           cfg,
 		daoManager:       dao,
 		signer:           signer,
 		bscExecutor:      bscExecutor,
 		votePoolExecutor: votePoolExecutor,
-		blsPublicKey:     util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+		blsPublicKey:     util.BlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
 	}
 }
 
-func (p *BSCVoteProcessor) SignAndBroadcast() {
+func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 	for {
 		err := p.signAndBroadcast()
 		if err != nil {
@@ -59,7 +58,7 @@ func (p *BSCVoteProcessor) SignAndBroadcast() {
 	}
 }
 
-// SignAndBroadcast Will sign using the bls private key, and broadcast the vote to votepool
+// SignAndBroadcastVoteLoop Will sign using the bls private key, and broadcast the vote to votepool
 func (p *BSCVoteProcessor) signAndBroadcast() error {
 	latestHeight, err := p.bscExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {
@@ -143,7 +142,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		if err != nil {
 			return fmt.Errorf("encode packages error, err=%s", err.Error())
 		}
-		channelId := relayercommon.OracleChannelId
+		channelId := common.OracleChannelId
 		v := p.constructSignedVote(eventHash[:])
 
 		// broadcast v
@@ -153,7 +152,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 				return fmt.Errorf("failed to submit vote for events with channel id %d and sequence %d", channelId, seq)
 			}
 			return nil
-		}, retry.Context(context.Background()), relayercommon.RtyAttem, relayercommon.RtyDelay, relayercommon.RtyErr); err != nil {
+		}, retry.Context(context.Background()), common.RtyAttem, common.RtyDelay, common.RtyErr); err != nil {
 			return err
 		}
 
@@ -177,11 +176,14 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		if err != nil {
 			return err
 		}
+
+		// TODO for local testing
+		BroadcastVotesFromOtherRelayers(PrivKeys, p.daoManager, p.votePoolExecutor, uint8(channelId), seq, 2)
 	}
 	return nil
 }
 
-func (p *BSCVoteProcessor) CollectVotes() {
+func (p *BSCVoteProcessor) CollectVotesLoop() {
 	for {
 		err := p.collectVotes()
 		if err != nil {
@@ -204,7 +206,7 @@ func (p *BSCVoteProcessor) collectVotes() error {
 
 	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
 		var pkgIds []int64
-		oracleChannelId := relayercommon.OracleChannelId
+		oracleChannelId := common.OracleChannelId
 
 		for _, tx := range pkgsForSeq {
 			pkgIds = append(pkgIds, tx.Id)
@@ -242,7 +244,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.Ch
 }
 
 // queryMoreThanTwoThirdValidVotes queries votes from votePool
-func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []stakingtypes.Validator, pkgIds []int64) error {
+func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []*tmtypes.Validator, pkgIds []int64) error {
 	triedTimes := 0
 	validVotesTotalCnt := 1
 	channelId := localVote.ChannelId
@@ -331,7 +333,7 @@ func (p *BSCVoteProcessor) constructSignedVote(eventHash []byte) *votepool.Vote 
 	return &v
 }
 
-func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []stakingtypes.Validator) bool {
+func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmtypes.Validator) bool {
 	for _, validator := range validators {
 		if bytes.Equal(v.PubKey[:], validator.RelayerBlsKey[:]) {
 			return true

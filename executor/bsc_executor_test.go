@@ -40,6 +40,8 @@ func TestGetBlockHeader(t *testing.T) {
 
 func TestGetLightClientHeight(t *testing.T) {
 	height, err := InitBSCExecutor().GetLightClientLatestHeight()
+	t.Log(err.Error())
+
 	require.NoError(t, err)
 	t.Log(height)
 }
@@ -55,7 +57,7 @@ func TestSyncTendermintHeader(t *testing.T) {
 	curLightClientHeight, err := e.GetLightClientLatestHeight()
 	require.NoError(t, err)
 	t.Log(curLightClientHeight)
-	hash, err := e.SyncTendermintLightClientHeader(curLightClientHeight + 1)
+	hash, err := e.SyncTendermintLightBlock(curLightClientHeight + 1)
 	require.NoError(t, err)
 	time.Sleep(10 * time.Second)
 	t.Log(hash.String())

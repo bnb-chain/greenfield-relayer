@@ -8,24 +8,17 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/votepool"
-
-	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/db"
-	"github.com/bnb-chain/greenfield-relayer/db/dao"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
-	"github.com/bnb-chain/greenfield-relayer/util"
 	"github.com/bnb-chain/greenfield-relayer/vote"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 const (
 	// Change your relayers Bls private key when integration test using local env
-	Relayer1HexBlsPrivKey = "2969268e6722a8e16579e7a3380f83a2dd0b15478a2994cb0ac6480e1aead999" // for test only
-	Relayer2HexBlsPrivKey = "6f235c2c0d91ecdf961f4409061a785d456b9bc4b398e2a0940378397772cb0b"
+	Relayer1HexBlsPrivKey = "3a1055a667eddef7405a554f2994aedea43c8258712a013b3a61532e8cd0f032" // for test only
+	Relayer2HexBlsPrivKey = "139ace9a52fa78b9f4dc2f151231225f9503d60f3aefeef89a1ee82d6d48ef9a"
 )
 
 func TestClaimPackagesSucceed(t *testing.T) {
@@ -75,7 +68,9 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	require.NoError(t, err)
 
 	// This is needed in local testing, if move to use testnet, can trigger transaction use cli.
-	go broadcastVotesFromOtherRelayers(daoManager, app.BSCRelayer.VotePoolExecutor, oracleSeq)
+	go vote.BroadcastVotesFromOtherRelayers(
+		[]string{Relayer1HexBlsPrivKey, Relayer2HexBlsPrivKey},
+		daoManager, app.BSCRelayer.VotePoolExecutor, channelId, oracleSeq, 2)
 
 	// The first in-turn relayer has 40 seconds relaying window, so that need to wait for a  while if current one is not the first in-turn.
 	// sleep for all processes have done their work, if there are more validators, might need to set this larger due to
@@ -108,49 +103,4 @@ func getPayload(ts uint64) []byte {
 	})
 	payloadHeader = append(payloadHeader, []byte("test payload")...)
 	return payloadHeader
-}
-
-func broadcastVotesFromOtherRelayers(daoManager *dao.DaoManager,
-	votePoolExecutor *vote.VotePoolExecutor, oracleSeq uint64) {
-	var vote *model.Vote
-	// retry to query vote from local DB
-	for {
-		localVote, err := daoManager.VoteDao.GetVoteByChannelIdAndSequenceAndPubKey(uint8(relayercommon.OracleChannelId), oracleSeq, hex.EncodeToString(util.GetBlsPubKeyFromPrivKeyStr(GetTestConfig().VotePoolConfig.BlsPrivateKey)))
-		if err != nil {
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		vote = localVote
-		break
-	}
-
-	secretKey1, err := blst.SecretKeyFromBytes(common.Hex2Bytes(Relayer1HexBlsPrivKey))
-	if err != nil {
-		panic(err)
-	}
-	pubKey1 := secretKey1.PublicKey()
-	sign1 := secretKey1.Sign(vote.EventHash[:]).Marshal()
-
-	mockVoteFromRelayer1 := &votepool.Vote{
-		PubKey:    pubKey1.Marshal(),
-		Signature: sign1,
-		EventType: 2,
-		EventHash: vote.EventHash[:],
-	}
-
-	secretKey2, err := blst.SecretKeyFromBytes(common.Hex2Bytes(Relayer2HexBlsPrivKey))
-	if err != nil {
-		panic(err)
-	}
-	pubKey2 := secretKey2.PublicKey()
-	sign2 := secretKey2.Sign(vote.EventHash[:]).Marshal()
-
-	mockVoteFromRelayer2 := &votepool.Vote{
-		PubKey:    pubKey2.Marshal(),
-		Signature: sign2,
-		EventType: 2,
-		EventHash: vote.EventHash[:],
-	}
-	_ = votePoolExecutor.BroadcastVote(mockVoteFromRelayer1)
-	_ = votePoolExecutor.BroadcastVote(mockVoteFromRelayer2)
 }

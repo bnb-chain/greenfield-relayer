@@ -35,8 +35,8 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 	}
 }
 
-// AssembleTransactionAndSend assemble a tx by gathering votes signature and then call the build-in smart-contract
-func (a *GreenfieldAssembler) AssembleTransactionAndSend() {
+// AssembleTransactionsLoop assemble a tx by gathering votes signature and then call the build-in smart-contract
+func (a *GreenfieldAssembler) AssembleTransactionsLoop() {
 	for _, c := range a.getMonitorChannels() {
 		go a.assembleTransactionAndSendForChannel(types.ChannelId(c))
 	}
@@ -85,7 +85,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 		return err
 	}
 
-	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.votePoolExecutor.GetBlsPrivateKey())
+	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.votePoolExecutor.GetBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
 	txRelayStartTime := tx.TxTime + a.config.RelayConfig.GreenfieldToBSCRelayingDelayTime

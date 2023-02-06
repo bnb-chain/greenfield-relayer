@@ -5,10 +5,10 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/types"
 	"reflect"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/votepool"
 	"github.com/willf/bitset"
 
@@ -47,7 +47,7 @@ func AggregateSignatureAndValidatorBitSet(votes []*model.Vote, validators interf
 			}
 		}
 	} else {
-		for idx, valInfo := range validators.([]stakingtypes.Validator) {
+		for idx, valInfo := range validators.([]*tmtypes.Validator) {
 			if _, ok := voteAddrSet[hex.EncodeToString(valInfo.RelayerBlsKey[:])]; ok {
 				valBitSet.Set(uint(idx))
 			}

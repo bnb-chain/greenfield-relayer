@@ -1,5 +1,50 @@
 [
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "version",
+          "type": "uint8"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "height",
+          "type": "uint64"
+        }
+      ],
+      "name": "initConsensusState",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "height",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "validatorSetChanged",
+          "type": "bool"
+        }
+      ],
+      "name": "updateConsensusState",
+      "type": "event"
+    },
+    {
       "inputs": [],
       "name": "APP_CHANNELID",
       "outputs": [
@@ -14,7 +59,20 @@
     },
     {
       "inputs": [],
-      "name": "BLS_PUBKEY_LENGTH",
+      "name": "BLS_SIGNATURE_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "CHAIN_ID_LENGTH",
       "outputs": [
         {
           "internalType": "uint256",
@@ -33,6 +91,45 @@
           "internalType": "uint32",
           "name": "",
           "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "CONSENSUS_STATE_BASE_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "CONSENSUS_STATE_BYTES_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "CROSS_CHAIN",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -66,7 +163,7 @@
     },
     {
       "inputs": [],
-      "name": "LIGHT_CLIENT_CONTRACT",
+      "name": "GOV_HUB",
       "outputs": [
         {
           "internalType": "address",
@@ -79,7 +176,124 @@
     },
     {
       "inputs": [],
+      "name": "HEADER_VALIDATE_CONTRACT",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "HEIGHT_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "LIGHT_CLIENT",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MESSAGE_HASH_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "PACKAGE_VERIFY_CONTRACT",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "PROXY_ADMIN",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RELAYER_ADDRESS_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RELAYER_BLS_KEY_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RELAYER_HUB",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "TOKEN_HUB",
       "outputs": [
         {
           "internalType": "address",
@@ -118,12 +332,51 @@
     },
     {
       "inputs": [],
-      "name": "VALIDATORSET_CHANNELID",
+      "name": "VALIDATOR_BYTES_LENGTH",
       "outputs": [
         {
-          "internalType": "uint8",
+          "internalType": "uint256",
           "name": "",
-          "type": "uint8"
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "VALIDATOR_PUB_KEY_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "VALIDATOR_SET_HASH_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "VALIDATOR_VOTING_POWER_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -132,6 +385,32 @@
     {
       "inputs": [],
       "name": "blsPubKeys",
+      "outputs": [
+        {
+          "internalType": "bytes",
+          "name": "_blsPubKeys",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "chainID",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "consensusStateBytes",
       "outputs": [
         {
           "internalType": "bytes",
@@ -157,7 +436,20 @@
     },
     {
       "inputs": [],
-      "name": "insHeight",
+      "name": "height",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "initialHeight",
       "outputs": [
         {
           "internalType": "uint64",
@@ -171,15 +463,41 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
+          "internalType": "bytes",
+          "name": "_initConsensusStateBytes",
+          "type": "bytes"
         }
       ],
-      "name": "relayers",
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "nextValidatorSetHash",
       "outputs": [
         {
-          "internalType": "address",
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "name": "submitters",
+      "outputs": [
+        {
+          "internalType": "address payable",
           "name": "",
           "type": "address"
         }
@@ -191,37 +509,62 @@
       "inputs": [
         {
           "internalType": "bytes",
-          "name": "_header",
+          "name": "_lightBlock",
           "type": "bytes"
         },
         {
           "internalType": "uint64",
           "name": "_height",
           "type": "uint64"
-        },
-        {
-          "internalType": "bytes",
-          "name": "_blsPubKeys",
-          "type": "bytes"
-        },
-        {
-          "internalType": "address[]",
-          "name": "_relayers",
-          "type": "address[]"
         }
       ],
-      "name": "syncTendermintHeader",
-      "outputs": [],
+      "name": "syncLightBlock",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
       "inputs": [
         {
-          "internalType": "bytes",
-          "name": "_pkgKey",
-          "type": "bytes"
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "validatorSet",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "pubKey",
+          "type": "bytes32"
         },
+        {
+          "internalType": "int64",
+          "name": "votingPower",
+          "type": "int64"
+        },
+        {
+          "internalType": "address",
+          "name": "relayerAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "relayerBlsKey",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
         {
           "internalType": "bytes",
           "name": "_payload",
@@ -239,8 +582,14 @@
         }
       ],
       "name": "verifyPackage",
-      "outputs": [],
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
       "stateMutability": "view",
       "type": "function"
     }
-]
+  ]

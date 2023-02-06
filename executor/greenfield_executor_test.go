@@ -38,3 +38,10 @@ func TestGetValidators(t *testing.T) {
 	require.NoError(t, err)
 	t.Log(validators)
 }
+
+func TestGetBlockAtHeight(t *testing.T) {
+	e := InitGnfdExecutor()
+	b, err := e.GetBlockAtHeight(50000)
+	require.NoError(t, err)
+	t.Log(b)
+}

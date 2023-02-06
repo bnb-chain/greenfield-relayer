@@ -38,20 +38,19 @@ type GreenfieldVoteProcessor struct {
 }
 
 func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
-	greenfieldExecutor *executor.GreenfieldExecutor, votePoolExecutor *VotePoolExecutor,
-) *GreenfieldVoteProcessor {
+	greenfieldExecutor *executor.GreenfieldExecutor, votePoolExecutor *VotePoolExecutor) *GreenfieldVoteProcessor {
 	return &GreenfieldVoteProcessor{
 		config:             cfg,
 		daoManager:         dao,
 		signer:             signer,
 		greenfieldExecutor: greenfieldExecutor,
 		votePoolExecutor:   votePoolExecutor,
-		blsPublicKey:       util.GetBlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
 	}
 }
 
-// SignAndBroadcast signs tx using the relayer's bls private key, then broadcasts the vote to Greenfield votepool
-func (p *GreenfieldVoteProcessor) SignAndBroadcast() {
+// SignAndBroadcastLoop signs tx using the relayer's bls private key, then broadcasts the vote to Greenfield votepool
+func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
 	for {
 		err := p.signAndBroadcast()
 		if err != nil {
@@ -141,11 +140,13 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 		if err != nil {
 			return err
 		}
+		// TODO for local testing
+		BroadcastVotesFromOtherRelayers(PrivKeys, p.daoManager, p.votePoolExecutor, tx.ChannelId, tx.Sequence, 1)
 	}
 	return nil
 }
 
-func (p *GreenfieldVoteProcessor) CollectVotes() {
+func (p *GreenfieldVoteProcessor) CollectVotesLoop() {
 	for {
 		err := p.collectVotes()
 		if err != nil {

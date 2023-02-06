@@ -40,25 +40,25 @@ func (r *BSCRelayer) Start() {
 
 // MonitorEventsLoop will monitor cross chain events for every block and persist into DB
 func (r *BSCRelayer) MonitorEventsLoop() {
-	r.Listener.Start()
+	r.Listener.StartLoop()
 }
 
 func (r *BSCRelayer) SignAndBroadcastVoteLoop() {
-	r.voteProcessor.SignAndBroadcast()
+	r.voteProcessor.SignAndBroadcastVoteLoop()
 }
 
 func (r *BSCRelayer) CollectVotesLoop() {
-	r.voteProcessor.CollectVotes()
+	r.voteProcessor.CollectVotesLoop()
 }
 
 func (r *BSCRelayer) AssemblePackagesLoop() {
-	r.assembler.AssemblePackagesAndClaim()
+	r.assembler.AssemblePackagesAndClaimLoop()
 }
 
 func (r *BSCRelayer) UpdateCachedLatestValidatorsLoop() {
-	r.bscExecutor.UpdateCachedLatestValidators() // cache validators queried from greenfield, update it every 1 minute
+	r.bscExecutor.UpdateCachedLatestValidatorsLoop() // cache validators queried from greenfield, update it every 1 minute
 }
 
 func (r *BSCRelayer) UpdateClientLoop() {
-	r.bscExecutor.UpdateClients()
+	r.bscExecutor.UpdateClientLoop()
 }

@@ -34,8 +34,8 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 	}
 }
 
-// AssemblePackagesAndClaim assemble packages and then claim in Greenfield
-func (a *BSCAssembler) AssemblePackagesAndClaim() {
+// AssemblePackagesAndClaimLoop assemble packages and then claim in Greenfield
+func (a *BSCAssembler) AssemblePackagesAndClaimLoop() {
 	a.assemblePackagesAndClaimForOracleChannel(common.OracleChannelId)
 }
 
@@ -90,7 +90,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	// packages for same oracle sequence share one timestamp
 	pkgTs := pkgs[0].TxTime
 
-	relayerPubKey := util.GetBlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
+	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
 	packagesRelayStartTime := pkgTs + a.config.RelayConfig.BSCToGreenfieldRelayingDelayTime

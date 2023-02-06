@@ -18,8 +18,8 @@ import (
 )
 
 type App struct {
-	BSCRelayer        *relayer.BSCRelayer
-	GreenfieldRelayer *relayer.GreenfieldRelayer
+	BSCRelayer  *relayer.BSCRelayer
+	GnfdRelayer *relayer.GreenfieldRelayer
 }
 
 func NewApp(cfg *config.Config) *App {
@@ -64,12 +64,12 @@ func NewApp(cfg *config.Config) *App {
 	bscRelayer := relayer.NewBSCRelayer(bscListener, greenfieldExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
 
 	return &App{
-		BSCRelayer:        bscRelayer,
-		GreenfieldRelayer: gnfdRelayer,
+		BSCRelayer:  bscRelayer,
+		GnfdRelayer: gnfdRelayer,
 	}
 }
 
 func (a *App) Start() {
-	a.GreenfieldRelayer.Start()
+	a.GnfdRelayer.Start()
 	a.BSCRelayer.Start()
 }

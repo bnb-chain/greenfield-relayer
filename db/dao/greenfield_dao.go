@@ -2,7 +2,7 @@ package dao
 
 import (
 	"database/sql"
-	relayercommon "github.com/bnb-chain/greenfield-relayer/types"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"time"
 
 	"gorm.io/gorm"
@@ -71,7 +71,7 @@ func (d *GreenfieldDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	return uint64(result.Int64), nil
 }
 
-func (d *GreenfieldDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId relayercommon.ChannelId, sequence uint64, status db.TxStatus) (*model.GreenfieldRelayTransaction, error) {
+func (d *GreenfieldDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId types.ChannelId, sequence uint64, status db.TxStatus) (*model.GreenfieldRelayTransaction, error) {
 	tx := model.GreenfieldRelayTransaction{}
 	err := d.DB.Where("channel_id = ? and sequence = ? and status = ?", channelId, sequence, status).Find(&tx).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
