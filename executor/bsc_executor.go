@@ -6,12 +6,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 	"math/big"
 	"sync"
 	"time"
-
-	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -24,6 +21,8 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/executor/crosschain"
 	"github.com/bnb-chain/greenfield-relayer/executor/greenfieldlightclient"
+	"github.com/bnb-chain/greenfield-relayer/logging"
+	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
 type BSCClient struct {

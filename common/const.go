@@ -1,10 +1,11 @@
 package common
 
 import (
-	"github.com/bnb-chain/greenfield-relayer/types"
 	"time"
 
 	"github.com/avast/retry-go/v4"
+
+	"github.com/bnb-chain/greenfield-relayer/types"
 )
 
 var (

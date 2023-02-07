@@ -2,17 +2,18 @@ package integrationtest
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/greenfield-relayer/types"
 	"math/big"
 	"sort"
 	"testing"
 	"time"
 
-	"github.com/bnb-chain/greenfield-relayer/db"
-	"github.com/bnb-chain/greenfield-relayer/db/model"
-	"github.com/bnb-chain/greenfield-relayer/vote"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bnb-chain/greenfield-relayer/db"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/types"
+	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
 const (

@@ -2,13 +2,13 @@ package dao
 
 import (
 	"database/sql"
-	"github.com/bnb-chain/greenfield-relayer/types"
 	"time"
 
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-relayer/db"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/types"
 )
 
 type GreenfieldDao struct {

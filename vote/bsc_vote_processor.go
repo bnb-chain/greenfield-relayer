@@ -5,11 +5,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/types"
 	"sort"
 	"time"
-
-	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/avast/retry-go/v4"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +22,8 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/bnb-chain/greenfield-relayer/util"
 )
 

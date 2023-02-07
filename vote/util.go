@@ -2,7 +2,6 @@ package vote
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/greenfield-relayer/types"
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -13,6 +12,7 @@ import (
 	"github.com/willf/bitset"
 
 	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/types"
 )
 
 // VerifySignature verifies vote signature

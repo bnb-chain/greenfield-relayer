@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bnb-chain/greenfield-relayer/logging"
-
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -16,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
@@ -63,7 +62,6 @@ func (l *GreenfieldListener) poll() error {
 	}
 	blockRes, block, err := l.getBlockAndBlockResult(nextHeight)
 	if err != nil {
-		logging.Logger.Errorf("encounter error when retrieve block and block result at block height=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
 	if err = l.monitorCrossChainEvents(blockRes, block); err != nil {
@@ -131,7 +129,7 @@ func (l *GreenfieldListener) monitorCrossChainEvents(blockResults *ctypes.Result
 						if err != nil {
 							return err
 						}
-						relayTx.Sequence = seq
+						relayTx.Sequence = seq - 4
 					case "package_type":
 						packType, err := strconv.ParseInt(string(attr.Value), 10, 32)
 						if err != nil {
@@ -178,6 +176,9 @@ func (l *GreenfieldListener) monitorCrossChainEvents(blockResults *ctypes.Result
 
 func (l *GreenfieldListener) monitorValidators() error {
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
+	if err != nil {
+		return err
+	}
 	if lightClientLatestHeight == 0 {
 		return l.sync(common.GreenfieldStartHeight)
 	}
@@ -236,10 +237,10 @@ func (l *GreenfieldListener) calNextHeight() (uint64, error) {
 
 func (l *GreenfieldListener) sync(nextHeight uint64) error {
 	logging.Logger.Infof("syncing tendermint light block at height %d", nextHeight)
-	txHash, err := l.bscExecutor.SyncTendermintLightBlock(nextHeight)
-	if err != nil {
-		return err
-	}
-	logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
+	//txHash, err := l.bscExecutor.SyncTendermintLightBlock(nextHeight)
+	//if err != nil {
+	//	return err
+	//}
+	//logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
 	return nil
 }

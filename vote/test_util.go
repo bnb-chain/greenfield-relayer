@@ -2,13 +2,15 @@ package vote
 
 import (
 	"encoding/hex"
-	"github.com/bnb-chain/greenfield-relayer/db/dao"
-	"github.com/bnb-chain/greenfield-relayer/db/model"
-	"github.com/bnb-chain/greenfield-relayer/util"
+	"time"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/tendermint/tendermint/votepool"
-	"time"
+
+	"github.com/bnb-chain/greenfield-relayer/db/dao"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
 const (

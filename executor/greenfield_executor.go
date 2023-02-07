@@ -6,11 +6,8 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/types"
 	"sync"
 	"time"
-
-	"github.com/bnb-chain/greenfield-relayer/logging"
 
 	"github.com/avast/retry-go/v4"
 	clitx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -32,6 +29,8 @@ import (
 
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/types"
 )
 
 type GreenfieldClient struct {

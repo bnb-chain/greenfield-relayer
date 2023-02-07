@@ -3,7 +3,6 @@ package listener
 import (
 	"encoding/hex"
 	"fmt"
-	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -12,6 +11,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
+	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
 func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, greenfieldChainId, bscChainId rtypes.ChainId, config *config.RelayConfig) (*model.BscRelayPackage, error) {
