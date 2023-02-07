@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	LocalRelayerHexBlsPrivKey = "4f1f561f5835d0f310d3cf072821155834653ab5f417ff0905eaab3023d56b1e"
+	LocalRelayerHexBlsPrivKey = "275ebf409f5caa121bdc37841660b4548bfbf81eb8593442640ffe0b66dfc86f"
 )
 
 // PrivKeys Bls Private keys from other mock relayers
 var PrivKeys = []string{
-	"3a1055a667eddef7405a554f2994aedea43c8258712a013b3a61532e8cd0f032",
-	"139ace9a52fa78b9f4dc2f151231225f9503d60f3aefeef89a1ee82d6d48ef9a",
+	"60e5839445580b001576ce8fb0b08cf2b37f8289faaf49a2a3d1e36dbbe588a1",
+	"4b4d06d9c4af19c175962190596ed7e01e1b818821ef4cbf593f6ec84345a0f0",
 }
 
 // BroadcastVotesFromOtherRelayers for mimic multi relayers when bsc -> gnfd

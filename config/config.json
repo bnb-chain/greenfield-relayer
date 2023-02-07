@@ -9,7 +9,7 @@
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "ab463aca3d2965233da3d1d6108aa521274c5ddc2369ff72970a52a451863fbf",
+    "private_key": "03ec592c156849665fa319fc7a11960dbd76f59ed06f664103b58668fb78b2f9",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
     "start_height": 25000,
@@ -22,9 +22,9 @@
     "aws_region": "",
     "aws_secret_name": "",
     "rpc_addrs": [
-      "http://127.0.0.1:8545"
+      "http://172.22.41.33:8545"
     ],
-    "private_key": "ab463aca3d2965233da3d1d6108aa521274c5ddc2369ff72970a52a451863fbf",
+    "private_key": "03ec592c156849665fa319fc7a11960dbd76f59ed06f664103b58668fb78b2f9",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,
@@ -34,7 +34,7 @@
   "vote_pool_config": {
     "rpc_addr":
       "http://127.0.0.1:26750",
-    "bls_private_key": "4f1f561f5835d0f310d3cf072821155834653ab5f417ff0905eaab3023d56b1e"
+    "bls_private_key": "275ebf409f5caa121bdc37841660b4548bfbf81eb8593442640ffe0b66dfc86f"
   },
   "relay_config": {
     "bsc_to_greenfield_relaying_delay_time": 30,

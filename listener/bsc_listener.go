@@ -110,7 +110,7 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 	if isForked {
 		return fmt.Errorf("there is fork at block height=%d", latestPolledBlock.Height)
 	}
-	logs, err := l.getLogsFromHeader(nextHeightBlockHeader)
+	logs, err := l.queryCrossChainLogs(nextHeightBlockHeader.Hash())
 	if err != nil {
 		return fmt.Errorf("failed to get logs from block at blockHeight=%d, err=%s", nextHeight, err.Error())
 	}
@@ -144,10 +144,9 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		relayPkgs)
 }
 
-func (l *BSCListener) getLogsFromHeader(header *types.Header) ([]types.Log, error) {
+func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log, error) {
 	client := l.bscExecutor.GetRpcClient()
 	topics := [][]ethcommon.Hash{{l.getCrossChainPackageEventHash()}}
-	blockHash := header.Hash()
 	logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 		BlockHash: &blockHash,
 		Topics:    topics,

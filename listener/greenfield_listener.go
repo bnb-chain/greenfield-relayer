@@ -236,10 +236,10 @@ func (l *GreenfieldListener) calNextHeight() (uint64, error) {
 
 func (l *GreenfieldListener) sync(nextHeight uint64) error {
 	logging.Logger.Infof("syncing tendermint light block at height %d", nextHeight)
-	//txHash, err := l.bscExecutor.SyncTendermintLightBlock(nextHeight)
-	//if err != nil {
-	//	return err
-	//}
-	//logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
+	txHash, err := l.bscExecutor.SyncTendermintLightBlock(nextHeight)
+	if err != nil {
+		return err
+	}
+	logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
 	return nil
 }

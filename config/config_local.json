@@ -22,7 +22,7 @@
     "aws_region": "",
     "aws_secret_name": "",
     "rpc_addrs": [
-      "http://172.22.41.33:8545"
+      "http://127.0.0.1:8545"
     ],
     "private_key": "31f91f9a937528160c50710bff1f1d85f746546b5cc82db2b341fc7026217ad0",
     "gas_limit": 4700000,
@@ -33,7 +33,7 @@
   },
   "vote_pool_config": {
     "rpc_addr":
-    "http://127.0.0.1:26750",
+      "http://127.0.0.1:26750",
     "bls_private_key": "0fc08c0874cf9d760d9efe08d66cf83f3739620e3ccf859f18f971e362952ca2"
   },
   "relay_config": {

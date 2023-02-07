@@ -8,6 +8,9 @@ and broadcast the signed event which called "the vote" through the p2p network o
 the Greenfield relayer are collected, the relayer will assemble a cross chain package transaction and submit it to the 
 BSC or Greenfield network
 
+### Requirement
+
+Go version above 1.19
 
 ## Build
 

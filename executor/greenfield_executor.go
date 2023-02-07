@@ -253,7 +253,6 @@ func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, er
 		SignedHeader: &commit.SignedHeader,
 		ValidatorSet: validatorSet,
 	}
-
 	protoBlock, err := lightBlock.ToProto()
 	if err != nil {
 		return nil, err
