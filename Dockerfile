@@ -11,6 +11,11 @@ ENV CONFIG_TYPE "local"
 ENV AWS_REGION ""
 ENV AWS_SECRET_KEY ""
 
+# For Private REPO
+ARG GH_TOKEN=""
+RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
+RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://github.com"
+
 # Set working directory for the build
 WORKDIR /opt/app
 
