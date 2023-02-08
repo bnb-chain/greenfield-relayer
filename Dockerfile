@@ -11,11 +11,6 @@ ENV CONFIG_TYPE "local"
 ENV AWS_REGION ""
 ENV AWS_SECRET_KEY ""
 
-# For Private REPO
-ARG GH_TOKEN=""
-RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
-RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://github.com"
-
 # Set working directory for the build
 WORKDIR /opt/app
 
@@ -23,8 +18,14 @@ WORKDIR /opt/app
 COPY . .
 
 # Install minimum necessary dependencies, remove packages
-RUN apk add --no-cache $PACKAGES && \
-    make build
+RUN apk add --no-cache $PACKAGES
+
+# For Private REPO
+ARG GH_TOKEN=""
+RUN go env -w GOPRIVATE="github.com/bnb-chain/*"
+RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://github.com"
+
+RUN make build
 
 # Run as non-root user for security
 USER 1000
