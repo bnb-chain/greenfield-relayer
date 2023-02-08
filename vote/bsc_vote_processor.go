@@ -175,9 +175,6 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		if err != nil {
 			return err
 		}
-
-		// TODO for local testing
-		BroadcastVotesFromOtherRelayers(PrivKeys, p.daoManager, p.votePoolExecutor, uint8(channelId), seq, 2)
 	}
 	return nil
 }

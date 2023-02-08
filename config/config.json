@@ -45,8 +45,8 @@
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
     "bsc_cross_chain_package_event_name": "CrossChainPackage",
     "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",
-    "cross_chain_contract_addr": "0x04ED4ad3cDe36FE8ba944E3D6CFC54f7Fe6c3C72",
-    "greenfield_light_client_contract_addr": "0x06F22B54c2dAbA237DdDC9F10Ee12dCF91CBfCF5"
+    "cross_chain_contract_addr": "0xCBd5431cC04031d089c90E7c83288183A6Fe545d",
+    "greenfield_light_client_contract_addr": "0x193198556d1DbF455Aa063050eC1Cb039E8acECf"
   },
   "log_config": {
     "level": "DEBUG",

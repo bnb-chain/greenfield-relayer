@@ -436,7 +436,7 @@
     },
     {
       "inputs": [],
-      "name": "height",
+      "name": "gnfdHeight",
       "outputs": [
         {
           "internalType": "uint64",
@@ -449,7 +449,7 @@
     },
     {
       "inputs": [],
-      "name": "initialHeight",
+      "name": "initialGnfdHeight",
       "outputs": [
         {
           "internalType": "uint64",

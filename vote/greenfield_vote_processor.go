@@ -139,8 +139,6 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 		if err != nil {
 			return err
 		}
-		// TODO for local testing
-		BroadcastVotesFromOtherRelayers(PrivKeys, p.daoManager, p.votePoolExecutor, tx.ChannelId, tx.Sequence, 1)
 	}
 	return nil
 }

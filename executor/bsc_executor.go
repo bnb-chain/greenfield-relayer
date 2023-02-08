@@ -386,7 +386,7 @@ func (e *BSCExecutor) GetLightClientLatestHeight() (uint64, error) {
 		Pending: true,
 		Context: context.Background(),
 	}
-	latestHeight, err := e.getGreenfieldLightClient().Height(callOpts)
+	latestHeight, err := e.getGreenfieldLightClient().GnfdHeight(callOpts)
 	if err != nil {
 		return 0, err
 	}

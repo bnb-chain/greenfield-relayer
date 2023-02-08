@@ -35,24 +35,13 @@ func NewGreenfieldListener(cfg *config.Config, gnfdExecutor *executor.Greenfield
 }
 
 func (l *GreenfieldListener) StartLoop() {
-	go func() {
-		for {
-			err := l.poll()
-			if err != nil {
-				time.Sleep(common.RetryInterval)
-				continue
-			}
+	for {
+		err := l.poll()
+		if err != nil {
+			time.Sleep(common.RetryInterval)
+			continue
 		}
-	}()
-	go func() {
-		for {
-			err := l.monitorValidators()
-			if err != nil {
-				time.Sleep(common.RetryInterval)
-				continue
-			}
-		}
-	}()
+	}
 }
 
 func (l *GreenfieldListener) poll() error {
@@ -60,12 +49,12 @@ func (l *GreenfieldListener) poll() error {
 	if err != nil {
 		return err
 	}
-	blockRes, block, err := l.getBlockAndBlockResult(nextHeight)
-	if err != nil {
+	if err = l.monitorCrossChainEvents(nextHeight); err != nil {
+		logging.Logger.Errorf("encounter error when monitor cross-chain events at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
-	if err = l.monitorCrossChainEvents(blockRes, block); err != nil {
-		logging.Logger.Errorf("encounter error when monitor cross-chain events at blockHeight=%d, err=%s", nextHeight, err.Error())
+	if err = l.monitorValidators(nextHeight); err != nil {
+		logging.Logger.Errorf("encounter error when monitor validators at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
 	return nil
@@ -92,7 +81,11 @@ func (l *GreenfieldListener) getBlockAndBlockResult(height uint64) (*ctypes.Resu
 	return blockResults, block, nil
 }
 
-func (l *GreenfieldListener) monitorCrossChainEvents(blockResults *ctypes.ResultBlockResults, block *tmtypes.Block) error {
+func (l *GreenfieldListener) monitorCrossChainEvents(nextHeight uint64) error {
+	blockResults, block, err := l.getBlockAndBlockResult(nextHeight)
+	if err != nil {
+		return err
+	}
 	txs := make([]*model.GreenfieldRelayTransaction, 0)
 	for _, tx := range blockResults.TxsResults {
 		for _, event := range tx.Events {
@@ -129,7 +122,7 @@ func (l *GreenfieldListener) monitorCrossChainEvents(blockResults *ctypes.Result
 						if err != nil {
 							return err
 						}
-						relayTx.Sequence = seq - 4
+						relayTx.Sequence = seq
 					case "package_type":
 						packType, err := strconv.ParseInt(string(attr.Value), 10, 32)
 						if err != nil {
@@ -174,17 +167,13 @@ func (l *GreenfieldListener) monitorCrossChainEvents(blockResults *ctypes.Result
 	return l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs)
 }
 
-func (l *GreenfieldListener) monitorValidators() error {
+func (l *GreenfieldListener) monitorValidators(nextHeight uint64) error {
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
 		return err
 	}
-	if lightClientLatestHeight == 0 {
+	if lightClientLatestHeight == common.GreenfieldStartHeight {
 		return l.sync(common.GreenfieldStartHeight)
-	}
-	nextHeight, err := l.calNextHeight()
-	if err != nil {
-		return err
 	}
 	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
 	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
@@ -237,10 +226,10 @@ func (l *GreenfieldListener) calNextHeight() (uint64, error) {
 
 func (l *GreenfieldListener) sync(nextHeight uint64) error {
 	logging.Logger.Infof("syncing tendermint light block at height %d", nextHeight)
-	//txHash, err := l.bscExecutor.SyncTendermintLightBlock(nextHeight)
-	//if err != nil {
-	//	return err
-	//}
-	//logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
+	txHash, err := l.bscExecutor.SyncTendermintLightBlock(nextHeight)
+	if err != nil {
+		return err
+	}
+	logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
 	return nil
 }
