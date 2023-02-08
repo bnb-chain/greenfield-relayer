@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"sync"
 	"time"
 
@@ -52,6 +53,7 @@ type GreenfieldExecutor struct {
 	privateKey        *ethsecp256k1.PrivKey
 	address           string
 	validators        []*tmtypes.Validator // used to cache validators
+	cdc               *codec.ProtoCodec
 }
 
 func grpcConn(addr string) *grpc.ClientConn {
@@ -128,6 +130,7 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		privateKey:        privKey,
 		address:           privKey.PubKey().Address().String(),
 		config:            cfg,
+		cdc:               Cdc(),
 	}
 }
 
@@ -350,14 +353,14 @@ func (e *GreenfieldExecutor) GetAccount(address string) (authtypes.AccountI, err
 		return nil, err
 	}
 	var account authtypes.AccountI
-	if err := Cdc().InterfaceRegistry().UnpackAny(authRes.Account, &account); err != nil {
+	if err := e.cdc.InterfaceRegistry().UnpackAny(authRes.Account, &account); err != nil {
 		return nil, err
 	}
 	return account, nil
 }
 
 func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64) (string, error) {
-	txConfig := authtx.NewTxConfig(Cdc(), authtx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(e.cdc, authtx.DefaultSignModes)
 	txBuilder := txConfig.NewTxBuilder()
 	seq, err := e.GetNextReceiveOracleSequence()
 	if err != nil {
