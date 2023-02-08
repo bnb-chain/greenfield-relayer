@@ -172,9 +172,6 @@ func (l *GreenfieldListener) monitorValidators(nextHeight uint64) error {
 	if err != nil {
 		return err
 	}
-	if lightClientLatestHeight == common.GreenfieldStartHeight {
-		return l.sync(common.GreenfieldStartHeight)
-	}
 
 	// happen when re-process block
 	if nextHeight <= lightClientLatestHeight {
