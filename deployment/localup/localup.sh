@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 basedir=$(cd `dirname $0`; pwd)
 workspace=${basedir}
-source ${workspace}/.env
 
 bin_name=greenfield-relayer
 bin=${workspace}/../../build/${bin_name}
