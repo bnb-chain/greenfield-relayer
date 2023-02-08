@@ -41,7 +41,6 @@ func printUsage() {
 func main() {
 	initFlags()
 	configType := viper.GetString(flagConfigType)
-	configType = "local"
 	if configType != config.AWSConfig && configType != config.LocalConfig {
 		printUsage()
 		return
@@ -69,13 +68,16 @@ func main() {
 		cfg = config.ParseConfigFromJson(configContent)
 	} else {
 		configFilePath := viper.GetString(flagConfigPath)
-		configFilePath = "config/config.json"
 		if configFilePath == "" {
 			printUsage()
 			return
 		}
-
+		fmt.Println("configFilePath", configFilePath)
 		cfg = config.ParseConfigFromFile(configFilePath)
+		fmt.Print(cfg.GreenfieldConfig.GRPCAddrs)
+
+		fmt.Print(cfg.DBConfig.DBPath)
+		fmt.Print(cfg.DBConfig.Dialect)
 	}
 
 	if cfg == nil {
