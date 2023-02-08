@@ -175,6 +175,12 @@ func (l *GreenfieldListener) monitorValidators(nextHeight uint64) error {
 	if lightClientLatestHeight == common.GreenfieldStartHeight {
 		return l.sync(common.GreenfieldStartHeight)
 	}
+
+	// happen when re-process block
+	if nextHeight <= lightClientLatestHeight {
+		return nil
+	}
+
 	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
 	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
 	if err != nil {
