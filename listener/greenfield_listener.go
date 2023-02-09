@@ -235,5 +235,6 @@ func (l *GreenfieldListener) sync(nextHeight uint64) error {
 		return err
 	}
 	logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
+	time.Sleep(common.SleepTimeAfterSyncLightBlock)
 	return nil
 }

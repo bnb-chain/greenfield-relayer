@@ -17,5 +17,6 @@ var (
 )
 
 const (
-	OracleChannelId types.ChannelId = 0
+	OracleChannelId              types.ChannelId = 0
+	SleepTimeAfterSyncLightBlock                 = 15 * time.Second
 )

@@ -63,7 +63,7 @@
   },
   "db_config": {
     "dialect": "mysql",
-    "db_path": "bijieprd:Csap201@tcp(tf-swap-qa-swap-db.cluster-cqq8zsvor6n6.ap-northeast-1.rds.amazonaws.com:3306)/greenfield-relayer0?charset=utf8&parseTime=True&loc=Local"
+    "db_path": "root:pass@/greenfield?charset=utf8&parseTime=True&loc=Local"
   },
   "alert_config": {
     "enable_alert": true,
