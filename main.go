@@ -72,12 +72,7 @@ func main() {
 			printUsage()
 			return
 		}
-		fmt.Println("configFilePath", configFilePath)
 		cfg = config.ParseConfigFromFile(configFilePath)
-		fmt.Print(cfg.GreenfieldConfig.GRPCAddrs)
-
-		fmt.Print(cfg.DBConfig.DBPath)
-		fmt.Print(cfg.DBConfig.Dialect)
 	}
 
 	if cfg == nil {
