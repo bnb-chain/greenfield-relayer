@@ -49,11 +49,15 @@ func (l *GreenfieldListener) poll() error {
 	if err != nil {
 		return err
 	}
-	if err = l.monitorCrossChainEvents(nextHeight); err != nil {
+	blockResults, block, err := l.getBlockAndBlockResult(nextHeight)
+	if err != nil {
+		return err
+	}
+	if err = l.monitorCrossChainEvents(block, blockResults); err != nil {
 		logging.Logger.Errorf("encounter error when monitor cross-chain events at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
-	if err = l.monitorValidators(nextHeight); err != nil {
+	if err = l.monitorValidators(block, nextHeight); err != nil {
 		logging.Logger.Errorf("encounter error when monitor validators at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
@@ -81,11 +85,7 @@ func (l *GreenfieldListener) getBlockAndBlockResult(height uint64) (*ctypes.Resu
 	return blockResults, block, nil
 }
 
-func (l *GreenfieldListener) monitorCrossChainEvents(nextHeight uint64) error {
-	blockResults, block, err := l.getBlockAndBlockResult(nextHeight)
-	if err != nil {
-		return err
-	}
+func (l *GreenfieldListener) monitorCrossChainEvents(block *tmtypes.Block, blockResults *ctypes.ResultBlockResults) error {
 	txs := make([]*model.GreenfieldRelayTransaction, 0)
 	for _, tx := range blockResults.TxsResults {
 		for _, event := range tx.Events {
@@ -167,17 +167,18 @@ func (l *GreenfieldListener) monitorCrossChainEvents(nextHeight uint64) error {
 	return l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs)
 }
 
-func (l *GreenfieldListener) monitorValidators(nextHeight uint64) error {
+func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, nextHeight uint64) error {
+	if bytes.Equal(block.NextValidatorsHash, block.ValidatorsHash) {
+		return nil
+	}
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
 		return err
 	}
-
 	// happen when re-process block
 	if nextHeight <= lightClientLatestHeight {
 		return nil
 	}
-
 	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
 	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
 	if err != nil {
