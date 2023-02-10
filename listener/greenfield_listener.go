@@ -168,9 +168,6 @@ func (l *GreenfieldListener) monitorCrossChainEvents(block *tmtypes.Block, block
 }
 
 func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, nextHeight uint64) error {
-	if bytes.Equal(block.NextValidatorsHash, block.ValidatorsHash) {
-		return nil
-	}
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
 		return err
