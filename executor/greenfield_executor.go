@@ -7,6 +7,7 @@ import (
 	_ "encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"sync"
 	"time"
 
@@ -380,7 +381,14 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 	if err != nil {
 		return "", err
 	}
-	txBuilder.SetGasLimit(e.config.GreenfieldConfig.GasLimit)
+
+	gasLimit := e.config.GreenfieldConfig.GasLimit
+	//todo use go-sdk
+	feeAmount := sdk.NewCoins(sdk.NewInt64Coin("BNB",
+		sdk.NewInt(int64(gasLimit)).Mul(sdk.NewInt(1000000000)).Int64()),
+	)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetFeeAmount(feeAmount)
 
 	acct, err := e.GetAccount(e.address)
 	if err != nil {
