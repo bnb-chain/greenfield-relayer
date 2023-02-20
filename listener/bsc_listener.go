@@ -85,11 +85,7 @@ func (l *BSCListener) poll() error {
 }
 
 func (l *BSCListener) getLatestPolledBlock() (*model.BscBlock, error) {
-	block, err := l.DaoManager.BSCDao.GetLatestBlock()
-	if err != nil {
-		return nil, err
-	}
-	return block, nil
+	return l.DaoManager.BSCDao.GetLatestBlock()
 }
 
 func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBlock *model.BscBlock) error {

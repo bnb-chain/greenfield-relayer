@@ -301,7 +301,7 @@ func (e *BSCExecutor) QueryTendermintLightBlockWithRetry(height int64) (lightBlo
 }
 
 func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte, err error) {
-	latestHeigh, err := e.GreenfieldExecutor.GetLatestBlockHeightWithRetry()
+	latestHeigh, err := e.GreenfieldExecutor.GetLatestBlockHeight()
 	if err != nil {
 		return nil, err
 	}

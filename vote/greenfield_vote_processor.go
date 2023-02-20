@@ -59,7 +59,7 @@ func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
 }
 
 func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
-	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeightWithRetry()
+	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeight()
 	if err != nil {
 		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 		return err

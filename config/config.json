@@ -9,7 +9,7 @@
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "03ec592c156849665fa319fc7a11960dbd76f59ed06f664103b58668fb78b2f9",
+    "private_key": "ed3b74930e1307bba957410127ec0ecb2995a557ca828722494e0c041cf78cf7",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
     "start_height": 1,
@@ -24,7 +24,7 @@
     "rpc_addrs": [
       "http://172.22.41.33:8545"
     ],
-    "private_key": "03ec592c156849665fa319fc7a11960dbd76f59ed06f664103b58668fb78b2f9",
+    "private_key": "ed3b74930e1307bba957410127ec0ecb2995a557ca828722494e0c041cf78cf7",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,
@@ -34,14 +34,13 @@
   "vote_pool_config": {
     "rpc_addr":
       "http://127.0.0.1:26750",
-    "bls_private_key": "275ebf409f5caa121bdc37841660b4548bfbf81eb8593442640ffe0b66dfc86f"
+    "bls_private_key": "051f291761fb0d5ecc10a91ad8c57590abb86fde11704a673752a686c1ab5394"
   },
   "relay_config": {
     "bsc_to_greenfield_relaying_delay_time": 30,
     "greenfield_to_bsc_relaying_delay_time": 10,
     "first_in_turn_relayer_relaying_window": 40,
     "in_turn_relayer_relaying_window": 3,
-
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
     "bsc_cross_chain_package_event_name": "CrossChainPackage",
     "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",

@@ -109,3 +109,9 @@ func (d *GreenfieldDao) SaveBlockAndBatchTransactions(b *model.GreenfieldBlock, 
 		return nil
 	})
 }
+
+func (d *GreenfieldDao) SaveSyncLightBlockTransaction(t *model.SyncLightBlockTransaction) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		return dbTx.Create(t).Error
+	})
+}

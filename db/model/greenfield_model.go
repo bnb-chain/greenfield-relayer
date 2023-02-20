@@ -38,6 +38,17 @@ func (*GreenfieldRelayTransaction) TableName() string {
 	return "greenfield_relay_transaction"
 }
 
+type SyncLightBlockTransaction struct {
+	Id             int64
+	ValidatorsHash string `gorm:"NOT NULL"`
+	Height         uint64 `gorm:"NOT NULL;index:idx_sync_light_block_transaction_height"`
+	TxHash         string `gorm:"NOT NULL"`
+}
+
+func (*SyncLightBlockTransaction) TableName() string {
+	return "sync_light_block_transaction"
+}
+
 func InitGreenfieldTables(db *gorm.DB) {
 	if !db.Migrator().HasTable(&GreenfieldBlock{}) {
 		err := db.Migrator().CreateTable(&GreenfieldBlock{})
@@ -48,6 +59,13 @@ func InitGreenfieldTables(db *gorm.DB) {
 
 	if !db.Migrator().HasTable(&GreenfieldRelayTransaction{}) {
 		err := db.Migrator().CreateTable(&GreenfieldRelayTransaction{})
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if !db.Migrator().HasTable(&SyncLightBlockTransaction{}) {
+		err := db.Migrator().CreateTable(&SyncLightBlockTransaction{})
 		if err != nil {
 			panic(err)
 		}

@@ -3,8 +3,10 @@ package listener
 import (
 	"bytes"
 	"strconv"
+	"sync"
 	"time"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -19,6 +21,7 @@ import (
 )
 
 type GreenfieldListener struct {
+	mutex              sync.RWMutex
 	config             *config.Config
 	greenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
@@ -53,150 +56,129 @@ func (l *GreenfieldListener) poll() error {
 	if err != nil {
 		return err
 	}
-	if err = l.monitorCrossChainEvents(block, blockResults); err != nil {
-		logging.Logger.Errorf("encounter error when monitor cross-chain events at blockHeight=%d, err=%s", nextHeight, err.Error())
-		return err
+	txs := make([]*model.GreenfieldRelayTransaction, 0)
+	wg := new(sync.WaitGroup)
+	wg.Add(3)
+	relayTxCh := make(chan *model.GreenfieldRelayTransaction)
+	errChan := make(chan error)
+	waitCh := make(chan struct{})
+
+	go func() {
+		go l.monitorTxEvents(uint64(block.Height), blockResults.TxsResults, relayTxCh, errChan, wg)
+		go l.monitorEndBlockEvents(uint64(block.Height), blockResults.EndBlockEvents, relayTxCh, errChan, wg)
+		go l.monitorValidators(block, errChan, wg)
+		wg.Wait()
+		close(waitCh)
+	}()
+	for {
+		select {
+		case err := <-errChan:
+			logging.Logger.Errorf("encounter error when monitoring at Height=%d, err=%s", nextHeight, err.Error())
+			return err
+		case tx := <-relayTxCh:
+			l.mutex.Lock()
+			txs = append(txs, tx)
+			l.mutex.Unlock()
+		case <-waitCh:
+			b := &model.GreenfieldBlock{
+				Chain:     block.ChainID,
+				Height:    uint64(block.Height),
+				BlockTime: block.Time.Unix(),
+			}
+			return l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs)
+		}
 	}
-	if err = l.monitorValidators(block, nextHeight); err != nil {
-		logging.Logger.Errorf("encounter error when monitor validators at blockHeight=%d, err=%s", nextHeight, err.Error())
-		return err
-	}
-	return nil
 }
 
 func (l *GreenfieldListener) getLatestPolledBlock() (*model.GreenfieldBlock, error) {
-	block, err := l.DaoManager.GreenfieldDao.GetLatestBlock()
-	if err != nil {
-		return nil, err
-	}
-	return block, nil
+	return l.DaoManager.GreenfieldDao.GetLatestBlock()
 }
 
 func (l *GreenfieldListener) getBlockAndBlockResult(height uint64) (*ctypes.ResultBlockResults, *tmtypes.Block, error) {
 	logging.Logger.Infof("retrieve greenfield block at height=%d", height)
-	blockResults, err := l.greenfieldExecutor.GetBlockResultAtHeight(int64(height))
-	if err != nil {
-		return nil, nil, err
-	}
-	block, err := l.greenfieldExecutor.GetBlockAtHeight(int64(height))
+	block, blockResults, err := l.greenfieldExecutor.GetBlockAndBlockResultAtHeight(int64(height))
 	if err != nil {
 		return nil, nil, err
 	}
 	return blockResults, block, nil
 }
 
-func (l *GreenfieldListener) monitorCrossChainEvents(block *tmtypes.Block, blockResults *ctypes.ResultBlockResults) error {
-	txs := make([]*model.GreenfieldRelayTransaction, 0)
-	for _, tx := range blockResults.TxsResults {
+func (l *GreenfieldListener) monitorTxEvents(height uint64, txRes []*abci.ResponseDeliverTx, txChan chan *model.GreenfieldRelayTransaction, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+	// Cross chain Transfer events
+	for _, tx := range txRes {
 		for _, event := range tx.Events {
-			relayTx := model.GreenfieldRelayTransaction{}
 			if event.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
-				for _, attr := range event.Attributes {
-					switch string(attr.Key) {
-					case "channel_id":
-						chanelId, err := strconv.ParseInt(string(attr.Value), 10, 8)
-						if err != nil {
-							return err
-						}
-						relayTx.ChannelId = uint8(chanelId)
-					case "src_chain_id":
-						srcChainId, err := strconv.ParseInt(string(attr.Value), 10, 32)
-						if err != nil {
-							return err
-						}
-						relayTx.SrcChainId = uint32(srcChainId)
-					case "dest_chain_id":
-						destChainId, err := strconv.ParseInt(string(attr.Value), 10, 32)
-						if err != nil {
-							return err
-						}
-						relayTx.DestChainId = uint32(destChainId)
-					case "package_load":
-						payloadStr, err := strconv.Unquote(string(attr.Value))
-						if err != nil {
-							return err
-						}
-						relayTx.PayLoad = payloadStr
-					case "sequence":
-						seq, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
-						if err != nil {
-							return err
-						}
-						relayTx.Sequence = seq
-					case "package_type":
-						packType, err := strconv.ParseInt(string(attr.Value), 10, 32)
-						if err != nil {
-							return err
-						}
-						relayTx.PackageType = uint32(packType)
-					case "timestamp":
-						ts, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
-						if err != nil {
-							return err
-						}
-						relayTx.TxTime = int64(ts)
-					case "relayer_fee":
-						feeStr, err := strconv.Unquote(string(attr.Value))
-						if err != nil {
-							return err
-						}
-						relayTx.RelayerFee = feeStr
-					case "ack_relayer_fee":
-						feeStr, err := strconv.Unquote(string(attr.Value))
-						if err != nil {
-							return err
-						}
-						relayTx.AckRelayerFee = feeStr
-					default:
-						logging.Logger.Errorf("unexpected attr, key is %s", attr.Key)
-					}
+				relayTx, err := constructRelayTx(event, height)
+				if err != nil {
+					errChan <- err
+					return
 				}
-				relayTx.Status = db.Saved
-				relayTx.Height = uint64(block.Height)
-				relayTx.UpdatedTime = time.Now().Unix()
-				txs = append(txs, &relayTx)
+				txChan <- &relayTx
 			}
 		}
 	}
-
-	b := &model.GreenfieldBlock{
-		Chain:     block.ChainID,
-		Height:    uint64(block.Height),
-		BlockTime: block.Time.Unix(),
-	}
-	return l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs)
 }
 
-func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, nextHeight uint64) error {
+func (l *GreenfieldListener) monitorEndBlockEvents(height uint64, endBlockEvents []abci.Event, txChan chan *model.GreenfieldRelayTransaction, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for _, e := range endBlockEvents {
+		if e.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
+			relayTx, err := constructRelayTx(e, height)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			txChan <- &relayTx
+		}
+	}
+}
+
+func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
-		return err
+		errChan <- err
+		return
 	}
+	nextHeight := uint64(block.Height)
 	// happen when re-process block
 	if nextHeight <= lightClientLatestHeight {
-		return nil
+		return
 	}
+
 	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
 	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
 	if err != nil {
-		return err
+		errChan <- err
+		return
 	}
+
 	curValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight - 1)
 	if err != nil {
-		return err
+		errChan <- err
+		return
 	}
+
 	if len(nextValidators) != len(curValidators) {
-		return l.sync(nextHeight)
+		if err := l.sync(nextHeight, block.ValidatorsHash.String()); err != nil {
+			errChan <- err
+		}
+		return
 	}
 	for idx, nextVal := range nextValidators {
 		curVal := curValidators[idx]
+
 		if !bytes.Equal(nextVal.Address.Bytes(), curVal.Address.Bytes()) ||
 			!bytes.Equal(nextVal.RelayerBlsKey, curVal.RelayerBlsKey) ||
 			!bytes.Equal(nextVal.RelayerAddress, curVal.RelayerAddress) {
-			return l.sync(nextHeight)
+
+			if err := l.sync(nextHeight, block.ValidatorsHash.String()); err != nil {
+				errChan <- err
+			}
+			break
 		}
 	}
-	return nil
 }
 
 func (l *GreenfieldListener) calNextHeight() (uint64, error) {
@@ -212,7 +194,7 @@ func (l *GreenfieldListener) calNextHeight() (uint64, error) {
 		nextHeight = latestPolledBlockHeight + 1
 	}
 
-	latestBlockHeight, err := l.greenfieldExecutor.GetLatestBlockHeightWithRetry()
+	latestBlockHeight, err := l.greenfieldExecutor.GetLatestBlockHeight()
 	if err != nil {
 		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 		return 0, err
@@ -225,13 +207,89 @@ func (l *GreenfieldListener) calNextHeight() (uint64, error) {
 	return nextHeight, nil
 }
 
-func (l *GreenfieldListener) sync(nextHeight uint64) error {
+func (l *GreenfieldListener) sync(nextHeight uint64, validatorsHash string) error {
 	logging.Logger.Infof("syncing tendermint light block at height %d", nextHeight)
 	txHash, err := l.bscExecutor.SyncTendermintLightBlock(nextHeight)
 	if err != nil {
 		return err
 	}
+	t := &model.SyncLightBlockTransaction{
+		ValidatorsHash: validatorsHash,
+		Height:         nextHeight,
+		TxHash:         txHash.String(),
+	}
+	if err = l.DaoManager.GreenfieldDao.SaveSyncLightBlockTransaction(t); err != nil {
+		return err
+	}
 	logging.Logger.Infof("synced tendermint light block at height %d with txHash %s", nextHeight, txHash.String())
 	time.Sleep(common.SleepTimeAfterSyncLightBlock)
 	return nil
+}
+
+func constructRelayTx(event abci.Event, height uint64) (model.GreenfieldRelayTransaction, error) {
+	relayTx := model.GreenfieldRelayTransaction{}
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case "channel_id":
+			chanelId, err := strconv.ParseInt(string(attr.Value), 10, 8)
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.ChannelId = uint8(chanelId)
+		case "src_chain_id":
+			srcChainId, err := strconv.ParseInt(string(attr.Value), 10, 32)
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.SrcChainId = uint32(srcChainId)
+		case "dest_chain_id":
+			destChainId, err := strconv.ParseInt(string(attr.Value), 10, 32)
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.DestChainId = uint32(destChainId)
+		case "package_load":
+			payloadStr, err := strconv.Unquote(string(attr.Value))
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.PayLoad = payloadStr
+		case "sequence":
+			seq, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.Sequence = seq
+		case "package_type":
+			packType, err := strconv.ParseInt(string(attr.Value), 10, 32)
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.PackageType = uint32(packType)
+		case "timestamp":
+			ts, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.TxTime = int64(ts)
+		case "relayer_fee":
+			feeStr, err := strconv.Unquote(string(attr.Value))
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.RelayerFee = feeStr
+		case "ack_relayer_fee":
+			feeStr, err := strconv.Unquote(string(attr.Value))
+			if err != nil {
+				return relayTx, err
+			}
+			relayTx.AckRelayerFee = feeStr
+		default:
+			logging.Logger.Errorf("unexpected attr, key is %s", attr.Key)
+		}
+	}
+	relayTx.Status = db.Saved
+	relayTx.Height = height
+	relayTx.UpdatedTime = time.Now().Unix()
+	return relayTx, nil
 }

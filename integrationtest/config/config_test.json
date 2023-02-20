@@ -4,49 +4,48 @@
     "aws_region": "",
     "aws_secret_name": "",
     "rpc_addrs": [
-      "http://0.0.0.0:26750"
+      "https://qa-gnfd.bnbchain.world:443"
     ],
     "grpc_addrs": [
-      "localhost:9090"
+      "k8s-gnfd-gnfdvali-05c593a3c7-c5502bc443c42322.elb.ap-northeast-1.amazonaws.com:9090"
     ],
-    "private_key": "03ec592c156849665fa319fc7a11960dbd76f59ed06f664103b58668fb78b2f9",
+    "private_key": "31d8f71a3f631bb90fc980a7bb631a7314b8bf9e2c78f3833f7afb9f1d91884d",
     "number_of_blocks_for_finality": 1,
-    "chain_id": 1,
+    "chain_id": 9000,
     "start_height": 1,
     "monitor_channel_list": [1,2,3],
     "gas_limit": 210000,
-    "chain_id_string": "greenfield_9000-121"
+    "chain_id_string": "greenfield_9000-1741"
   },
   "bsc_config": {
     "key_type": "local_private_key",
     "aws_region": "",
     "aws_secret_name": "",
     "rpc_addrs": [
-      "http://172.22.41.33:8545"
+      "https://qa-gnfd-bsc.bnbchain.world"
     ],
-    "private_key": "a7ef01b22b2dd6dbeca5337d6a3aae483e84ec304c21bf97c16418b1b590eef2",
+    "private_key": "31d8f71a3f631bb90fc980a7bb631a7314b8bf9e2c78f3833f7afb9f1d91884d",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,
     "start_height": 0,
-    "chain_id": 2
+    "chain_id": 714
   },
   "vote_pool_config": {
     "rpc_addr":
-    "http://127.0.0.1:26750",
-    "bls_private_key": "275ebf409f5caa121bdc37841660b4548bfbf81eb8593442640ffe0b66dfc86f"
+    "https://qa-gnfd.bnbchain.world:443",
+    "bls_private_key": "0a7eeb1a6e3adc35877bde310ba2eeba89f7fafd193dbfcbf5cf5369645c64dc"
   },
   "relay_config": {
     "bsc_to_greenfield_relaying_delay_time": 30,
     "greenfield_to_bsc_relaying_delay_time": 10,
     "first_in_turn_relayer_relaying_window": 40,
     "in_turn_relayer_relaying_window": 3,
-
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
     "bsc_cross_chain_package_event_name": "CrossChainPackage",
     "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",
-    "cross_chain_contract_addr": "0xCBd5431cC04031d089c90E7c83288183A6Fe545d",
-    "greenfield_light_client_contract_addr": "0x193198556d1DbF455Aa063050eC1Cb039E8acECf"
+    "cross_chain_contract_addr": "0x7ab4C4804197531f7ed6A6bc0f0781f706ff7953",
+    "greenfield_light_client_contract_addr": "0xD79aE87F2c003Ec925fB7e9C11585709bfe41473"
   },
   "log_config": {
     "level": "DEBUG",
@@ -63,7 +62,7 @@
   },
   "db_config": {
     "dialect": "mysql",
-    "db_path": "root:pass@/greenfield?charset=utf8&parseTime=True&loc=Local"
+    "db_path": "bijieprd:Csap2012@tcp(tf-swap-qa-swap-db.cluster-cqq8zsvor6n6.ap-northeast-1.rds.amazonaws.com:3306)/greenfield-relayer0?charset=utf8&parseTime=True&loc=Local"
   },
   "alert_config": {
     "enable_alert": true,
