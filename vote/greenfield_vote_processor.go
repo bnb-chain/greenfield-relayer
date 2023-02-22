@@ -228,23 +228,16 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 		isLocalVoteIncluded := false
 
 		for i, v := range queriedVotes {
-			logging.Logger.Infof("vote %d pub key is %s", i, hex.EncodeToString(v.PubKey))
 
 			if !p.isVotePubKeyValid(v, validators) {
-				logging.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
 				validVotesCountPerReq--
 				continue
 			}
-
-			logging.Logger.Infof("vote %d pub key is valid ", i)
 
 			if err := VerifySignature(v, localVote.EventHash); err != nil {
-				logging.Logger.Errorf("verify vote's signature failed,  err=%s", err)
 				validVotesCountPerReq--
 				continue
 			}
-
-			logging.Logger.Infof("vote %d signature is valid", i)
 
 			// check if it is local vote
 			if bytes.Equal(v.PubKey[:], p.blsPublicKey) {
@@ -252,8 +245,6 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				validVotesCountPerReq--
 				continue
 			}
-
-			logging.Logger.Infof("vote %d is not local vote", i)
 
 			// check duplicate, the vote might have been saved in previous request.
 			exist, err := p.daoManager.VoteDao.IsVoteExist(channelId, seq, hex.EncodeToString(v.PubKey[:]))
@@ -264,21 +255,15 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				validVotesCountPerReq--
 				continue
 			}
-			logging.Logger.Infof("vote %d is not exist into DB", i)
-
 			// a vote result persisted into DB should be valid, unique.
 			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload))
 			if err != nil {
 				return err
 			}
-			logging.Logger.Infof("vote %d has been persitented into DB", i)
+			logging.Logger.Infof("vote %d has been persisted into DB", i)
 		}
 
-		logging.Logger.Infof("validVotesCountPerReq is %d in trial %d", validVotesCountPerReq, triedTimes)
-
 		validVotesTotalCount += validVotesCountPerReq
-
-		logging.Logger.Infof("validVotesTotalCount is %d in trial %d", validVotesTotalCount, triedTimes)
 
 		if validVotesTotalCount > len(validators)*2/3 {
 			return nil
