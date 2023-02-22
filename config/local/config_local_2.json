@@ -9,8 +9,8 @@
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "511f1ff2262d219adc0d241410d704b7cf91488348b33d6e880b08343c29e2e4",
-    "bls_private_key": "46ddc8d2bffc5e840c645b6f0701148cce9ca59bd420e121188ed2c2e787bbd0",
+    "private_key": "you_private_key",
+    "bls_private_key": "you_private_key",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
     "start_height": 1,
@@ -23,9 +23,9 @@
     "aws_region": "",
     "aws_secret_name": "",
     "rpc_addrs": [
-      "https://qa-gnfd-bsc.bnbchain.world"
+      "localhost:9090"
     ],
-    "private_key": "511f1ff2262d219adc0d241410d704b7cf91488348b33d6e880b08343c29e2e4",
+    "private_key": "your_private_key",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,

@@ -20,8 +20,8 @@ const (
 
 // PrivKeys Bls Private keys from other mock relayers
 var PrivKeys = []string{
-	"60e5839445580b001576ce8fb0b08cf2b37f8289faaf49a2a3d1e36dbbe588a1",
-	"4b4d06d9c4af19c175962190596ed7e01e1b818821ef4cbf593f6ec84345a0f0",
+	"your_private_key",
+	"your_private_key",
 }
 
 // BroadcastVotesFromOtherRelayers for mimic multi relayers when bsc -> gnfd
