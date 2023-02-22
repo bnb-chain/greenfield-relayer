@@ -16,5 +16,9 @@ make build
 bash ./deployment/localup/localup.sh start ${SIZE}
 ```
 
+4. stop relayer
+```bash
+bash ./deployment/localup/localup.sh stop
+```
 
 

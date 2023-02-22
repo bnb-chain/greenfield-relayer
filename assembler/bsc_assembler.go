@@ -20,15 +20,13 @@ type BSCAssembler struct {
 	greenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
 	daoManager         *dao.DaoManager
-	votePoolExecutor   *vote.VotePoolExecutor
 }
 
-func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, votePoolExecutor *vote.VotePoolExecutor, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
+func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
 	return &BSCAssembler{
 		config:             cfg,
 		bscExecutor:        executor,
 		daoManager:         dao,
-		votePoolExecutor:   votePoolExecutor,
 		greenfieldExecutor: greenfieldExecutor,
 	}
 }
@@ -89,7 +87,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	// packages for same oracle sequence share one timestamp
 	pkgTs := pkgs[0].TxTime
 
-	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
+	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.greenfieldExecutor.GetBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
 	packagesRelayStartTime := pkgTs + a.config.RelayConfig.BSCToGreenfieldRelayingDelayTime
@@ -157,8 +155,4 @@ func (a *BSCAssembler) validateSequenceFilled(filled chan struct{}, errC chan er
 			filled <- struct{}{}
 		}
 	}
-}
-
-func (a *BSCAssembler) getBlsPrivateKey() string {
-	return a.config.VotePoolConfig.BlsPrivateKey
 }

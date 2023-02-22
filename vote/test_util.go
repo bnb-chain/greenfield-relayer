@@ -10,6 +10,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
@@ -27,7 +28,7 @@ var PrivKeys = []string{
 func BroadcastVotesFromOtherRelayers(
 	privateKeysList []string,
 	daoManager *dao.DaoManager,
-	votePoolExecutor *VotePoolExecutor, channelId uint8, seq uint64, eventType uint8) {
+	gnfdExecutor *executor.GreenfieldExecutor, channelId uint8, seq uint64, eventType uint8) {
 	var vote *model.Vote
 	// retry to query vote from local DB
 	for {
@@ -55,7 +56,7 @@ func BroadcastVotesFromOtherRelayers(
 			EventType: votepool.EventType(eventType),
 			EventHash: vote.EventHash[:],
 		}
-		err = votePoolExecutor.BroadcastVote(mockVoteFromRelayer)
+		err = gnfdExecutor.BroadcastVote(mockVoteFromRelayer)
 		if err != nil {
 			panic(err)
 		}

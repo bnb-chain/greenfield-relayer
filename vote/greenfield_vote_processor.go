@@ -28,7 +28,6 @@ import (
 )
 
 type GreenfieldVoteProcessor struct {
-	votePoolExecutor   *VotePoolExecutor
 	daoManager         *dao.DaoManager
 	config             *config.Config
 	signer             *VoteSigner
@@ -37,14 +36,13 @@ type GreenfieldVoteProcessor struct {
 }
 
 func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
-	greenfieldExecutor *executor.GreenfieldExecutor, votePoolExecutor *VotePoolExecutor) *GreenfieldVoteProcessor {
+	greenfieldExecutor *executor.GreenfieldExecutor) *GreenfieldVoteProcessor {
 	return &GreenfieldVoteProcessor{
 		config:             cfg,
 		daoManager:         dao,
 		signer:             signer,
 		greenfieldExecutor: greenfieldExecutor,
-		votePoolExecutor:   votePoolExecutor,
-		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
 	}
 }
 
@@ -109,7 +107,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 		// broadcast v
 		if err = retry.Do(func() error {
-			err = p.votePoolExecutor.BroadcastVote(v)
+			err = p.greenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 			}
@@ -216,7 +214,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 			return nil
 		}
 
-		queriedVotes, err := p.votePoolExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
+		queriedVotes, err := p.greenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
 		if err != nil {
 			logging.Logger.Errorf("encounter error when query votes. will retry.")
 			return err
@@ -293,7 +291,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 			if err != nil {
 				return err
 			}
-			err = p.votePoolExecutor.BroadcastVote(v)
+			err = p.greenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return err
 			}

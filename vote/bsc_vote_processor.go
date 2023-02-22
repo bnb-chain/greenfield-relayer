@@ -28,23 +28,20 @@ import (
 )
 
 type BSCVoteProcessor struct {
-	votePoolExecutor *VotePoolExecutor
-	daoManager       *dao.DaoManager
-	config           *config.Config
-	signer           *VoteSigner
-	bscExecutor      *executor.BSCExecutor
-	blsPublicKey     []byte
+	daoManager   *dao.DaoManager
+	config       *config.Config
+	signer       *VoteSigner
+	bscExecutor  *executor.BSCExecutor
+	blsPublicKey []byte
 }
 
-func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *VotePoolExecutor) *BSCVoteProcessor {
+func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor) *BSCVoteProcessor {
 	return &BSCVoteProcessor{
-		config:           cfg,
-		daoManager:       dao,
-		signer:           signer,
-		bscExecutor:      bscExecutor,
-		votePoolExecutor: votePoolExecutor,
-		blsPublicKey:     util.BlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+		config:       cfg,
+		daoManager:   dao,
+		signer:       signer,
+		bscExecutor:  bscExecutor,
+		blsPublicKey: util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
 	}
 }
 
@@ -146,7 +143,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 
 		// broadcast v
 		if err = retry.Do(func() error {
-			err = p.votePoolExecutor.BroadcastVote(v)
+			err = p.bscExecutor.GreenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for events with channel id %d and sequence %d", channelId, seq)
 			}
@@ -255,7 +252,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 			}
 			return nil
 		}
-		queriedVotes, err := p.votePoolExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
+		queriedVotes, err := p.bscExecutor.GreenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
 		if err != nil {
 			logging.Logger.Errorf("encounter error when query votes.")
 			return err
@@ -311,7 +308,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 			if err != nil {
 				return err
 			}
-			err = p.votePoolExecutor.BroadcastVote(v)
+			err = p.bscExecutor.GreenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return err
 			}

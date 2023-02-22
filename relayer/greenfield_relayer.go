@@ -11,19 +11,16 @@ type GreenfieldRelayer struct {
 	Listener            *listener.GreenfieldListener
 	GreenfieldExecutor  *executor.GreenfieldExecutor
 	bscExecutor         *executor.BSCExecutor
-	votePoolExecutor    *vote.VotePoolExecutor
 	voteProcessor       *vote.GreenfieldVoteProcessor
 	greenfieldAssembler *assembler.GreenfieldAssembler
 }
 
-func NewGreenfieldRelayer(listener *listener.GreenfieldListener, greenfieldExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.GreenfieldVoteProcessor, greenfieldAssembler *assembler.GreenfieldAssembler,
+func NewGreenfieldRelayer(listener *listener.GreenfieldListener, greenfieldExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor, voteProcessor *vote.GreenfieldVoteProcessor, greenfieldAssembler *assembler.GreenfieldAssembler,
 ) *GreenfieldRelayer {
 	return &GreenfieldRelayer{
 		Listener:            listener,
 		GreenfieldExecutor:  greenfieldExecutor,
 		bscExecutor:         bscExecutor,
-		votePoolExecutor:    votePoolExecutor,
 		voteProcessor:       voteProcessor,
 		greenfieldAssembler: greenfieldAssembler,
 	}
@@ -34,6 +31,7 @@ func (r *GreenfieldRelayer) Start() {
 	go r.SignAndBroadcastLoop()
 	go r.CollectVotesLoop()
 	go r.AssembleTransactionsLoop()
+	go r.UpdateCachedLatestValidatorsLoop()
 }
 
 // MonitorEventsLoop will monitor cross chain events for every block and persist into DB
@@ -51,4 +49,8 @@ func (r *GreenfieldRelayer) CollectVotesLoop() {
 
 func (r *GreenfieldRelayer) AssembleTransactionsLoop() {
 	r.greenfieldAssembler.AssembleTransactionsLoop()
+}
+
+func (r *GreenfieldRelayer) UpdateCachedLatestValidatorsLoop() {
+	r.GreenfieldExecutor.UpdateCachedLatestValidatorsLoop() // cache validators queried from greenfield, update it every 1 minute
 }

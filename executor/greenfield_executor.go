@@ -10,6 +10,7 @@ import (
 	sdkkeys "github.com/bnb-chain/greenfield-go-sdk/keys"
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +20,11 @@ import (
 	"github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tendermint/votepool"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"time"
 )
 
 type GreenfieldExecutor struct {
@@ -41,8 +45,8 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 	}
 
 	clients := sdkclient.NewGnfdCompositClients(
-		cfg.GreenfieldConfig.RPCAddrs,
 		cfg.GreenfieldConfig.GRPCAddrs,
+		cfg.GreenfieldConfig.RPCAddrs,
 		cfg.GreenfieldConfig.ChainIdString,
 		sdkclient.WithKeyManager(km),
 		sdkclient.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
@@ -225,6 +229,18 @@ func (e *GreenfieldExecutor) QueryCachedLatestValidators() ([]*tmtypes.Validator
 	return validators, nil
 }
 
+func (e *GreenfieldExecutor) UpdateCachedLatestValidatorsLoop() {
+	ticker := time.NewTicker(UpdateCachedValidatorsInterval)
+	for range ticker.C {
+		validators, err := e.queryLatestValidators()
+		if err != nil {
+			logging.Logger.Errorf("update latest greenfield validators error, err=%s", err)
+			continue
+		}
+		e.validators = validators
+	}
+}
+
 func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 	validators, err := e.QueryCachedLatestValidators()
 	if err != nil {
@@ -285,6 +301,40 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 		return "", fmt.Errorf("claim error, code=%d, log=%s", txRes.TxResponse.Code, txRes.TxResponse.RawLog)
 	}
 	return txRes.TxResponse.TxHash, nil
+}
+
+func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
+	client, err := e.gnfdClients.GetClient()
+	if err != nil {
+		return nil, err
+	}
+	queryMap := make(map[string]interface{})
+	queryMap[VotePoolQueryParameterEventType] = int(eventType)
+	queryMap[VotePoolQueryParameterEventHash] = eventHash
+	var queryVote ctypes.ResultQueryVote
+	_, err = client.JsonRpcClient.Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
+	if err != nil {
+		return nil, err
+	}
+	return queryVote.Votes, nil
+}
+
+func (e *GreenfieldExecutor) BroadcastVote(v *votepool.Vote) error {
+	client, err := e.gnfdClients.GetClient()
+	if err != nil {
+		return err
+	}
+	broadcastMap := make(map[string]interface{})
+	broadcastMap[VotePoolBroadcastParameterKey] = *v
+	_, err = client.JsonRpcClient.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &ctypes.ResultBroadcastVote{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *GreenfieldExecutor) GetBlsPrivateKey() string {
+	return e.config.GreenfieldConfig.BlsPrivateKey
 }
 
 func (e *GreenfieldExecutor) getDestChainId() uint32 {

@@ -21,16 +21,14 @@ type GreenfieldAssembler struct {
 	bscExecutor        *executor.BSCExecutor
 	greenfieldExecutor *executor.GreenfieldExecutor
 	daoManager         *dao.DaoManager
-	votePoolExecutor   *vote.VotePoolExecutor
 }
 
-func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor, votePoolExecutor *vote.VotePoolExecutor) *GreenfieldAssembler {
+func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor) *GreenfieldAssembler {
 	return &GreenfieldAssembler{
 		config:             cfg,
 		greenfieldExecutor: executor,
 		daoManager:         dao,
 		bscExecutor:        bscExecutor,
-		votePoolExecutor:   votePoolExecutor,
 	}
 }
 
@@ -84,7 +82,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 		return err
 	}
 
-	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.votePoolExecutor.GetBlsPrivateKey())
+	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.greenfieldExecutor.GetBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
 	txRelayStartTime := tx.TxTime + a.config.RelayConfig.GreenfieldToBSCRelayingDelayTime
