@@ -38,10 +38,15 @@ func TestGetNextReceiveSequenceForChannel(t *testing.T) {
 
 func TestGetConsensusStatus(t *testing.T) {
 	e := InitGnfdExecutor()
-	validators, err := e.getRpcClient().Validators(context.Background(), nil, nil, nil)
+	rpcClient, err := e.getRpcClient()
 	assert.NoError(t, err)
 
-	b, err := e.GetBlockAtHeight(1)
+	validators, err := rpcClient.Validators(context.Background(), nil, nil, nil)
+	assert.NoError(t, err)
+
+	b, _, err := e.GetBlockAndBlockResultAtHeight(1)
+	assert.NoError(t, err)
+
 	t.Log("nexValidator hash: ", hex.EncodeToString(b.NextValidatorsHash))
 	for i, validator := range validators.Validators {
 		t.Logf("validator %d", i)
@@ -54,7 +59,9 @@ func TestGetConsensusStatus(t *testing.T) {
 
 func TestGetLatestValidators(t *testing.T) {
 	e := InitGnfdExecutor()
-	validators, err := e.getRpcClient().Validators(context.Background(), nil, nil, nil)
+	rpcClient, err := e.getRpcClient()
+	assert.NoError(t, err)
+	validators, err := rpcClient.Validators(context.Background(), nil, nil, nil)
 	assert.NoError(t, err)
 	for i, validator := range validators.Validators {
 		t.Logf("validator %d", i)

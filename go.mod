@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.40.45
-	github.com/bnb-chain/greenfield-go-sdk v0.0.3
+	github.com/bnb-chain/greenfield-go-sdk v0.0.4
 	github.com/cosmos/cosmos-sdk v0.46.4
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/evmos/ethermint v0.6.1-0.20220919141022-34226aa7b1fa
@@ -156,10 +156,8 @@ require (
 )
 
 replace (
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230218043343-0872fc03a586
-
-	github.com/bnb-chain/greenfield-go-sdk => ../gnfd-go-sdk //TODO
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.5
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230220032958-f72b8a3582cb
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.2-0.20230216105555-b94a14479b11
 	github.com/ferranbt/fastssz => github.com/prysmaticlabs/fastssz v0.0.0-20220110145812-fafb696cae88
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 => github.com/prysmaticlabs/grpc-gateway/v2 v2.3.1-0.20210702154020-550e1cd83ec1

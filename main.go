@@ -41,7 +41,6 @@ func printUsage() {
 func main() {
 	initFlags()
 	configType := viper.GetString(flagConfigType)
-	configType = "local"
 	if configType != config.AWSConfig && configType != config.LocalConfig {
 		printUsage()
 		return
@@ -69,7 +68,6 @@ func main() {
 		cfg = config.ParseConfigFromJson(configContent)
 	} else {
 		configFilePath := viper.GetString(flagConfigPath)
-		configFilePath = "config/config.json"
 		if configFilePath == "" {
 			printUsage()
 			return

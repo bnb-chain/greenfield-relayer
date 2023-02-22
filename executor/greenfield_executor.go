@@ -6,33 +6,30 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
-	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"sync"
-
 	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client/chain"
 	sdkkeys "github.com/bnb-chain/greenfield-go-sdk/keys"
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
+	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	"github.com/tendermint/tendermint/rpc/client"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type GreenfieldExecutor struct {
-	mutex             sync.RWMutex
-	BscExecutor       *BSCExecutor
-	greenfieldClients *sdkclient.GnfdClients
-	config            *config.Config
-	address           string
-	validators        []*tmtypes.Validator // used to cache validators
-	cdc               *codec.ProtoCodec
+	BscExecutor *BSCExecutor
+	gnfdClients *sdkclient.GnfdCompositeClients
+	config      *config.Config
+	address     string
+	validators  []*tmtypes.Validator // used to cache validators
+	cdc         *codec.ProtoCodec
 }
 
 func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
@@ -43,7 +40,7 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		panic(err)
 	}
 
-	clients := sdkclient.NewGnfdClients(
+	clients := sdkclient.NewGnfdCompositClients(
 		cfg.GreenfieldConfig.RPCAddrs,
 		cfg.GreenfieldConfig.GRPCAddrs,
 		cfg.GreenfieldConfig.ChainIdString,
@@ -51,10 +48,10 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		sdkclient.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 	)
 	return &GreenfieldExecutor{
-		greenfieldClients: clients,
-		address:           km.GetAddr().String(),
-		config:            cfg,
-		cdc:               Cdc(),
+		gnfdClients: clients,
+		address:     km.GetAddr().String(),
+		config:      cfg,
+		cdc:         Cdc(),
 	}
 }
 
@@ -85,7 +82,7 @@ func getGreenfieldPrivateKey(cfg *config.GreenfieldConfig) string {
 }
 
 func (e *GreenfieldExecutor) getRpcClient() (client.Client, error) {
-	client, err := e.greenfieldClients.GetClient()
+	client, err := e.gnfdClients.GetClient()
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +90,7 @@ func (e *GreenfieldExecutor) getRpcClient() (client.Client, error) {
 }
 
 func (e *GreenfieldExecutor) getGnfdClient() (*sdkclient.GreenfieldClient, error) {
-	client, err := e.greenfieldClients.GetClient()
+	client, err := e.gnfdClients.GetClient()
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +114,7 @@ func (e *GreenfieldExecutor) GetBlockAndBlockResultAtHeight(height int64) (*tmty
 }
 
 func (e *GreenfieldExecutor) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	client, err := e.greenfieldClients.GetClient()
+	client, err := e.gnfdClients.GetClient()
 	if err != nil {
 		return 0, err
 	}
@@ -130,6 +127,9 @@ func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, er
 		return nil, err
 	}
 	validators, err := client.Validators(context.Background(), &height, nil, nil)
+	if err != nil {
+		return nil, err
+	}
 	commit, err := client.Commit(context.Background(), &height)
 	if err != nil {
 		return nil, err
@@ -160,6 +160,9 @@ func (e *GreenfieldExecutor) GetNextDeliverySequenceForChannel(channelID types.C
 
 func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 	gnfdClient, err := e.getGnfdClient()
+	if err != nil {
+		return 0, err
+	}
 	res, err := gnfdClient.CrosschainQueryClient.ReceiveSequence(
 		context.Background(),
 		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(relayercommon.OracleChannelId)},
@@ -173,6 +176,9 @@ func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 // GetNextReceiveSequenceForChannel gets the sequence specifically for bsc -> gnfd package's channel
 func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.ChannelId) (uint64, error) {
 	gnfdClient, err := e.getGnfdClient()
+	if err != nil {
+		return 0, err
+	}
 	res, err := gnfdClient.ReceiveSequence(
 		context.Background(),
 		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},

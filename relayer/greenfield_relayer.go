@@ -34,7 +34,6 @@ func (r *GreenfieldRelayer) Start() {
 	go r.SignAndBroadcastLoop()
 	go r.CollectVotesLoop()
 	go r.AssembleTransactionsLoop()
-	go r.UpdateCachedLatestValidatorsLoop()
 }
 
 // MonitorEventsLoop will monitor cross chain events for every block and persist into DB
@@ -52,12 +51,4 @@ func (r *GreenfieldRelayer) CollectVotesLoop() {
 
 func (r *GreenfieldRelayer) AssembleTransactionsLoop() {
 	r.greenfieldAssembler.AssembleTransactionsLoop()
-}
-
-func (r *GreenfieldRelayer) UpdateCachedLatestValidatorsLoop() {
-	r.GreenfieldExecutor.UpdateCachedLatestValidatorsLoop() // cache validators queried from greenfield, update it every 1 minute
-}
-
-func (r *GreenfieldRelayer) UpdateClientLoop() {
-	r.GreenfieldExecutor.UpdateClientLoop()
 }

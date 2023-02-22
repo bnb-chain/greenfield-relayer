@@ -21,7 +21,6 @@ import (
 )
 
 type GreenfieldListener struct {
-	mutex              sync.RWMutex
 	config             *config.Config
 	greenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
@@ -70,15 +69,14 @@ func (l *GreenfieldListener) poll() error {
 		wg.Wait()
 		close(waitCh)
 	}()
+
 	for {
 		select {
 		case err := <-errChan:
-			logging.Logger.Errorf("encounter error when monitoring at Height=%d, err=%s", nextHeight, err.Error())
+			logging.Logger.Errorf("encounter error when monitoring block at Height=%d, err=%s", nextHeight, err.Error())
 			return err
 		case tx := <-relayTxCh:
-			l.mutex.Lock()
 			txs = append(txs, tx)
-			l.mutex.Unlock()
 		case <-waitCh:
 			b := &model.GreenfieldBlock{
 				Chain:     block.ChainID,
