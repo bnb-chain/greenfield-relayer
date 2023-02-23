@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	LocalRelayerHexBlsPrivKey = "275ebf409f5caa121bdc37841660b4548bfbf81eb8593442640ffe0b66dfc86f"
+	LocalRelayerHexBlsPrivKey = "your_private_key"
 )
 
 // PrivKeys Bls Private keys from other mock relayers

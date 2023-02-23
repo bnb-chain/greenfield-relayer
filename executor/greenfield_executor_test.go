@@ -3,10 +3,6 @@ package executor
 import (
 	"context"
 	"encoding/hex"
-	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	"github.com/bnb-chain/greenfield-relayer/config"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -74,15 +70,4 @@ func TestGetLatestValidators(t *testing.T) {
 		t.Logf("relayeraddress %s", hex.EncodeToString(validator.RelayerAddress))
 		t.Logf("relayer bls pub key %s", hex.EncodeToString(validator.RelayerBlsKey))
 	}
-}
-
-func TestAds(t *testing.T) {
-	cfg := config.ParseConfigFromFile("../config/local/config_local_0.json")
-	clients := sdkclient.NewGnfdCompositClients(
-		cfg.GreenfieldConfig.RPCAddrs,
-		cfg.GreenfieldConfig.GRPCAddrs,
-		cfg.GreenfieldConfig.ChainIdString,
-		sdkclient.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
-	)
-	clients.GetClient()
 }

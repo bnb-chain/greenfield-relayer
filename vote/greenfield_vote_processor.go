@@ -181,8 +181,7 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 		return err
 	}
 
-	err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id)
-	if err != nil {
+	if err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id); err != nil {
 		return err
 	}
 	return nil
@@ -196,12 +195,6 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
 
-	logging.Logger.Infof("number of validators %d", len(validators))
-
-	for i, vldr := range validators {
-		logging.Logger.Infof("vldr %d bls pub key is %s", i, hex.EncodeToString(vldr.BlsPublicKey))
-	}
-
 	for range ticker.C {
 		triedTimes++
 		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
@@ -211,23 +204,20 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				logging.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
 				return err
 			}
-			return nil
+			return errors.New("exceed max retry")
 		}
 
 		queriedVotes, err := p.greenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
 		if err != nil {
-			logging.Logger.Errorf("encounter error when query votes. will retry.")
 			return err
 		}
 		validVotesCountPerReq := len(queriedVotes)
 		if validVotesCountPerReq == 0 {
 			continue
 		}
-
-		logging.Logger.Infof("queried %d votes from votepool", len(queriedVotes))
 		isLocalVoteIncluded := false
 
-		for i, v := range queriedVotes {
+		for _, v := range queriedVotes {
 
 			if !p.isVotePubKeyValid(v, validators) {
 				validVotesCountPerReq--
@@ -256,11 +246,9 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				continue
 			}
 			// a vote result persisted into DB should be valid, unique.
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload))
-			if err != nil {
+			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload)); err != nil {
 				return err
 			}
-			logging.Logger.Infof("vote %d has been persisted into DB", i)
 		}
 
 		validVotesTotalCount += validVotesCountPerReq
@@ -268,8 +256,6 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 		if validVotesTotalCount > len(validators)*2/3 {
 			return nil
 		}
-
-		logging.Logger.Infof("validVotesTotalCount %d is less than %d", validVotesTotalCount, len(validators)*2/3)
 
 		if !isLocalVoteIncluded {
 			v, err := DtoToEntity(localVote)

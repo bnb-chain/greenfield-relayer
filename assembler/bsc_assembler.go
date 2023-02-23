@@ -131,8 +131,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 					return err
 				}
 				logging.Logger.Infof("claimed transaction with txHash %s", txHash)
-				err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Delivered, txHash)
-				if err != nil {
+				if err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Delivered, txHash); err != nil {
 					logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
 					return err
 				}

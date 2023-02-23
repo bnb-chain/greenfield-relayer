@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -229,8 +230,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.Ch
 		return err
 	}
 	// Query from votePool until there are more than 2/3 votes
-	err = p.queryMoreThanTwoThirdValidVotes(localVote, validators, pkgIds)
-	if err != nil {
+	if err = p.queryMoreThanTwoThirdValidVotes(localVote, validators, pkgIds); err != nil {
 		return err
 	}
 	return nil
@@ -250,7 +250,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				logging.Logger.Errorf("failed to update packages status to 'Saved', packages' id=%v", pkgIds)
 				return err
 			}
-			return nil
+			return errors.New("exceed max retry")
 		}
 		queriedVotes, err := p.bscExecutor.GreenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
 		if err != nil {
@@ -267,13 +267,11 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 
 		for _, v := range queriedVotes {
 			if !p.isVotePubKeyValid(v, validators) {
-				logging.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
 				validVotesCntPerReq--
 				continue
 			}
 
 			if err := VerifySignature(v, localVote.EventHash[:]); err != nil {
-				logging.Logger.Errorf("verify vote's signature failed,  err=%s", err)
 				validVotesCntPerReq--
 				continue
 			}
@@ -292,8 +290,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				validVotesCntPerReq--
 				continue
 			}
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload))
-			if err != nil {
+			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload)); err != nil {
 				return err
 			}
 		}
@@ -308,8 +305,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 			if err != nil {
 				return err
 			}
-			err = p.bscExecutor.GreenfieldExecutor.BroadcastVote(v)
-			if err != nil {
+			if err = p.bscExecutor.GreenfieldExecutor.BroadcastVote(v); err != nil {
 				return err
 			}
 		}
