@@ -93,11 +93,11 @@ func (l *GreenfieldListener) getLatestPolledBlock() (*model.GreenfieldBlock, err
 }
 
 func (l *GreenfieldListener) getBlockAndBlockResult(height uint64) (*ctypes.ResultBlockResults, *tmtypes.Block, error) {
-	logging.Logger.Infof("retrieve greenfield block at height=%d", height)
 	block, blockResults, err := l.greenfieldExecutor.GetBlockAndBlockResultAtHeight(int64(height))
 	if err != nil {
 		return nil, nil, err
 	}
+	logging.Logger.Infof("retrieved greenfield block at height=%d", height)
 	return blockResults, block, nil
 }
 

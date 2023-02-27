@@ -38,8 +38,7 @@ func (a *BSCAssembler) AssemblePackagesAndClaimLoop() {
 
 func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.ChannelId) {
 	for {
-		err := a.process(channelId)
-		if err != nil {
+		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
 			time.Sleep(common.RetryInterval)
 		}
@@ -52,7 +51,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		return err
 	}
 	var pkgIds []int64
-	pkgs, err := a.daoManager.BSCDao.GetAllVotedPackages(nextSequence)
+	pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(nextSequence)
 	if err != nil {
 		logging.Logger.Errorf("failed to get all validator voted tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err
@@ -60,6 +59,11 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if len(pkgs) == 0 {
 		return nil
 	}
+
+	if pkgs[0].Status != db.AllVoted && pkgs[0].Status != db.Delivered {
+		return nil
+	}
+
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
 	}
@@ -135,6 +139,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 					logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
 					return err
 				}
+				time.Sleep(executor.SequenceUpdateLatency)
 				return nil
 			}
 		}

@@ -41,8 +41,7 @@ func (a *GreenfieldAssembler) AssembleTransactionsLoop() {
 
 func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId types.ChannelId) {
 	for {
-		err := a.process(channelId)
-		if err != nil {
+		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
 			time.Sleep(common.RetryInterval)
 		}
@@ -55,11 +54,14 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 		return err
 	}
 
-	tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, db.AllVoted)
+	tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequence(channelId, nextSequence)
 	if err != nil {
 		return err
 	}
 	if (*tx == model.GreenfieldRelayTransaction{}) {
+		return nil
+	}
+	if tx.Status != db.AllVoted && tx.Status != db.Delivered {
 		return nil
 	}
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig
@@ -126,11 +128,14 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 					return err
 				}
 				logging.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
+
+				// `Delivered` does not mean tx is successful even there is txHash returned, so need to wait a bit and use sequence to validate, otherwise retry
 				err = a.daoManager.GreenfieldDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String())
 				if err != nil {
 					logging.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'Delivered', error=%s", tx.ChannelId, tx.Sequence, err.Error())
 					return err
 				}
+				time.Sleep(executor.SequenceUpdateLatency)
 				return nil
 			}
 		}
