@@ -22,6 +22,7 @@ type GreenfieldAssembler struct {
 	bscExecutor        *executor.BSCExecutor
 	greenfieldExecutor *executor.GreenfieldExecutor
 	daoManager         *dao.DaoManager
+	blsPubKey          string
 }
 
 func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor) *GreenfieldAssembler {
@@ -30,6 +31,7 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 		greenfieldExecutor: executor,
 		daoManager:         dao,
 		bscExecutor:        bscExecutor,
+		blsPubKey:          hex.EncodeToString(util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey)),
 	}
 }
 
@@ -84,9 +86,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 	if err != nil {
 		return err
 	}
-
-	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.greenfieldExecutor.GetBlsPrivateKey())
-	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
+	relayerIdx := util.IndexOf(a.blsPubKey, relayerBlsPubKeys)
 	if relayerIdx == -1 {
 		return errors.New(" not a relayer. ")
 	}

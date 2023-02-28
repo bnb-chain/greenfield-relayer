@@ -21,6 +21,7 @@ type BSCAssembler struct {
 	greenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
 	daoManager         *dao.DaoManager
+	blsPubKey          string
 }
 
 func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
@@ -29,6 +30,7 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 		bscExecutor:        executor,
 		daoManager:         dao,
 		greenfieldExecutor: greenfieldExecutor,
+		blsPubKey:          hex.EncodeToString(util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey)),
 	}
 }
 
@@ -92,8 +94,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	// packages for same oracle sequence share one timestamp
 	pkgTs := pkgs[0].TxTime
 
-	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.greenfieldExecutor.GetBlsPrivateKey())
-	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
+	relayerIdx := util.IndexOf(a.blsPubKey, relayerPubKeys)
 	if relayerIdx == -1 {
 		return errors.New(" not a relayer. ")
 	}

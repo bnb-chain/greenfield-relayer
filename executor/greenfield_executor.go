@@ -333,10 +333,6 @@ func (e *GreenfieldExecutor) BroadcastVote(v *votepool.Vote) error {
 	return nil
 }
 
-func (e *GreenfieldExecutor) GetBlsPrivateKey() string {
-	return e.config.GreenfieldConfig.BlsPrivateKey
-}
-
 func (e *GreenfieldExecutor) getDestChainId() uint32 {
 	return uint32(e.config.GreenfieldConfig.ChainId)
 }
