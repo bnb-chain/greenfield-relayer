@@ -143,8 +143,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 func (p *GreenfieldVoteProcessor) CollectVotesLoop() {
 	for {
-		err := p.collectVotes()
-		if err != nil {
+		if err := p.collectVotes(); err != nil {
 			time.Sleep(RetryInterval)
 		}
 	}

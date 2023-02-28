@@ -135,7 +135,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 					logging.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'Delivered', error=%s", tx.ChannelId, tx.Sequence, err.Error())
 					return err
 				}
-				time.Sleep(executor.SequenceUpdateLatency)
+				time.Sleep(executor.BSCSequenceUpdateLatency)
 				return nil
 			}
 		}

@@ -48,8 +48,7 @@ func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSi
 
 func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 	for {
-		err := p.signAndBroadcast()
-		if err != nil {
+		if err := p.signAndBroadcast(); err != nil {
 			time.Sleep(RetryInterval)
 		}
 	}
@@ -179,8 +178,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 
 func (p *BSCVoteProcessor) CollectVotesLoop() {
 	for {
-		err := p.collectVotes()
-		if err != nil {
+		if err := p.collectVotes(); err != nil {
 			time.Sleep(RetryInterval)
 		}
 	}

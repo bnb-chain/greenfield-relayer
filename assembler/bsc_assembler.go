@@ -139,7 +139,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 					logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
 					return err
 				}
-				time.Sleep(executor.SequenceUpdateLatency)
+				time.Sleep(executor.GnfdSequenceUpdateLatency)
 				return nil
 			}
 		}
