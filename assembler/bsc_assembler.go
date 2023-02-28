@@ -2,6 +2,7 @@ package assembler
 
 import (
 	"encoding/hex"
+	"errors"
 	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
@@ -93,6 +94,10 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 
 	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.greenfieldExecutor.GetBlsPrivateKey())
 	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
+	if relayerIdx == -1 {
+		return errors.New(" not a relayer. ")
+	}
+
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
 	packagesRelayStartTime := pkgTs + a.config.RelayConfig.BSCToGreenfieldRelayingDelayTime
 	logging.Logger.Infof("packages will be relayed starting at %d", packagesRelayStartTime)
