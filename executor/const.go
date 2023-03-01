@@ -12,7 +12,7 @@ const (
 	RPCTimeout                     = 3 * time.Second
 	RelayerBytesLength             = 48
 	UpdateCachedValidatorsInterval = 1 * time.Minute
-	GnfdSequenceUpdateLatency      = 10 * time.Second
+	GnfdSequenceUpdateLatency      = 3 * time.Second
 	BSCSequenceUpdateLatency       = 10 * time.Second
 
 	VotePoolBroadcastMethodName   = "broadcast_vote"

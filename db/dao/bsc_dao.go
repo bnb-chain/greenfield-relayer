@@ -71,9 +71,9 @@ func (d *BSCDao) UpdateBatchPackagesStatusAndClaimedTxHash(txIds []int64, status
 	})
 }
 
-func (d *BSCDao) GetPackagesByOracleSequence(sequence uint64) ([]*model.BscRelayPackage, error) {
+func (d *BSCDao) GetPackagesByOracleSequenceAndStatus(sequence uint64, status db.TxStatus) ([]*model.BscRelayPackage, error) {
 	pkgs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("oracle_sequence = ?", sequence).Find(&pkgs).Error
+	err := d.DB.Where("oracle_sequence = ? and status = ? ", sequence, status).Find(&pkgs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

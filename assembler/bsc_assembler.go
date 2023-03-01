@@ -53,8 +53,8 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	var pkgIds []int64
-	pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(nextSequence)
+
+	pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequenceAndStatus(nextSequence, db.AllVoted)
 	if err != nil {
 		logging.Logger.Errorf("failed to get all validator voted tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err
@@ -63,10 +63,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		return nil
 	}
 
-	if pkgs[0].Status != db.AllVoted && pkgs[0].Status != db.Delivered {
-		return nil
-	}
-
+	var pkgIds []int64
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
 	}
@@ -96,7 +93,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 
 	relayerIdx := util.IndexOf(a.blsPubKey, relayerPubKeys)
 	if relayerIdx == -1 {
-		return errors.New(" not a relayer. ")
+		return errors.New(" relayer's bls pub key not found. ")
 	}
 
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
@@ -141,10 +138,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 					return err
 				}
 				logging.Logger.Infof("claimed transaction with txHash %s", txHash)
-				if err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Delivered, txHash); err != nil {
-					logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
-					return err
-				}
 				time.Sleep(executor.GnfdSequenceUpdateLatency)
 				return nil
 			}
@@ -153,7 +146,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 }
 
 func (a *BSCAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64) {
-	ticker := time.NewTicker(common.RetryInterval)
+	ticker := time.NewTicker(common.RetrieveSequenceInterval)
 	defer ticker.Stop()
 	for range ticker.C {
 		nextDeliverySequence, err := a.bscExecutor.GetNextDeliveryOracleSequence()
