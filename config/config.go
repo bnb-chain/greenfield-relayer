@@ -10,7 +10,6 @@ import (
 type Config struct {
 	GreenfieldConfig GreenfieldConfig `json:"greenfield_config"`
 	BSCConfig        BSCConfig        `json:"bsc_config"`
-	VotePoolConfig   VotePoolConfig   `json:"vote_pool_config"`
 	RelayConfig      RelayConfig      `json:"relay_config"`
 	LogConfig        LogConfig        `json:"log_config"`
 	AdminConfig      AdminConfig      `json:"admin_config"`
@@ -28,11 +27,6 @@ func (cfg *AdminConfig) Validate() {
 	}
 }
 
-type VotePoolConfig struct {
-	RPCAddr       string `json:"rpc_addr"`
-	BlsPrivateKey string `json:"bls_private_key"`
-}
-
 type GreenfieldConfig struct {
 	KeyType                   string   `json:"key_type"`
 	AWSRegion                 string   `json:"aws_region"`
@@ -40,6 +34,7 @@ type GreenfieldConfig struct {
 	RPCAddrs                  []string `json:"rpc_addrs"`
 	GRPCAddrs                 []string `json:"grpc_addrs"`
 	PrivateKey                string   `json:"private_key"`
+	BlsPrivateKey             string   `json:"bls_private_key"`
 	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
 	ChainId                   uint16   `json:"chain_id"`
 	StartHeight               uint64   `json:"start_height"`
@@ -62,11 +57,10 @@ type BSCConfig struct {
 }
 
 type RelayConfig struct {
-	BSCToGreenfieldRelayingDelayTime int64 `json:"bsc_to_greenfield_relaying_delay_time"` // in second
-	GreenfieldToBSCRelayingDelayTime int64 `json:"greenfield_to_bsc_relaying_delay_time"` // in second
-	FirstInTurnRelayerRelayingWindow int64 `json:"first_in_turn_relayer_relaying_window"` // in second
-	InTurnRelayerRelayingWindow      int64 `json:"in_turn_relayer_relaying_window"`       // in second
-
+	BSCToGreenfieldRelayingDelayTime  int64  `json:"bsc_to_greenfield_relaying_delay_time"` // in second
+	GreenfieldToBSCRelayingDelayTime  int64  `json:"greenfield_to_bsc_relaying_delay_time"` // in second
+	FirstInTurnRelayerRelayingWindow  int64  `json:"first_in_turn_relayer_relaying_window"` // in second
+	InTurnRelayerRelayingWindow       int64  `json:"in_turn_relayer_relaying_window"`       // in second
 	GreenfieldEventTypeCrossChain     string `json:"greenfield_event_type_cross_chain"`
 	BSCCrossChainPackageEventName     string `json:"bsc_cross_chain_package_event_name"`
 	CrossChainPackageEventHex         string `json:"cross_chain_package_event_hex"`

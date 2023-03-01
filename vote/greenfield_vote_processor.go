@@ -28,7 +28,6 @@ import (
 )
 
 type GreenfieldVoteProcessor struct {
-	votePoolExecutor   *VotePoolExecutor
 	daoManager         *dao.DaoManager
 	config             *config.Config
 	signer             *VoteSigner
@@ -37,14 +36,13 @@ type GreenfieldVoteProcessor struct {
 }
 
 func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
-	greenfieldExecutor *executor.GreenfieldExecutor, votePoolExecutor *VotePoolExecutor) *GreenfieldVoteProcessor {
+	greenfieldExecutor *executor.GreenfieldExecutor) *GreenfieldVoteProcessor {
 	return &GreenfieldVoteProcessor{
 		config:             cfg,
 		daoManager:         dao,
 		signer:             signer,
 		greenfieldExecutor: greenfieldExecutor,
-		votePoolExecutor:   votePoolExecutor,
-		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
 	}
 }
 
@@ -59,7 +57,7 @@ func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
 }
 
 func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
-	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeightWithRetry()
+	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeight()
 	if err != nil {
 		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 		return err
@@ -109,7 +107,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 		// broadcast v
 		if err = retry.Do(func() error {
-			err = p.votePoolExecutor.BroadcastVote(v)
+			err = p.greenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 			}
@@ -145,8 +143,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 func (p *GreenfieldVoteProcessor) CollectVotesLoop() {
 	for {
-		err := p.collectVotes()
-		if err != nil {
+		if err := p.collectVotes(); err != nil {
 			time.Sleep(RetryInterval)
 		}
 	}
@@ -183,8 +180,7 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 		return err
 	}
 
-	err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id)
-	if err != nil {
+	if err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id); err != nil {
 		return err
 	}
 	return nil
@@ -197,6 +193,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
+
 	for range ticker.C {
 		triedTimes++
 		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
@@ -206,12 +203,11 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				logging.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
 				return err
 			}
-			return nil
+			return errors.New("exceed max retry")
 		}
 
-		queriedVotes, err := p.votePoolExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
+		queriedVotes, err := p.greenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
 		if err != nil {
-			logging.Logger.Errorf("encounter error when query votes. will retry.")
 			return err
 		}
 		validVotesCountPerReq := len(queriedVotes)
@@ -221,14 +217,13 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 		isLocalVoteIncluded := false
 
 		for _, v := range queriedVotes {
+
 			if !p.isVotePubKeyValid(v, validators) {
-				logging.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
 				validVotesCountPerReq--
 				continue
 			}
 
 			if err := VerifySignature(v, localVote.EventHash); err != nil {
-				logging.Logger.Errorf("verify vote's signature failed,  err=%s", err)
 				validVotesCountPerReq--
 				continue
 			}
@@ -250,8 +245,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				continue
 			}
 			// a vote result persisted into DB should be valid, unique.
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload))
-			if err != nil {
+			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload)); err != nil {
 				return err
 			}
 		}
@@ -261,12 +255,13 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 		if validVotesTotalCount > len(validators)*2/3 {
 			return nil
 		}
+
 		if !isLocalVoteIncluded {
 			v, err := DtoToEntity(localVote)
 			if err != nil {
 				return err
 			}
-			err = p.votePoolExecutor.BroadcastVote(v)
+			err = p.greenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return err
 			}

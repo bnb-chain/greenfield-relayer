@@ -4,12 +4,13 @@
     "aws_region": "",
     "aws_secret_name": "",
     "rpc_addrs": [
-      "http://0.0.0.0:26750"
+      "http://127.0.0.1:26750"
     ],
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "03ec592c156849665fa319fc7a11960dbd76f59ed06f664103b58668fb78b2f9",
+    "private_key": "your_private_key",
+    "bls_private_key": "your_private_key",
     "number_of_blocks_for_finality": 1,
     "chain_id": 1,
     "start_height": 1,
@@ -22,31 +23,25 @@
     "aws_region": "",
     "aws_secret_name": "",
     "rpc_addrs": [
-      "http://172.22.41.33:8545"
+      "localhost:9090"
     ],
-    "private_key": "a7ef01b22b2dd6dbeca5337d6a3aae483e84ec304c21bf97c16418b1b590eef2",
+    "private_key": "your_private_key",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,
     "start_height": 0,
-    "chain_id": 2
-  },
-  "vote_pool_config": {
-    "rpc_addr":
-    "http://127.0.0.1:26750",
-    "bls_private_key": "275ebf409f5caa121bdc37841660b4548bfbf81eb8593442640ffe0b66dfc86f"
+    "chain_id": 714
   },
   "relay_config": {
     "bsc_to_greenfield_relaying_delay_time": 30,
     "greenfield_to_bsc_relaying_delay_time": 10,
     "first_in_turn_relayer_relaying_window": 40,
     "in_turn_relayer_relaying_window": 3,
-
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
     "bsc_cross_chain_package_event_name": "CrossChainPackage",
     "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",
-    "cross_chain_contract_addr": "0xCBd5431cC04031d089c90E7c83288183A6Fe545d",
-    "greenfield_light_client_contract_addr": "0x193198556d1DbF455Aa063050eC1Cb039E8acECf"
+    "cross_chain_contract_addr": "0x04ED4ad3cDe36FE8ba944E3D6CFC54f7Fe6c3C72",
+    "greenfield_light_client_contract_addr": "0x06F22B54c2dAbA237DdDC9F10Ee12dCF91CBfCF5"
   },
   "log_config": {
     "level": "DEBUG",
@@ -63,7 +58,7 @@
   },
   "db_config": {
     "dialect": "mysql",
-    "db_path": "root:pass@/greenfield?charset=utf8&parseTime=True&loc=Local"
+    "db_path": "root:pass@/greenfield-relayer0?charset=utf8&parseTime=True&loc=Local"
   },
   "alert_config": {
     "enable_alert": true,

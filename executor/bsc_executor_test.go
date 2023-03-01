@@ -60,7 +60,7 @@ func TestSyncTendermintHeader(t *testing.T) {
 	curLightClientHeight, err := e.GetLightClientLatestHeight()
 	require.NoError(t, err)
 	t.Log(curLightClientHeight)
-	hash, err := e.SyncTendermintLightBlock(4438)
+	hash, err := e.SyncTendermintLightBlock(34722)
 	require.NoError(t, err)
 	time.Sleep(10 * time.Second)
 	t.Log(hash.String())

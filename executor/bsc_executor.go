@@ -301,7 +301,7 @@ func (e *BSCExecutor) QueryTendermintLightBlockWithRetry(height int64) (lightBlo
 }
 
 func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte, err error) {
-	latestHeigh, err := e.GreenfieldExecutor.GetLatestBlockHeightWithRetry()
+	latestHeigh, err := e.GreenfieldExecutor.GetLatestBlockHeight()
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSe
 	return tx.Hash(), nil
 }
 
-// used for gnfd -> bsc
+// QueryLatestValidators used for gnfd -> bsc
 func (e *BSCExecutor) QueryLatestValidators() ([]rtypes.Validator, error) {
 	relayerAddresses, err := e.getGreenfieldLightClient().GetRelayers(nil)
 	if err != nil {
@@ -357,7 +357,7 @@ func (e *BSCExecutor) QueryLatestValidators() ([]rtypes.Validator, error) {
 	return relayers, nil
 }
 
-// Used for gnfd -> bsc
+// QueryCachedLatestValidators Used for gnfd -> bsc
 func (e *BSCExecutor) QueryCachedLatestValidators() ([]rtypes.Validator, error) {
 	if len(e.relayers) != 0 {
 		return e.relayers, nil
