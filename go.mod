@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.23
 	github.com/willf/bitset v1.1.11
-	google.golang.org/grpc v1.52.0
+	google.golang.org/grpc v1.52.3
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/gorm v1.23.8
@@ -45,7 +45,7 @@ require (
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogoproto v1.4.3 // indirect
+	github.com/cosmos/gogoproto v1.4.4 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
@@ -156,10 +156,10 @@ require (
 )
 
 replace (
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.0-20230220032958-f72b8a3582cb
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.2-0.20230216105555-b94a14479b11
+	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.6
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.7
 	github.com/ferranbt/fastssz => github.com/prysmaticlabs/fastssz v0.0.0-20220110145812-fafb696cae88
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 => github.com/prysmaticlabs/grpc-gateway/v2 v2.3.1-0.20210702154020-550e1cd83ec1
-	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.1
+	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.2
 )
