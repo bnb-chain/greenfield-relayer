@@ -243,6 +243,8 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
+	logging.Logger.Infof("queries votes for for channel %d and seq %d", channelId, seq)
+
 	for range ticker.C {
 		triedTimes++
 		if triedTimes > QueryVotepoolMaxRetryTimes {
@@ -261,6 +263,13 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 		validVotesCntPerReq := len(queriedVotes)
 
 		if validVotesCntPerReq == 0 {
+			v, err := DtoToEntity(localVote)
+			if err != nil {
+				return err
+			}
+			if err = p.bscExecutor.GreenfieldExecutor.BroadcastVote(v); err != nil {
+				return err
+			}
 			continue
 		}
 		isLocalVoteIncluded := false

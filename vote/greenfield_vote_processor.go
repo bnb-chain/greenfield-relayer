@@ -214,6 +214,14 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 		}
 		validVotesCountPerReq := len(queriedVotes)
 		if validVotesCountPerReq == 0 {
+			v, err := DtoToEntity(localVote)
+			if err != nil {
+				return err
+			}
+			err = p.greenfieldExecutor.BroadcastVote(v)
+			if err != nil {
+				return err
+			}
 			continue
 		}
 		isLocalVoteIncluded := false
