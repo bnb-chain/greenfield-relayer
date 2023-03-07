@@ -51,6 +51,7 @@ func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
 	for {
 		err := p.signAndBroadcast()
 		if err != nil {
+			logging.Logger.Errorf("encounter error, err: %s", err.Error())
 			time.Sleep(RetryInterval)
 		}
 	}
@@ -144,6 +145,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 func (p *GreenfieldVoteProcessor) CollectVotesLoop() {
 	for {
 		if err := p.collectVotes(); err != nil {
+			logging.Logger.Errorf("encounter error, err: %s", err.Error())
 			time.Sleep(RetryInterval)
 		}
 	}
