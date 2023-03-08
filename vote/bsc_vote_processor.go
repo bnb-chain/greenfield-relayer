@@ -112,21 +112,21 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		}
 
 		// check if oracle sequence is filled on greenfield, if so, update packages status to filled and skip to next oracle sequence
-		nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequence()
+		isFilled, err := p.isOracleSequenceFilled(seq)
 		if err != nil {
 			return err
 		}
-		if seq < nextDeliverySeqOnGreenfield {
-			err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered)
-			if err != nil {
-				logging.Logger.Errorf("failed to update packages error %s", err.Error())
+		if isFilled {
+			if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
 				return err
 			}
-			logging.Logger.Infof("packages' oracle sequence %d is less than nex delivery oracle sequence %d", seq, nextDeliverySeqOnGreenfield)
+			logging.Logger.Infof("oracle sequence %d has already been filled", seq)
 			continue
 		}
-
 		encodedPayload, err := rlp.EncodeToBytes(aggPkgs)
+		if err != nil {
+			return fmt.Errorf("encode packages error, err=%s", err.Error())
+		}
 		blsClaim := oracletypes.BlsClaim{
 			// chain ids are validated when packages persisted into DB, non-matched ones would be omitted
 			SrcChainId:  uint32(p.config.BSCConfig.ChainId),
@@ -136,9 +136,6 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			Payload:     encodedPayload,
 		}
 		eventHash := blsClaim.GetSignBytes()
-		if err != nil {
-			return fmt.Errorf("encode packages error, err=%s", err.Error())
-		}
 		channelId := common.OracleChannelId
 		v := p.constructSignedVote(eventHash[:])
 
@@ -200,19 +197,24 @@ func (p *BSCVoteProcessor) collectVotes() error {
 
 	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
 		var pkgIds []int64
-		oracleChannelId := common.OracleChannelId
-
 		for _, tx := range pkgsForSeq {
 			pkgIds = append(pkgIds, tx.Id)
 		}
-
-		err := p.prepareEnoughValidVotesForPackages(oracleChannelId, seq, pkgIds)
+		isFilled, err := p.isOracleSequenceFilled(seq)
 		if err != nil {
 			return err
 		}
-
-		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.AllVoted)
-		if err != nil {
+		if isFilled {
+			if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
+				return err
+			}
+			logging.Logger.Infof("oracle sequence %d has already been filled", seq)
+			continue
+		}
+		if err := p.prepareEnoughValidVotesForPackages(common.OracleChannelId, seq, pkgIds); err != nil {
+			return err
+		}
+		if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.AllVoted); err != nil {
 			return err
 		}
 	}
@@ -338,4 +340,13 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmt
 		}
 	}
 	return false
+}
+
+func (p *BSCVoteProcessor) isOracleSequenceFilled(seq uint64) (bool, error) {
+	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequence()
+	if err != nil {
+		return false, err
+	}
+	return seq < nextDeliverySeqOnGreenfield, nil
+
 }
