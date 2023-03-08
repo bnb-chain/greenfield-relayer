@@ -216,6 +216,7 @@ func (p *BSCVoteProcessor) collectVotes() error {
 }
 
 func (p *BSCVoteProcessor) collectVoteForPackages(pkgsForSeq []*model.BscRelayPackage, seq uint64, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
 	var pkgIds []int64
 	for _, tx := range pkgsForSeq {
 		pkgIds = append(pkgIds, tx.Id)
@@ -223,18 +224,22 @@ func (p *BSCVoteProcessor) collectVoteForPackages(pkgsForSeq []*model.BscRelayPa
 	isFilled, err := p.isOracleSequenceFilled(seq)
 	if err != nil {
 		errChan <- err
+		return
 	}
 	if isFilled {
 		if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
 			errChan <- err
+			return
 		}
 		logging.Logger.Infof("oracle sequence %d has already been filled", seq)
 	}
 	if err := p.prepareEnoughValidVotesForPackages(common.OracleChannelId, seq, pkgIds); err != nil {
 		errChan <- err
+		return
 	}
 	if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.AllVoted); err != nil {
 		errChan <- err
+		return
 	}
 }
 

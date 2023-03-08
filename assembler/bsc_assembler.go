@@ -138,6 +138,9 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 					return err
 				}
 				logging.Logger.Infof("claimed transaction with txHash %s", txHash)
+				if err = a.daoManager.BSCDao.UpdateBatchPackagesClaimedTxHash(pkgIds, txHash); err != nil {
+					return err
+				}
 				time.Sleep(executor.GnfdSequenceUpdateLatency)
 				return nil
 			}

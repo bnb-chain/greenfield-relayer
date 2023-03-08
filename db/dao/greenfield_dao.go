@@ -86,10 +86,10 @@ func (d *GreenfieldDao) UpdateTransactionStatus(id int64, status db.TxStatus) er
 	return err
 }
 
-func (d *GreenfieldDao) UpdateTransactionStatusAndClaimedTxHash(id int64, status db.TxStatus, claimedTxHash string) error {
+func (d *GreenfieldDao) UpdateTransactionClaimedTxHash(id int64, claimedTxHash string) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.GreenfieldRelayTransaction{}).Where("id = ?", id).Updates(
-			model.GreenfieldRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimedTxHash: claimedTxHash}).Error
+			model.GreenfieldRelayTransaction{UpdatedTime: time.Now().Unix(), ClaimedTxHash: claimedTxHash}).Error
 	})
 }
 

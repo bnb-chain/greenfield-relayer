@@ -183,19 +183,23 @@ func (p *GreenfieldVoteProcessor) collectVoteForTx(tx *model.GreenfieldRelayTran
 	isFilled, err := p.isTxSequenceFilled(tx)
 	if err != nil {
 		errChan <- err
+		return
 	}
 	if isFilled {
 		if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
 			errChan <- err
+			return
 		}
 		logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
 	}
 
 	if err = p.prepareEnoughValidVotesForTx(tx); err != nil {
 		errChan <- err
+		return
 	}
 	if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.AllVoted); err != nil {
 		errChan <- err
+		return
 	}
 }
 

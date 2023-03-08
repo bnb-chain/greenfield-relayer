@@ -130,6 +130,9 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 					return err
 				}
 				logging.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
+				if err = a.daoManager.GreenfieldDao.UpdateTransactionClaimedTxHash(tx.Id, txHash.String()); err != nil {
+					return err
+				}
 				time.Sleep(executor.BSCSequenceUpdateLatency)
 				return nil
 			}
