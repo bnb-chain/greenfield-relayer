@@ -191,6 +191,7 @@ func (p *GreenfieldVoteProcessor) collectVoteForTx(tx *model.GreenfieldRelayTran
 			return
 		}
 		logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
+		return
 	}
 
 	if err = p.prepareEnoughValidVotesForTx(tx); err != nil {

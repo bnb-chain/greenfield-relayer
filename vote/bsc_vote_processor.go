@@ -232,6 +232,7 @@ func (p *BSCVoteProcessor) collectVoteForPackages(pkgsForSeq []*model.BscRelayPa
 			return
 		}
 		logging.Logger.Infof("oracle sequence %d has already been filled", seq)
+		return
 	}
 	if err := p.prepareEnoughValidVotesForPackages(common.OracleChannelId, seq, pkgIds); err != nil {
 		errChan <- err
