@@ -156,10 +156,11 @@ require (
 )
 
 replace (
-	github.com/bnb-chain/greenfield => github.com/bnb-chain/greenfield v0.0.6
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/gnfd-cosmos-sdk v0.0.7
+	github.com/bnb-chain/greenfield => ../greenfield // todo
+	github.com/cosmos/cosmos-sdk => ../gnfd-cosmos-sdk //todo
 	github.com/ferranbt/fastssz => github.com/prysmaticlabs/fastssz v0.0.0-20220110145812-fafb696cae88
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 => github.com/prysmaticlabs/grpc-gateway/v2 v2.3.1-0.20210702154020-550e1cd83ec1
 	github.com/tendermint/tendermint => github.com/bnb-chain/gnfd-tendermint v0.0.2
+	github.com/bnb-chain/greenfield-go-sdk v0.0.4 => ../gnfd-go-sdk // todo
 )

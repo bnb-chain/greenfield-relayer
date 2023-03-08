@@ -52,11 +52,16 @@ func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId typ
 }
 
 func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
-	nextSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannel(channelId)
+
+	inturnRelayer, err := a.greenfieldExecutor.GetInturnRelayer()
 	if err != nil {
 		return err
 	}
 
+	nextSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannel(channelId)
+	if err != nil {
+		return err
+	}
 	tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequence(channelId, nextSequence)
 	if err != nil {
 		return err
@@ -65,6 +70,17 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 		return nil
 	}
 	if tx.Status != db.AllVoted && tx.Status != db.Delivered {
+		return nil
+	}
+
+	inturnRelayerTimeout := int64(40) // todo define in config file.
+
+	// not inturn relayer, will check tx in db if exceeding inturn relayer relay timeout, if so, can relay such tx
+	if inturnRelayer.BlsPubKey != a.blsPubKey {
+		if time.Now().Unix() > tx.TxTime+inturnRelayerTimeout {
+			// can relay
+
+		}
 		return nil
 	}
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig

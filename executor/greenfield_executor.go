@@ -303,6 +303,16 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 	return txRes.TxResponse.TxHash, nil
 }
 
+func (e *GreenfieldExecutor) GetInturnRelayer() (*oracletypes.QueryInturnRelayerResponse, error) {
+	gnfdClient, err := e.getGnfdClient()
+	if err != nil {
+		return nil, err
+	}
+	return gnfdClient.OracleQueryClient.InturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
+}
+
+// vote pool related
+
 func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
 	client, err := e.gnfdClients.GetClient()
 	if err != nil {
