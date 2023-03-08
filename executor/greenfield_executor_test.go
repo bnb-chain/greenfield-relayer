@@ -31,7 +31,7 @@ func TestGetNextReceiveOracleSequence(t *testing.T) {
 
 func TestGetNextReceiveSequenceForChannel(t *testing.T) {
 	e := InitGnfdExecutor()
-	oracleSeq, err := e.GetNextReceiveSequenceForChannel(2)
+	oracleSeq, err := e.GetNextReceiveSequenceForChannel(1)
 	require.NoError(t, err)
 	t.Log(oracleSeq)
 }
@@ -40,8 +40,8 @@ func TestGetConsensusStatus(t *testing.T) {
 	e := InitGnfdExecutor()
 	rpcClient, err := e.getRpcClient()
 	assert.NoError(t, err)
-
-	validators, err := rpcClient.Validators(context.Background(), nil, nil, nil)
+	h := int64(1)
+	validators, err := rpcClient.Validators(context.Background(), &h, nil, nil)
 	assert.NoError(t, err)
 
 	b, _, err := e.GetBlockAndBlockResultAtHeight(1)

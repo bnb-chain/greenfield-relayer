@@ -71,9 +71,9 @@ func (d *GreenfieldDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	return uint64(result.Int64), nil
 }
 
-func (d *GreenfieldDao) GetTransactionByChannelIdAndSequence(channelId types.ChannelId, sequence uint64) (*model.GreenfieldRelayTransaction, error) {
+func (d *GreenfieldDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId types.ChannelId, sequence uint64, status db.TxStatus) (*model.GreenfieldRelayTransaction, error) {
 	tx := model.GreenfieldRelayTransaction{}
-	err := d.DB.Where("channel_id = ? and sequence = ? ", channelId, sequence).Find(&tx).Error
+	err := d.DB.Where("channel_id = ? and sequence = ? and status = ?", channelId, sequence, status).Find(&tx).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -86,10 +86,10 @@ func (d *GreenfieldDao) UpdateTransactionStatus(id int64, status db.TxStatus) er
 	return err
 }
 
-func (d *GreenfieldDao) UpdateTransactionStatusAndClaimedTxHash(id int64, status db.TxStatus, claimedTxHash string) error {
+func (d *GreenfieldDao) UpdateTransactionClaimedTxHash(id int64, claimedTxHash string) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.GreenfieldRelayTransaction{}).Where("id = ?", id).Updates(
-			model.GreenfieldRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimedTxHash: claimedTxHash}).Error
+			model.GreenfieldRelayTransaction{UpdatedTime: time.Now().Unix(), ClaimedTxHash: claimedTxHash}).Error
 	})
 }
 

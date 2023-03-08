@@ -23,7 +23,7 @@ func TestGetBlockHeight(t *testing.T) {
 }
 
 func TestGetNextReceiveSequence(t *testing.T) {
-	seq, err := InitBSCExecutor().GetNextReceiveSequenceForChannel(1)
+	seq, err := InitBSCExecutor().GetNextReceiveSequenceForChannel(3)
 	require.NoError(t, err)
 	t.Log(seq)
 }
@@ -60,7 +60,7 @@ func TestSyncTendermintHeader(t *testing.T) {
 	curLightClientHeight, err := e.GetLightClientLatestHeight()
 	require.NoError(t, err)
 	t.Log(curLightClientHeight)
-	hash, err := e.SyncTendermintLightBlock(34722)
+	hash, err := e.SyncTendermintLightBlock(10)
 	require.NoError(t, err)
 	time.Sleep(10 * time.Second)
 	t.Log(hash.String())
