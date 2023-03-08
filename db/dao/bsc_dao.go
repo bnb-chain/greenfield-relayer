@@ -64,16 +64,16 @@ func (d *BSCDao) UpdateBatchPackagesStatus(txIds []int64, status db.TxStatus) er
 	})
 }
 
-func (d *BSCDao) UpdateBatchPackagesStatusAndClaimedTxHash(txIds []int64, status db.TxStatus, claimTxHash string) error {
+func (d *BSCDao) UpdateBatchPackagesClaimedTxHash(txIds []int64, claimTxHash string) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
-			model.BscRelayPackage{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
+			model.BscRelayPackage{UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
 	})
 }
 
-func (d *BSCDao) GetPackagesByOracleSequence(sequence uint64) ([]*model.BscRelayPackage, error) {
+func (d *BSCDao) GetPackagesByOracleSequenceAndStatus(sequence uint64, status db.TxStatus) ([]*model.BscRelayPackage, error) {
 	pkgs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("oracle_sequence = ?", sequence).Find(&pkgs).Error
+	err := d.DB.Where("oracle_sequence = ? and status = ? ", sequence, status).Find(&pkgs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
