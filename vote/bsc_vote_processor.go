@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -189,36 +190,52 @@ func (p *BSCVoteProcessor) collectVotes() error {
 		logging.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
 		return err
 	}
-
 	pkgsGroupByOracleSeq := make(map[uint64][]*model.BscRelayPackage)
 	for _, pkg := range pkgs {
 		pkgsGroupByOracleSeq[pkg.OracleSequence] = append(pkgsGroupByOracleSeq[pkg.OracleSequence], pkg)
 	}
-
-	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
-		var pkgIds []int64
-		for _, tx := range pkgsForSeq {
-			pkgIds = append(pkgIds, tx.Id)
+	wg := new(sync.WaitGroup)
+	errCh := make(chan error)
+	waitCh := make(chan struct{})
+	go func() {
+		for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
+			wg.Add(1)
+			go p.collectVoteForPackages(pkgsForSeq, seq, errCh, wg)
 		}
-		isFilled, err := p.isOracleSequenceFilled(seq)
-		if err != nil {
+		wg.Wait()
+		close(waitCh)
+	}()
+	for {
+		select {
+		case err := <-errCh:
 			return err
-		}
-		if isFilled {
-			if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
-				return err
-			}
-			logging.Logger.Infof("oracle sequence %d has already been filled", seq)
-			continue
-		}
-		if err := p.prepareEnoughValidVotesForPackages(common.OracleChannelId, seq, pkgIds); err != nil {
-			return err
-		}
-		if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.AllVoted); err != nil {
-			return err
+		case <-waitCh:
+			return nil
 		}
 	}
-	return nil
+}
+
+func (p *BSCVoteProcessor) collectVoteForPackages(pkgsForSeq []*model.BscRelayPackage, seq uint64, errChan chan error, wg *sync.WaitGroup) {
+	var pkgIds []int64
+	for _, tx := range pkgsForSeq {
+		pkgIds = append(pkgIds, tx.Id)
+	}
+	isFilled, err := p.isOracleSequenceFilled(seq)
+	if err != nil {
+		errChan <- err
+	}
+	if isFilled {
+		if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
+			errChan <- err
+		}
+		logging.Logger.Infof("oracle sequence %d has already been filled", seq)
+	}
+	if err := p.prepareEnoughValidVotesForPackages(common.OracleChannelId, seq, pkgIds); err != nil {
+		errChan <- err
+	}
+	if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.AllVoted); err != nil {
+		errChan <- err
+	}
 }
 
 // prepareEnoughValidVotesForPackages will prepare fetch and validate votes result, store in votes
@@ -265,11 +282,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 		validVotesCntPerReq := len(queriedVotes)
 
 		if validVotesCntPerReq == 0 {
-			v, err := DtoToEntity(localVote)
-			if err != nil {
-				return err
-			}
-			if err = p.bscExecutor.GreenfieldExecutor.BroadcastVote(v); err != nil {
+			if err := p.reBroadcastVote(localVote); err != nil {
 				return err
 			}
 			continue
@@ -312,11 +325,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 			return nil
 		}
 		if !isLocalVoteIncluded {
-			v, err := DtoToEntity(localVote)
-			if err != nil {
-				return err
-			}
-			if err = p.bscExecutor.GreenfieldExecutor.BroadcastVote(v); err != nil {
+			if err := p.reBroadcastVote(localVote); err != nil {
 				return err
 			}
 		}
@@ -348,5 +357,12 @@ func (p *BSCVoteProcessor) isOracleSequenceFilled(seq uint64) (bool, error) {
 		return false, err
 	}
 	return seq < nextDeliverySeqOnGreenfield, nil
+}
 
+func (p *BSCVoteProcessor) reBroadcastVote(localVote *model.Vote) error {
+	v, err := DtoToEntity(localVote)
+	if err != nil {
+		return err
+	}
+	return p.bscExecutor.GreenfieldExecutor.BroadcastVote(v)
 }
