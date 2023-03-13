@@ -254,6 +254,14 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.Ch
 	if err != nil {
 		return err
 	}
+
+	count, err := p.daoManager.VoteDao.GetVotesCountByChannelIdAndSequence(uint8(channelId), sequence)
+	if err != nil {
+		return err
+	}
+	if count > int64(len(validators)) {
+		return nil
+	}
 	// Query from votePool until there are more than 2/3 votes
 	if err = p.queryMoreThanTwoThirdValidVotes(localVote, validators, pkgIds); err != nil {
 		return err

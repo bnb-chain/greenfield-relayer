@@ -30,11 +30,13 @@ func NewApp(cfg *config.Config) *App {
 	model.InitBSCTables(db)
 	model.InitGreenfieldTables(db)
 	model.InitVoteTables(db)
+	model.InitSequenceTable(db)
 
 	greenfieldDao := dao.NewGreenfieldDao(db)
 	bscDao := dao.NewBSCDao(db)
 	voteDao := dao.NewVoteDao(db)
-	daoManager := dao.NewDaoManager(greenfieldDao, bscDao, voteDao)
+	seqDao := dao.NewSequenceDao(db)
+	daoManager := dao.NewDaoManager(greenfieldDao, bscDao, voteDao, seqDao)
 
 	greenfieldExecutor := executor.NewGreenfieldExecutor(cfg)
 	bscExecutor := executor.NewBSCExecutor(cfg)

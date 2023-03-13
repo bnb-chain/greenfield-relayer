@@ -23,7 +23,7 @@ func TestGetBlockHeight(t *testing.T) {
 }
 
 func TestGetNextReceiveSequence(t *testing.T) {
-	seq, err := InitBSCExecutor().GetNextReceiveSequenceForChannel(3)
+	seq, err := InitBSCExecutor().GetNextReceiveSequenceForChannel(1)
 	require.NoError(t, err)
 	t.Log(seq)
 }
@@ -85,4 +85,14 @@ func TestGetLogsFromHeader(t *testing.T) {
 	})
 	require.NoError(t, err)
 	t.Log(logs)
+}
+
+func TestGetRelayerInterval(t *testing.T) {
+	e := InitBSCExecutor()
+	r, err := e.GetInturnRelayer()
+	require.NoError(t, err)
+	t.Log(r.BlsPublicKey)
+	t.Log(r.Start)
+	t.Log(r.End)
+
 }

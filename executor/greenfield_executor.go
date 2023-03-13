@@ -8,13 +8,13 @@ import (
 	"fmt"
 	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client/chain"
 	sdkkeys "github.com/bnb-chain/greenfield-go-sdk/keys"
+	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	"github.com/tendermint/tendermint/rpc/client"
@@ -86,18 +86,12 @@ func getGreenfieldPrivateKey(cfg *config.GreenfieldConfig) string {
 }
 
 func (e *GreenfieldExecutor) getRpcClient() (client.Client, error) {
-	client, err := e.gnfdClients.GetClient()
-	if err != nil {
-		return nil, err
-	}
+	client := e.gnfdClients.GetClient()
 	return client.TendermintClient.RpcClient.TmClient, nil
 }
 
 func (e *GreenfieldExecutor) getGnfdClient() (*sdkclient.GreenfieldClient, error) {
-	client, err := e.gnfdClients.GetClient()
-	if err != nil {
-		return nil, err
-	}
+	client := e.gnfdClients.GetClient()
 	return client.GreenfieldClient, nil
 }
 
@@ -118,10 +112,7 @@ func (e *GreenfieldExecutor) GetBlockAndBlockResultAtHeight(height int64) (*tmty
 }
 
 func (e *GreenfieldExecutor) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	client, err := e.gnfdClients.GetClient()
-	if err != nil {
-		return 0, err
-	}
+	client := e.gnfdClients.GetClient()
 	return uint64(client.Height), nil
 }
 
@@ -253,29 +244,16 @@ func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 	return keys, nil
 }
 
-func (e *GreenfieldExecutor) GetAccount(address string) (authtypes.AccountI, error) {
+func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
 	gnfdClient, err := e.getGnfdClient()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	authRes, err := gnfdClient.Account(context.Background(), &authtypes.QueryAccountRequest{Address: address})
-	if err != nil {
-		return nil, err
-	}
-	var account authtypes.AccountI
-	if err := e.cdc.InterfaceRegistry().UnpackAny(authRes.Account, &account); err != nil {
-		return nil, err
-	}
-	return account, nil
+	return gnfdClient.GetNonce()
 }
 
-func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64) (string, error) {
+func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
 	gnfdClient, err := e.getGnfdClient()
-	if err != nil {
-		return "", err
-	}
-
-	seq, err := e.GetNextReceiveOracleSequence()
 	if err != nil {
 		return "", err
 	}
@@ -283,16 +261,17 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 		e.address,
 		e.getSrcChainId(),
 		e.getDestChainId(),
-		seq,
+		oracleSeq,
 		uint64(claimTs),
 		payloadBts,
 		voteAddressSet,
 		aggregatedSig,
 	)
-
 	txRes, err := gnfdClient.BroadcastTx(
 		[]sdk.Msg{msgClaim},
-		nil,
+		&sdktypes.TxOption{
+			Nonce: nonce,
+		},
 	)
 	if err != nil {
 		return "", err
@@ -311,18 +290,13 @@ func (e *GreenfieldExecutor) GetInturnRelayer() (*oracletypes.QueryInturnRelayer
 	return gnfdClient.OracleQueryClient.InturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
 }
 
-// vote pool related
-
 func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
-	client, err := e.gnfdClients.GetClient()
-	if err != nil {
-		return nil, err
-	}
+	client := e.gnfdClients.GetClient()
 	queryMap := make(map[string]interface{})
 	queryMap[VotePoolQueryParameterEventType] = int(eventType)
 	queryMap[VotePoolQueryParameterEventHash] = eventHash
 	var queryVote ctypes.ResultQueryVote
-	_, err = client.JsonRpcClient.Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
+	_, err := client.JsonRpcClient.Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
 	if err != nil {
 		return nil, err
 	}
@@ -330,13 +304,10 @@ func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, even
 }
 
 func (e *GreenfieldExecutor) BroadcastVote(v *votepool.Vote) error {
-	client, err := e.gnfdClients.GetClient()
-	if err != nil {
-		return err
-	}
+	client := e.gnfdClients.GetClient()
 	broadcastMap := make(map[string]interface{})
 	broadcastMap[VotePoolBroadcastParameterKey] = *v
-	_, err = client.JsonRpcClient.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &ctypes.ResultBroadcastVote{})
+	_, err := client.JsonRpcClient.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &ctypes.ResultBroadcastVote{})
 	if err != nil {
 		return err
 	}

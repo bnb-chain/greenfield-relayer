@@ -216,6 +216,14 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 		return err
 	}
 
+	count, err := p.daoManager.VoteDao.GetVotesCountByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
+	if err != nil {
+		return err
+	}
+	if count > int64(len(validators)) {
+		return nil
+	}
+
 	if err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id); err != nil {
 		return err
 	}

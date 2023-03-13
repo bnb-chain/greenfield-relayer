@@ -2,10 +2,10 @@ package assembler
 
 import (
 	"encoding/hex"
-	"errors"
+	"fmt"
+	"github.com/bnb-chain/greenfield-relayer/common"
 	"time"
 
-	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
@@ -43,7 +43,8 @@ func (a *GreenfieldAssembler) AssembleTransactionsLoop() {
 }
 
 func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId types.ChannelId) {
-	for {
+	ticker := time.NewTicker(1 * time.Second)
+	for range ticker.C {
 		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
 			time.Sleep(common.RetryInterval)
@@ -52,35 +53,75 @@ func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId typ
 }
 
 func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
-
-	inturnRelayer, err := a.greenfieldExecutor.GetInturnRelayer()
+	inturnRelayer, err := a.bscExecutor.GetInturnRelayer()
 	if err != nil {
 		return err
 	}
+	isInturnRelyer := inturnRelayer.BlsPublicKey == a.blsPubKey
+	var startSequence uint64
+	if isInturnRelyer {
+		// get processed sequence from DB
+		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
+		startSequence = uint64(seq.Sequence + 1)
 
-	nextSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannel(channelId)
-	if err != nil {
-		return err
-	}
-
-	tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequenceAndStatus(channelId, nextSequence, db.AllVoted)
-	if err != nil {
-		return err
-	}
-	if (*tx == model.GreenfieldRelayTransaction{}) {
-		return nil
-	}
-
-	inturnRelayerTimeout := int64(40) // todo define in config file.
-
-	// not inturn relayer, will check tx in db if exceeding inturn relayer relay timeout, if so, can relay such tx
-	if inturnRelayer.BlsPubKey != a.blsPubKey {
-		if time.Now().Unix() > tx.TxTime+inturnRelayerTimeout {
-			// can relay
-
+		// in-turn relayer get the start sequence from chain first time, it starts to relay after the  sequence
+		// get updated
+		for uint64(time.Now().Unix())-inturnRelayer.Start < 10 {
+			time.Sleep(1 * time.Second)
+			startSequence, err = a.greenfieldExecutor.GetNextReceiveSequenceForChannel(channelId)
+			if err != nil {
+				return err
+			}
 		}
-		return nil
+		logging.Logger.Infof("relay as inturn relayer")
+	} else {
+		// non-inturn relayer retry every 10 second, get the sequence from chain
+		time.Sleep(10 * time.Second)
+		startSequence, err = a.greenfieldExecutor.GetNextReceiveSequenceForChannel(channelId)
+		if err != nil {
+			return err
+		}
+		logging.Logger.Infof("relay as non-inturn relayer")
+
 	}
+
+	endSequence, err := a.daoManager.GreenfieldDao.GetLatestSequenceByChannelIdAndStatus(channelId, db.AllVoted)
+	if err != nil {
+		return err
+	}
+	logging.Logger.Infof("channel %d start seq is %d, end seq is %d ", channelId, startSequence, endSequence)
+	nonce, err := a.bscExecutor.GetNonce()
+	if err != nil {
+		return err
+	}
+	for i := startSequence; i <= endSequence; i++ {
+		tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequence(channelId, i)
+		if (*tx == model.GreenfieldRelayTransaction{}) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if tx.Status != db.AllVoted && tx.Status != db.Delivered {
+			return fmt.Errorf("tx with channel id %d and sequence %d does not get enough votes yet", tx.ChannelId, tx.Sequence)
+		}
+		if !isInturnRelyer && time.Now().Unix() < tx.TxTime+a.config.RelayConfig.GreenfieldToBSCInturnRelayerTimeout {
+			return nil
+		}
+		logging.Logger.Infof("relay tx with channel id %d and sequence %d ", tx.ChannelId, tx.Sequence)
+		if err := a.processTx(tx, nonce); err != nil {
+			return err
+		}
+		// update latest processed sequence
+		if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), i); err != nil {
+			return err
+		}
+		nonce++
+	}
+	return nil
+}
+
+func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, nonce uint64) error {
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
 	if err != nil {
@@ -96,80 +137,15 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 		return err
 	}
 
-	relayerBlsPubKeys, err := a.bscExecutor.GetValidatorsBlsPublicKey()
+	txHash, err := a.bscExecutor.CallBuildInSystemContract(aggregatedSignature, util.BitSetToBigInt(valBitSet), votes[0].ClaimPayload, nonce)
 	if err != nil {
 		return err
 	}
-	relayerIdx := util.IndexOf(a.blsPubKey, relayerBlsPubKeys)
-	if relayerIdx == -1 {
-		return errors.New(" not a relayer. ")
+	logging.Logger.Infof("relayed transaction with channel id %d and sequence %d, get txHash %s", tx.ChannelId, tx.Sequence, txHash)
+	if err = a.daoManager.GreenfieldDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String()); err != nil {
+		return err
 	}
-
-	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
-	txRelayStartTime := tx.TxTime + a.config.RelayConfig.GreenfieldToBSCRelayingDelayTime
-	logging.Logger.Infof("tx will be relayed starting at %d", txRelayStartTime)
-
-	var indexDiff int
-	if relayerIdx >= firstInturnRelayerIdx {
-		indexDiff = relayerIdx - firstInturnRelayerIdx
-	} else {
-		indexDiff = len(relayerBlsPubKeys) - (firstInturnRelayerIdx - relayerIdx)
-	}
-	curRelayerRelayingStartTime := int64(0)
-	if indexDiff == 0 {
-		curRelayerRelayingStartTime = txRelayStartTime
-	} else {
-		curRelayerRelayingStartTime = txRelayStartTime + a.config.RelayConfig.FirstInTurnRelayerRelayingWindow + int64(indexDiff-1)*a.config.RelayConfig.InTurnRelayerRelayingWindow
-	}
-	logging.Logger.Infof("current relayer starts relaying from %d", curRelayerRelayingStartTime)
-
-	filled := make(chan struct{})
-	errC := make(chan error)
-	ticker := time.NewTicker(common.RetryInterval)
-
-	go a.validateSequenceFilled(filled, errC, nextSequence, channelId)
-
-	for {
-		select {
-		case err = <-errC:
-			return err
-		case <-filled:
-			if err = a.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
-				logging.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'Delivered', error=%s", tx.ChannelId, tx.Sequence, err.Error())
-				return err
-			}
-			return nil
-		case <-ticker.C:
-			if time.Now().Unix() >= curRelayerRelayingStartTime {
-				logging.Logger.Infof("relaying transaction with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
-				txHash, err := a.bscExecutor.CallBuildInSystemContract(aggregatedSignature, util.BitSetToBigInt(valBitSet), votes[0].ClaimPayload)
-				if err != nil {
-					return err
-				}
-				logging.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
-				if err = a.daoManager.GreenfieldDao.UpdateTransactionClaimedTxHash(tx.Id, txHash.String()); err != nil {
-					return err
-				}
-				time.Sleep(executor.BSCSequenceUpdateLatency)
-				return nil
-			}
-		}
-	}
-}
-
-func (a *GreenfieldAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID types.ChannelId) {
-	ticker := time.NewTicker(common.RetrieveSequenceInterval)
-	defer ticker.Stop()
-	for range ticker.C {
-		nextDeliverySequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannel(channelID)
-		if err != nil {
-			errC <- err
-		}
-		if sequence < nextDeliverySequence {
-			logging.Logger.Infof("sequence %d for channel %d has already been filled ", sequence, channelID)
-			filled <- struct{}{}
-		}
-	}
+	return nil
 }
 
 func (a *GreenfieldAssembler) getMonitorChannels() []uint8 {

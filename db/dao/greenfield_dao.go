@@ -48,19 +48,6 @@ func (d *GreenfieldDao) GetTransactionsByStatusAndHeight(status db.TxStatus, hei
 	return txs, nil
 }
 
-func (d *GreenfieldDao) GetLatestVotedTransactionHeight() (uint64, error) {
-	var result uint64
-	res := d.DB.Table("greenfield_relay_transaction").Select("MAX(height)").Where("status = ?", db.SelfVoted)
-	if res.RowsAffected == 0 {
-		return 0, nil
-	}
-	err := res.Row().Scan(&result)
-	if err != nil {
-		return 0, err
-	}
-	return result, nil
-}
-
 func (d *GreenfieldDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	var result sql.NullInt64
 	res := d.DB.Table("greenfield_relay_transaction").Select("MIN(height)").Where("status = ?", db.Saved)
@@ -71,6 +58,15 @@ func (d *GreenfieldDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	return uint64(result.Int64), nil
 }
 
+func (d *GreenfieldDao) GetTransactionByChannelIdAndSequence(channelId types.ChannelId, sequence uint64) (*model.GreenfieldRelayTransaction, error) {
+	tx := model.GreenfieldRelayTransaction{}
+	err := d.DB.Where("channel_id = ? and sequence = ?", channelId, sequence).Find(&tx).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return &tx, nil
+}
+
 func (d *GreenfieldDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId types.ChannelId, sequence uint64, status db.TxStatus) (*model.GreenfieldRelayTransaction, error) {
 	tx := model.GreenfieldRelayTransaction{}
 	err := d.DB.Where("channel_id = ? and sequence = ? and status = ?", channelId, sequence, status).Find(&tx).Error
@@ -78,6 +74,25 @@ func (d *GreenfieldDao) GetTransactionByChannelIdAndSequenceAndStatus(channelId 
 		return nil, err
 	}
 	return &tx, nil
+}
+
+func (d *GreenfieldDao) GetTransactionByChannelIdAndStatus(channelId types.ChannelId, status db.TxStatus) (*model.GreenfieldRelayTransaction, error) {
+	tx := model.GreenfieldRelayTransaction{}
+	err := d.DB.Where("channel_id = ? and status = ?", channelId, status).Find(&tx).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return &tx, nil
+}
+
+func (d *GreenfieldDao) GetLatestSequenceByChannelIdAndStatus(channelId types.ChannelId, status db.TxStatus) (uint64, error) {
+	var result sql.NullInt64
+	res := d.DB.Table("greenfield_relay_transaction").Select("MAX(sequence)").Where("channel_id = ? and status = ?", channelId, status)
+	err := res.Row().Scan(&result)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(result.Int64), nil
 }
 
 func (d *GreenfieldDao) UpdateTransactionStatus(id int64, status db.TxStatus) error {
@@ -90,6 +105,13 @@ func (d *GreenfieldDao) UpdateTransactionClaimedTxHash(id int64, claimedTxHash s
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.GreenfieldRelayTransaction{}).Where("id = ?", id).Updates(
 			model.GreenfieldRelayTransaction{UpdatedTime: time.Now().Unix(), ClaimedTxHash: claimedTxHash}).Error
+	})
+}
+
+func (d *GreenfieldDao) UpdateTransactionStatusAndClaimedTxHash(id int64, status db.TxStatus, claimedTxHash string) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		return dbTx.Model(model.GreenfieldRelayTransaction{}).Where("id = ?", id).Updates(
+			model.GreenfieldRelayTransaction{Status: status, UpdatedTime: time.Now().Unix(), ClaimedTxHash: claimedTxHash}).Error
 	})
 }
 

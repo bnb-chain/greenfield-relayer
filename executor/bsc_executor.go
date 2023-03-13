@@ -316,11 +316,11 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte,
 		}))
 }
 
-func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte) (common.Hash, error) {
-	nonce, err := e.GetRpcClient().PendingNonceAt(context.Background(), e.txSender)
-	if err != nil {
-		return common.Hash{}, err
-	}
+func (e *BSCExecutor) GetNonce() (uint64, error) {
+	return e.GetRpcClient().PendingNonceAt(context.Background(), e.txSender)
+}
+
+func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte, nonce uint64) (common.Hash, error) {
 	txOpts, err := e.getTransactor(nonce)
 	if err != nil {
 		return common.Hash{}, err
@@ -403,4 +403,21 @@ func (e *BSCExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 		keys = append(keys, hex.EncodeToString(v.BlsPublicKey[:]))
 	}
 	return keys, nil
+}
+
+func (e *BSCExecutor) GetInturnRelayer() (*rtypes.InturnRelayer, error) {
+	callOpts := &bind.CallOpts{
+		Pending: true,
+		Context: context.Background(),
+	}
+	r, err := e.getGreenfieldLightClient().GetInturnRelayer(callOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rtypes.InturnRelayer{
+		BlsPublicKey: hex.EncodeToString(r.BlsKey),
+		Start:        r.Start.Uint64(),
+		End:          r.End.Uint64(),
+	}, nil
 }

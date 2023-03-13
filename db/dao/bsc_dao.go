@@ -57,6 +57,34 @@ func (d *BSCDao) GetLeastSavedPackagesHeight() (uint64, error) {
 	return uint64(result.Int64), nil
 }
 
+func (d *BSCDao) GetLatestOracleSequenceByStatus(status db.TxStatus) (uint64, error) {
+	var result sql.NullInt64
+	res := d.DB.Table("bsc_relay_package").Select("MAX(oracle_sequence)").Where("status = ?", status)
+	err := res.Row().Scan(&result)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(result.Int64), nil
+}
+
+func (d *BSCDao) GetPackagesByOracleSequence(sequence uint64) ([]*model.BscRelayPackage, error) {
+	pkgs := make([]*model.BscRelayPackage, 0)
+	err := d.DB.Where("oracle_sequence = ?", sequence).Find(&pkgs).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return pkgs, nil
+}
+
+func (d *BSCDao) GetPackagesByOracleSequenceAndStatus(sequence uint64, status db.TxStatus) ([]*model.BscRelayPackage, error) {
+	pkgs := make([]*model.BscRelayPackage, 0)
+	err := d.DB.Where("oracle_sequence = ? and status = ? ", sequence, status).Find(&pkgs).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return pkgs, nil
+}
+
 func (d *BSCDao) UpdateBatchPackagesStatus(txIds []int64, status db.TxStatus) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
@@ -71,13 +99,11 @@ func (d *BSCDao) UpdateBatchPackagesClaimedTxHash(txIds []int64, claimTxHash str
 	})
 }
 
-func (d *BSCDao) GetPackagesByOracleSequenceAndStatus(sequence uint64, status db.TxStatus) ([]*model.BscRelayPackage, error) {
-	pkgs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("oracle_sequence = ? and status = ? ", sequence, status).Find(&pkgs).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, err
-	}
-	return pkgs, nil
+func (d *BSCDao) UpdateBatchPackagesStatusAndClaimedTxHash(txIds []int64, status db.TxStatus, claimTxHash string) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
+			model.BscRelayPackage{Status: status, UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
+	})
 }
 
 func (d *BSCDao) SaveBlockAndBatchPackages(b *model.BscBlock, pkgs []*model.BscRelayPackage) error {

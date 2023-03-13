@@ -31,7 +31,7 @@ var (
 
 // CrosschainMetaData contains all meta data concerning the Crosschain contract.
 var CrosschainMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"}],\"name\":\"AddChannel\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"srcChainId\",\"type\":\"uint32\"},{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"dstChainId\",\"type\":\"uint32\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"oracleSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"name\":\"CrossChainPackage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"isEnable\",\"type\":\"bool\"}],\"name\":\"EnableOrDisableChannel\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"ParamChange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"proposalTypeHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"proposer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"quorum\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"expiredAt\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"contentHash\",\"type\":\"bytes32\"}],\"name\":\"ProposalSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"packageType\",\"type\":\"uint8\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"}],\"name\":\"ReceivedPackage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"}],\"name\":\"Reopened\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"}],\"name\":\"Suspended\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"lowLevelData\",\"type\":\"bytes\"}],\"name\":\"UnexpectedFailureAssertionInPackageHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"reason\",\"type\":\"string\"}],\"name\":\"UnexpectedRevertInPackageHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"name\":\"UnsupportedPackage\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ACK_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"APP_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CANCEL_TRANSFER_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CODE_OK\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EMERGENCY_PROPOSAL_EXPIRE_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EMPTY_CONTENT_HASH\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ERROR_FAIL_DECODE\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FAIL_ACK_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"IN_TURN_RELAYER_VALIDITY_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OUT_TURN_RELAYER_BACKOFF_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"REOPEN_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SUSPEND_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SYN_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_IN_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_OUT_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATORSET_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"batchSizeForOracle\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attacker\",\"type\":\"address\"}],\"name\":\"cancelTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelHandlerMap\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelReceiveSequenceMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelSendSequenceMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelSyncedHeaderMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"emergencyProposals\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"quorum\",\"type\":\"uint16\"},{\"internalType\":\"uint128\",\"name\":\"expiredAt\",\"type\":\"uint128\"},{\"internalType\":\"bytes32\",\"name\":\"contentHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"packageType\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"relayFee\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"msgBytes\",\"type\":\"bytes\"}],\"name\":\"encodePayload\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"govHub\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"_blsSignature\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_validatorsBitSet\",\"type\":\"uint256\"}],\"name\":\"handlePackage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"_insChainId\",\"type\":\"uint16\"},{\"internalType\":\"address\",\"name\":\"_govHub\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"insChainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"isRelayRewardFromSystemReward\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isSuspended\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"oracleSequence\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"\",\"type\":\"int64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"previousTxHeight\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"quorumMap\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"registeredContractChannelMap\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"reopen\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"internalType\":\"bytes\",\"name\":\"msgBytes\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"relayFee\",\"type\":\"uint256\"}],\"name\":\"sendSynPackage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"suspend\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"txCounter\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"}],\"name\":\"AddChannel\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"srcChainId\",\"type\":\"uint32\"},{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"dstChainId\",\"type\":\"uint32\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"oracleSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"name\":\"CrossChainPackage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"isEnable\",\"type\":\"bool\"}],\"name\":\"EnableOrDisableChannel\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"ParamChange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"proposalTypeHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"proposer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"quorum\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"expiredAt\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"contentHash\",\"type\":\"bytes32\"}],\"name\":\"ProposalSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"packageType\",\"type\":\"uint8\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"}],\"name\":\"ReceivedPackage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"}],\"name\":\"Reopened\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"}],\"name\":\"Suspended\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"lowLevelData\",\"type\":\"bytes\"}],\"name\":\"UnexpectedFailureAssertionInPackageHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"reason\",\"type\":\"string\"}],\"name\":\"UnexpectedRevertInPackageHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"name\":\"UnsupportedPackage\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ACK_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"APP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CANCEL_TRANSFER_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CROSS_CHAIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EMERGENCY_PROPOSAL_EXPIRE_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EMPTY_CONTENT_HASH\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FAIL_ACK_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"IN_TURN_RELAYER_VALIDITY_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"LIGHT_CLIENT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PROXY_ADMIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"REOPEN_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SUSPEND_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SYN_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TOKEN_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_IN_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_OUT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ackRelayFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"batchSizeForOracle\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attacker\",\"type\":\"address\"}],\"name\":\"cancelTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelHandlerMap\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelReceiveSequenceMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelSendSequenceMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"emergencyProposals\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"quorum\",\"type\":\"uint16\"},{\"internalType\":\"uint128\",\"name\":\"expiredAt\",\"type\":\"uint128\"},{\"internalType\":\"bytes32\",\"name\":\"contentHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"packageType\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"relayFee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"ackRelayFee\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"msgBytes\",\"type\":\"bytes\"}],\"name\":\"encodePayload\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gnfdChainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"_blsSignature\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_validatorsBitSet\",\"type\":\"uint256\"}],\"name\":\"handlePackage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"_gnfdChainId\",\"type\":\"uint16\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isSuspended\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"oracleSequence\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"\",\"type\":\"int64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"previousTxHeight\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"quorumMap\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"registeredContractChannelMap\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"relayFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"reopen\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"internalType\":\"bytes\",\"name\":\"msgBytes\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"relayFee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"ackRelayFee\",\"type\":\"uint256\"}],\"name\":\"sendSynPackage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"suspend\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"txCounter\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // CrosschainABI is the input ABI used to generate the binding from.
@@ -186,6 +186,7 @@ func (_Crosschain *CrosschainTransactorRaw) Transact(opts *bind.TransactOpts, me
 func (_Crosschain *CrosschainCaller) ACKPACKAGE(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "ACK_PACKAGE")
+
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -193,6 +194,7 @@ func (_Crosschain *CrosschainCaller) ACKPACKAGE(opts *bind.CallOpts) (uint8, err
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
+
 }
 
 // ACKPACKAGE is a free data retrieval call binding the contract method 0xb0355f5b.
@@ -209,12 +211,13 @@ func (_Crosschain *CrosschainCallerSession) ACKPACKAGE() (uint8, error) {
 	return _Crosschain.Contract.ACKPACKAGE(&_Crosschain.CallOpts)
 }
 
-// APPCHANNELID is a free data retrieval call binding the contract method 0x63ee4ac4.
+// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
 //
-// Solidity: function APP_CHANNELID() view returns(uint8)
+// Solidity: function APP_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainCaller) APPCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "APP_CHANNELID")
+	err := _Crosschain.contract.Call(opts, &out, "APP_CHANNEL_ID")
+
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -222,20 +225,83 @@ func (_Crosschain *CrosschainCaller) APPCHANNELID(opts *bind.CallOpts) (uint8, e
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
+
 }
 
-// APPCHANNELID is a free data retrieval call binding the contract method 0x63ee4ac4.
+// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
 //
-// Solidity: function APP_CHANNELID() view returns(uint8)
+// Solidity: function APP_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainSession) APPCHANNELID() (uint8, error) {
 	return _Crosschain.Contract.APPCHANNELID(&_Crosschain.CallOpts)
 }
 
-// APPCHANNELID is a free data retrieval call binding the contract method 0x63ee4ac4.
+// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
 //
-// Solidity: function APP_CHANNELID() view returns(uint8)
+// Solidity: function APP_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainCallerSession) APPCHANNELID() (uint8, error) {
 	return _Crosschain.Contract.APPCHANNELID(&_Crosschain.CallOpts)
+}
+
+// BUCKETCHANNELID is a free data retrieval call binding the contract method 0x73f1e3c3.
+//
+// Solidity: function BUCKET_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainCaller) BUCKETCHANNELID(opts *bind.CallOpts) (uint8, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "BUCKET_CHANNEL_ID")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// BUCKETCHANNELID is a free data retrieval call binding the contract method 0x73f1e3c3.
+//
+// Solidity: function BUCKET_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainSession) BUCKETCHANNELID() (uint8, error) {
+	return _Crosschain.Contract.BUCKETCHANNELID(&_Crosschain.CallOpts)
+}
+
+// BUCKETCHANNELID is a free data retrieval call binding the contract method 0x73f1e3c3.
+//
+// Solidity: function BUCKET_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainCallerSession) BUCKETCHANNELID() (uint8, error) {
+	return _Crosschain.Contract.BUCKETCHANNELID(&_Crosschain.CallOpts)
+}
+
+// BUCKETHUB is a free data retrieval call binding the contract method 0x7afffdd2.
+//
+// Solidity: function BUCKET_HUB() view returns(address)
+func (_Crosschain *CrosschainCaller) BUCKETHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "BUCKET_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// BUCKETHUB is a free data retrieval call binding the contract method 0x7afffdd2.
+//
+// Solidity: function BUCKET_HUB() view returns(address)
+func (_Crosschain *CrosschainSession) BUCKETHUB() (common.Address, error) {
+	return _Crosschain.Contract.BUCKETHUB(&_Crosschain.CallOpts)
+}
+
+// BUCKETHUB is a free data retrieval call binding the contract method 0x7afffdd2.
+//
+// Solidity: function BUCKET_HUB() view returns(address)
+func (_Crosschain *CrosschainCallerSession) BUCKETHUB() (common.Address, error) {
+	return _Crosschain.Contract.BUCKETHUB(&_Crosschain.CallOpts)
 }
 
 // CANCELTRANSFERPROPOSAL is a free data retrieval call binding the contract method 0x5692ddd3.
@@ -244,6 +310,7 @@ func (_Crosschain *CrosschainCallerSession) APPCHANNELID() (uint8, error) {
 func (_Crosschain *CrosschainCaller) CANCELTRANSFERPROPOSAL(opts *bind.CallOpts) ([32]byte, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "CANCEL_TRANSFER_PROPOSAL")
+
 	if err != nil {
 		return *new([32]byte), err
 	}
@@ -251,6 +318,7 @@ func (_Crosschain *CrosschainCaller) CANCELTRANSFERPROPOSAL(opts *bind.CallOpts)
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
 
 	return out0, err
+
 }
 
 // CANCELTRANSFERPROPOSAL is a free data retrieval call binding the contract method 0x5692ddd3.
@@ -267,33 +335,35 @@ func (_Crosschain *CrosschainCallerSession) CANCELTRANSFERPROPOSAL() ([32]byte, 
 	return _Crosschain.Contract.CANCELTRANSFERPROPOSAL(&_Crosschain.CallOpts)
 }
 
-// CODEOK is a free data retrieval call binding the contract method 0xab51bb96.
+// CROSSCHAIN is a free data retrieval call binding the contract method 0x557cf477.
 //
-// Solidity: function CODE_OK() view returns(uint32)
-func (_Crosschain *CrosschainCaller) CODEOK(opts *bind.CallOpts) (uint32, error) {
+// Solidity: function CROSS_CHAIN() view returns(address)
+func (_Crosschain *CrosschainCaller) CROSSCHAIN(opts *bind.CallOpts) (common.Address, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "CODE_OK")
+	err := _Crosschain.contract.Call(opts, &out, "CROSS_CHAIN")
+
 	if err != nil {
-		return *new(uint32), err
+		return *new(common.Address), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
 	return out0, err
+
 }
 
-// CODEOK is a free data retrieval call binding the contract method 0xab51bb96.
+// CROSSCHAIN is a free data retrieval call binding the contract method 0x557cf477.
 //
-// Solidity: function CODE_OK() view returns(uint32)
-func (_Crosschain *CrosschainSession) CODEOK() (uint32, error) {
-	return _Crosschain.Contract.CODEOK(&_Crosschain.CallOpts)
+// Solidity: function CROSS_CHAIN() view returns(address)
+func (_Crosschain *CrosschainSession) CROSSCHAIN() (common.Address, error) {
+	return _Crosschain.Contract.CROSSCHAIN(&_Crosschain.CallOpts)
 }
 
-// CODEOK is a free data retrieval call binding the contract method 0xab51bb96.
+// CROSSCHAIN is a free data retrieval call binding the contract method 0x557cf477.
 //
-// Solidity: function CODE_OK() view returns(uint32)
-func (_Crosschain *CrosschainCallerSession) CODEOK() (uint32, error) {
-	return _Crosschain.Contract.CODEOK(&_Crosschain.CallOpts)
+// Solidity: function CROSS_CHAIN() view returns(address)
+func (_Crosschain *CrosschainCallerSession) CROSSCHAIN() (common.Address, error) {
+	return _Crosschain.Contract.CROSSCHAIN(&_Crosschain.CallOpts)
 }
 
 // EMERGENCYPROPOSALEXPIREPERIOD is a free data retrieval call binding the contract method 0xdc404331.
@@ -302,6 +372,7 @@ func (_Crosschain *CrosschainCallerSession) CODEOK() (uint32, error) {
 func (_Crosschain *CrosschainCaller) EMERGENCYPROPOSALEXPIREPERIOD(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "EMERGENCY_PROPOSAL_EXPIRE_PERIOD")
+
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -309,6 +380,7 @@ func (_Crosschain *CrosschainCaller) EMERGENCYPROPOSALEXPIREPERIOD(opts *bind.Ca
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
+
 }
 
 // EMERGENCYPROPOSALEXPIREPERIOD is a free data retrieval call binding the contract method 0xdc404331.
@@ -331,6 +403,7 @@ func (_Crosschain *CrosschainCallerSession) EMERGENCYPROPOSALEXPIREPERIOD() (*bi
 func (_Crosschain *CrosschainCaller) EMPTYCONTENTHASH(opts *bind.CallOpts) ([32]byte, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "EMPTY_CONTENT_HASH")
+
 	if err != nil {
 		return *new([32]byte), err
 	}
@@ -338,6 +411,7 @@ func (_Crosschain *CrosschainCaller) EMPTYCONTENTHASH(opts *bind.CallOpts) ([32]
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
 
 	return out0, err
+
 }
 
 // EMPTYCONTENTHASH is a free data retrieval call binding the contract method 0xc780e9de.
@@ -354,41 +428,13 @@ func (_Crosschain *CrosschainCallerSession) EMPTYCONTENTHASH() ([32]byte, error)
 	return _Crosschain.Contract.EMPTYCONTENTHASH(&_Crosschain.CallOpts)
 }
 
-// ERRORFAILDECODE is a free data retrieval call binding the contract method 0x0bee7a67.
-//
-// Solidity: function ERROR_FAIL_DECODE() view returns(uint32)
-func (_Crosschain *CrosschainCaller) ERRORFAILDECODE(opts *bind.CallOpts) (uint32, error) {
-	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "ERROR_FAIL_DECODE")
-	if err != nil {
-		return *new(uint32), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
-
-	return out0, err
-}
-
-// ERRORFAILDECODE is a free data retrieval call binding the contract method 0x0bee7a67.
-//
-// Solidity: function ERROR_FAIL_DECODE() view returns(uint32)
-func (_Crosschain *CrosschainSession) ERRORFAILDECODE() (uint32, error) {
-	return _Crosschain.Contract.ERRORFAILDECODE(&_Crosschain.CallOpts)
-}
-
-// ERRORFAILDECODE is a free data retrieval call binding the contract method 0x0bee7a67.
-//
-// Solidity: function ERROR_FAIL_DECODE() view returns(uint32)
-func (_Crosschain *CrosschainCallerSession) ERRORFAILDECODE() (uint32, error) {
-	return _Crosschain.Contract.ERRORFAILDECODE(&_Crosschain.CallOpts)
-}
-
 // FAILACKPACKAGE is a free data retrieval call binding the contract method 0x8cc8f561.
 //
 // Solidity: function FAIL_ACK_PACKAGE() view returns(uint8)
 func (_Crosschain *CrosschainCaller) FAILACKPACKAGE(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "FAIL_ACK_PACKAGE")
+
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -396,6 +442,7 @@ func (_Crosschain *CrosschainCaller) FAILACKPACKAGE(opts *bind.CallOpts) (uint8,
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
+
 }
 
 // FAILACKPACKAGE is a free data retrieval call binding the contract method 0x8cc8f561.
@@ -412,12 +459,13 @@ func (_Crosschain *CrosschainCallerSession) FAILACKPACKAGE() (uint8, error) {
 	return _Crosschain.Contract.FAILACKPACKAGE(&_Crosschain.CallOpts)
 }
 
-// GOVCHANNELID is a free data retrieval call binding the contract method 0x96713da9.
+// GOVCHANNELID is a free data retrieval call binding the contract method 0x81d91480.
 //
-// Solidity: function GOV_CHANNELID() view returns(uint8)
+// Solidity: function GOV_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainCaller) GOVCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "GOV_CHANNELID")
+	err := _Crosschain.contract.Call(opts, &out, "GOV_CHANNEL_ID")
+
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -425,20 +473,114 @@ func (_Crosschain *CrosschainCaller) GOVCHANNELID(opts *bind.CallOpts) (uint8, e
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
+
 }
 
-// GOVCHANNELID is a free data retrieval call binding the contract method 0x96713da9.
+// GOVCHANNELID is a free data retrieval call binding the contract method 0x81d91480.
 //
-// Solidity: function GOV_CHANNELID() view returns(uint8)
+// Solidity: function GOV_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainSession) GOVCHANNELID() (uint8, error) {
 	return _Crosschain.Contract.GOVCHANNELID(&_Crosschain.CallOpts)
 }
 
-// GOVCHANNELID is a free data retrieval call binding the contract method 0x96713da9.
+// GOVCHANNELID is a free data retrieval call binding the contract method 0x81d91480.
 //
-// Solidity: function GOV_CHANNELID() view returns(uint8)
+// Solidity: function GOV_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainCallerSession) GOVCHANNELID() (uint8, error) {
 	return _Crosschain.Contract.GOVCHANNELID(&_Crosschain.CallOpts)
+}
+
+// GOVHUB is a free data retrieval call binding the contract method 0xa9dae71c.
+//
+// Solidity: function GOV_HUB() view returns(address)
+func (_Crosschain *CrosschainCaller) GOVHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "GOV_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GOVHUB is a free data retrieval call binding the contract method 0xa9dae71c.
+//
+// Solidity: function GOV_HUB() view returns(address)
+func (_Crosschain *CrosschainSession) GOVHUB() (common.Address, error) {
+	return _Crosschain.Contract.GOVHUB(&_Crosschain.CallOpts)
+}
+
+// GOVHUB is a free data retrieval call binding the contract method 0xa9dae71c.
+//
+// Solidity: function GOV_HUB() view returns(address)
+func (_Crosschain *CrosschainCallerSession) GOVHUB() (common.Address, error) {
+	return _Crosschain.Contract.GOVHUB(&_Crosschain.CallOpts)
+}
+
+// GROUPCHANNELID is a free data retrieval call binding the contract method 0xe02e86b0.
+//
+// Solidity: function GROUP_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainCaller) GROUPCHANNELID(opts *bind.CallOpts) (uint8, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "GROUP_CHANNEL_ID")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// GROUPCHANNELID is a free data retrieval call binding the contract method 0xe02e86b0.
+//
+// Solidity: function GROUP_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainSession) GROUPCHANNELID() (uint8, error) {
+	return _Crosschain.Contract.GROUPCHANNELID(&_Crosschain.CallOpts)
+}
+
+// GROUPCHANNELID is a free data retrieval call binding the contract method 0xe02e86b0.
+//
+// Solidity: function GROUP_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainCallerSession) GROUPCHANNELID() (uint8, error) {
+	return _Crosschain.Contract.GROUPCHANNELID(&_Crosschain.CallOpts)
+}
+
+// GROUPHUB is a free data retrieval call binding the contract method 0x46934fc8.
+//
+// Solidity: function GROUP_HUB() view returns(address)
+func (_Crosschain *CrosschainCaller) GROUPHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "GROUP_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GROUPHUB is a free data retrieval call binding the contract method 0x46934fc8.
+//
+// Solidity: function GROUP_HUB() view returns(address)
+func (_Crosschain *CrosschainSession) GROUPHUB() (common.Address, error) {
+	return _Crosschain.Contract.GROUPHUB(&_Crosschain.CallOpts)
+}
+
+// GROUPHUB is a free data retrieval call binding the contract method 0x46934fc8.
+//
+// Solidity: function GROUP_HUB() view returns(address)
+func (_Crosschain *CrosschainCallerSession) GROUPHUB() (common.Address, error) {
+	return _Crosschain.Contract.GROUPHUB(&_Crosschain.CallOpts)
 }
 
 // INTURNRELAYERVALIDITYPERIOD is a free data retrieval call binding the contract method 0xe036ead6.
@@ -447,6 +589,7 @@ func (_Crosschain *CrosschainCallerSession) GOVCHANNELID() (uint8, error) {
 func (_Crosschain *CrosschainCaller) INTURNRELAYERVALIDITYPERIOD(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "IN_TURN_RELAYER_VALIDITY_PERIOD")
+
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -454,6 +597,7 @@ func (_Crosschain *CrosschainCaller) INTURNRELAYERVALIDITYPERIOD(opts *bind.Call
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
+
 }
 
 // INTURNRELAYERVALIDITYPERIOD is a free data retrieval call binding the contract method 0xe036ead6.
@@ -470,33 +614,159 @@ func (_Crosschain *CrosschainCallerSession) INTURNRELAYERVALIDITYPERIOD() (*big.
 	return _Crosschain.Contract.INTURNRELAYERVALIDITYPERIOD(&_Crosschain.CallOpts)
 }
 
-// OUTTURNRELAYERBACKOFFPERIOD is a free data retrieval call binding the contract method 0x34809881.
+// LIGHTCLIENT is a free data retrieval call binding the contract method 0xe613ae00.
 //
-// Solidity: function OUT_TURN_RELAYER_BACKOFF_PERIOD() view returns(uint256)
-func (_Crosschain *CrosschainCaller) OUTTURNRELAYERBACKOFFPERIOD(opts *bind.CallOpts) (*big.Int, error) {
+// Solidity: function LIGHT_CLIENT() view returns(address)
+func (_Crosschain *CrosschainCaller) LIGHTCLIENT(opts *bind.CallOpts) (common.Address, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "OUT_TURN_RELAYER_BACKOFF_PERIOD")
+	err := _Crosschain.contract.Call(opts, &out, "LIGHT_CLIENT")
+
 	if err != nil {
-		return *new(*big.Int), err
+		return *new(common.Address), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
 	return out0, err
+
 }
 
-// OUTTURNRELAYERBACKOFFPERIOD is a free data retrieval call binding the contract method 0x34809881.
+// LIGHTCLIENT is a free data retrieval call binding the contract method 0xe613ae00.
 //
-// Solidity: function OUT_TURN_RELAYER_BACKOFF_PERIOD() view returns(uint256)
-func (_Crosschain *CrosschainSession) OUTTURNRELAYERBACKOFFPERIOD() (*big.Int, error) {
-	return _Crosschain.Contract.OUTTURNRELAYERBACKOFFPERIOD(&_Crosschain.CallOpts)
+// Solidity: function LIGHT_CLIENT() view returns(address)
+func (_Crosschain *CrosschainSession) LIGHTCLIENT() (common.Address, error) {
+	return _Crosschain.Contract.LIGHTCLIENT(&_Crosschain.CallOpts)
 }
 
-// OUTTURNRELAYERBACKOFFPERIOD is a free data retrieval call binding the contract method 0x34809881.
+// LIGHTCLIENT is a free data retrieval call binding the contract method 0xe613ae00.
 //
-// Solidity: function OUT_TURN_RELAYER_BACKOFF_PERIOD() view returns(uint256)
-func (_Crosschain *CrosschainCallerSession) OUTTURNRELAYERBACKOFFPERIOD() (*big.Int, error) {
-	return _Crosschain.Contract.OUTTURNRELAYERBACKOFFPERIOD(&_Crosschain.CallOpts)
+// Solidity: function LIGHT_CLIENT() view returns(address)
+func (_Crosschain *CrosschainCallerSession) LIGHTCLIENT() (common.Address, error) {
+	return _Crosschain.Contract.LIGHTCLIENT(&_Crosschain.CallOpts)
+}
+
+// OBJECTCHANNELID is a free data retrieval call binding the contract method 0xeac78b33.
+//
+// Solidity: function OBJECT_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainCaller) OBJECTCHANNELID(opts *bind.CallOpts) (uint8, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "OBJECT_CHANNEL_ID")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// OBJECTCHANNELID is a free data retrieval call binding the contract method 0xeac78b33.
+//
+// Solidity: function OBJECT_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainSession) OBJECTCHANNELID() (uint8, error) {
+	return _Crosschain.Contract.OBJECTCHANNELID(&_Crosschain.CallOpts)
+}
+
+// OBJECTCHANNELID is a free data retrieval call binding the contract method 0xeac78b33.
+//
+// Solidity: function OBJECT_CHANNEL_ID() view returns(uint8)
+func (_Crosschain *CrosschainCallerSession) OBJECTCHANNELID() (uint8, error) {
+	return _Crosschain.Contract.OBJECTCHANNELID(&_Crosschain.CallOpts)
+}
+
+// OBJECTHUB is a free data retrieval call binding the contract method 0x7d2e3084.
+//
+// Solidity: function OBJECT_HUB() view returns(address)
+func (_Crosschain *CrosschainCaller) OBJECTHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "OBJECT_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// OBJECTHUB is a free data retrieval call binding the contract method 0x7d2e3084.
+//
+// Solidity: function OBJECT_HUB() view returns(address)
+func (_Crosschain *CrosschainSession) OBJECTHUB() (common.Address, error) {
+	return _Crosschain.Contract.OBJECTHUB(&_Crosschain.CallOpts)
+}
+
+// OBJECTHUB is a free data retrieval call binding the contract method 0x7d2e3084.
+//
+// Solidity: function OBJECT_HUB() view returns(address)
+func (_Crosschain *CrosschainCallerSession) OBJECTHUB() (common.Address, error) {
+	return _Crosschain.Contract.OBJECTHUB(&_Crosschain.CallOpts)
+}
+
+// PROXYADMIN is a free data retrieval call binding the contract method 0xed9bc82a.
+//
+// Solidity: function PROXY_ADMIN() view returns(address)
+func (_Crosschain *CrosschainCaller) PROXYADMIN(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "PROXY_ADMIN")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// PROXYADMIN is a free data retrieval call binding the contract method 0xed9bc82a.
+//
+// Solidity: function PROXY_ADMIN() view returns(address)
+func (_Crosschain *CrosschainSession) PROXYADMIN() (common.Address, error) {
+	return _Crosschain.Contract.PROXYADMIN(&_Crosschain.CallOpts)
+}
+
+// PROXYADMIN is a free data retrieval call binding the contract method 0xed9bc82a.
+//
+// Solidity: function PROXY_ADMIN() view returns(address)
+func (_Crosschain *CrosschainCallerSession) PROXYADMIN() (common.Address, error) {
+	return _Crosschain.Contract.PROXYADMIN(&_Crosschain.CallOpts)
+}
+
+// RELAYERHUB is a free data retrieval call binding the contract method 0xb9d86913.
+//
+// Solidity: function RELAYER_HUB() view returns(address)
+func (_Crosschain *CrosschainCaller) RELAYERHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "RELAYER_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// RELAYERHUB is a free data retrieval call binding the contract method 0xb9d86913.
+//
+// Solidity: function RELAYER_HUB() view returns(address)
+func (_Crosschain *CrosschainSession) RELAYERHUB() (common.Address, error) {
+	return _Crosschain.Contract.RELAYERHUB(&_Crosschain.CallOpts)
+}
+
+// RELAYERHUB is a free data retrieval call binding the contract method 0xb9d86913.
+//
+// Solidity: function RELAYER_HUB() view returns(address)
+func (_Crosschain *CrosschainCallerSession) RELAYERHUB() (common.Address, error) {
+	return _Crosschain.Contract.RELAYERHUB(&_Crosschain.CallOpts)
 }
 
 // REOPENPROPOSAL is a free data retrieval call binding the contract method 0x6de380bd.
@@ -505,6 +775,7 @@ func (_Crosschain *CrosschainCallerSession) OUTTURNRELAYERBACKOFFPERIOD() (*big.
 func (_Crosschain *CrosschainCaller) REOPENPROPOSAL(opts *bind.CallOpts) ([32]byte, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "REOPEN_PROPOSAL")
+
 	if err != nil {
 		return *new([32]byte), err
 	}
@@ -512,6 +783,7 @@ func (_Crosschain *CrosschainCaller) REOPENPROPOSAL(opts *bind.CallOpts) ([32]by
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
 
 	return out0, err
+
 }
 
 // REOPENPROPOSAL is a free data retrieval call binding the contract method 0x6de380bd.
@@ -534,6 +806,7 @@ func (_Crosschain *CrosschainCallerSession) REOPENPROPOSAL() ([32]byte, error) {
 func (_Crosschain *CrosschainCaller) SUSPENDPROPOSAL(opts *bind.CallOpts) ([32]byte, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "SUSPEND_PROPOSAL")
+
 	if err != nil {
 		return *new([32]byte), err
 	}
@@ -541,6 +814,7 @@ func (_Crosschain *CrosschainCaller) SUSPENDPROPOSAL(opts *bind.CallOpts) ([32]b
 	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
 
 	return out0, err
+
 }
 
 // SUSPENDPROPOSAL is a free data retrieval call binding the contract method 0x63e1394e.
@@ -563,6 +837,7 @@ func (_Crosschain *CrosschainCallerSession) SUSPENDPROPOSAL() ([32]byte, error) 
 func (_Crosschain *CrosschainCaller) SYNPACKAGE(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "SYN_PACKAGE")
+
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -570,6 +845,7 @@ func (_Crosschain *CrosschainCaller) SYNPACKAGE(opts *bind.CallOpts) (uint8, err
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
+
 }
 
 // SYNPACKAGE is a free data retrieval call binding the contract method 0x05e68258.
@@ -586,12 +862,44 @@ func (_Crosschain *CrosschainCallerSession) SYNPACKAGE() (uint8, error) {
 	return _Crosschain.Contract.SYNPACKAGE(&_Crosschain.CallOpts)
 }
 
-// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0x70fd5bad.
+// TOKENHUB is a free data retrieval call binding the contract method 0x6d3358a1.
 //
-// Solidity: function TRANSFER_IN_CHANNELID() view returns(uint8)
+// Solidity: function TOKEN_HUB() view returns(address)
+func (_Crosschain *CrosschainCaller) TOKENHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "TOKEN_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// TOKENHUB is a free data retrieval call binding the contract method 0x6d3358a1.
+//
+// Solidity: function TOKEN_HUB() view returns(address)
+func (_Crosschain *CrosschainSession) TOKENHUB() (common.Address, error) {
+	return _Crosschain.Contract.TOKENHUB(&_Crosschain.CallOpts)
+}
+
+// TOKENHUB is a free data retrieval call binding the contract method 0x6d3358a1.
+//
+// Solidity: function TOKEN_HUB() view returns(address)
+func (_Crosschain *CrosschainCallerSession) TOKENHUB() (common.Address, error) {
+	return _Crosschain.Contract.TOKENHUB(&_Crosschain.CallOpts)
+}
+
+// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0xcc12eabc.
+//
+// Solidity: function TRANSFER_IN_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainCaller) TRANSFERINCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "TRANSFER_IN_CHANNELID")
+	err := _Crosschain.contract.Call(opts, &out, "TRANSFER_IN_CHANNEL_ID")
+
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -599,28 +907,30 @@ func (_Crosschain *CrosschainCaller) TRANSFERINCHANNELID(opts *bind.CallOpts) (u
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
+
 }
 
-// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0x70fd5bad.
+// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0xcc12eabc.
 //
-// Solidity: function TRANSFER_IN_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_IN_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainSession) TRANSFERINCHANNELID() (uint8, error) {
 	return _Crosschain.Contract.TRANSFERINCHANNELID(&_Crosschain.CallOpts)
 }
 
-// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0x70fd5bad.
+// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0xcc12eabc.
 //
-// Solidity: function TRANSFER_IN_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_IN_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainCallerSession) TRANSFERINCHANNELID() (uint8, error) {
 	return _Crosschain.Contract.TRANSFERINCHANNELID(&_Crosschain.CallOpts)
 }
 
-// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0xfc3e5908.
+// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0x618d569c.
 //
-// Solidity: function TRANSFER_OUT_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_OUT_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainCaller) TRANSFEROUTCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "TRANSFER_OUT_CHANNELID")
+	err := _Crosschain.contract.Call(opts, &out, "TRANSFER_OUT_CHANNEL_ID")
+
 	if err != nil {
 		return *new(uint8), err
 	}
@@ -628,49 +938,52 @@ func (_Crosschain *CrosschainCaller) TRANSFEROUTCHANNELID(opts *bind.CallOpts) (
 	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
 
 	return out0, err
+
 }
 
-// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0xfc3e5908.
+// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0x618d569c.
 //
-// Solidity: function TRANSFER_OUT_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_OUT_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainSession) TRANSFEROUTCHANNELID() (uint8, error) {
 	return _Crosschain.Contract.TRANSFEROUTCHANNELID(&_Crosschain.CallOpts)
 }
 
-// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0xfc3e5908.
+// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0x618d569c.
 //
-// Solidity: function TRANSFER_OUT_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_OUT_CHANNEL_ID() view returns(uint8)
 func (_Crosschain *CrosschainCallerSession) TRANSFEROUTCHANNELID() (uint8, error) {
 	return _Crosschain.Contract.TRANSFEROUTCHANNELID(&_Crosschain.CallOpts)
 }
 
-// VALIDATORSETCHANNELID is a free data retrieval call binding the contract method 0x99770281.
+// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
 //
-// Solidity: function VALIDATORSET_CHANNELID() view returns(uint8)
-func (_Crosschain *CrosschainCaller) VALIDATORSETCHANNELID(opts *bind.CallOpts) (uint8, error) {
+// Solidity: function ackRelayFee() view returns(uint256)
+func (_Crosschain *CrosschainCaller) AckRelayFee(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "VALIDATORSET_CHANNELID")
+	err := _Crosschain.contract.Call(opts, &out, "ackRelayFee")
+
 	if err != nil {
-		return *new(uint8), err
+		return *new(*big.Int), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
+
 }
 
-// VALIDATORSETCHANNELID is a free data retrieval call binding the contract method 0x99770281.
+// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
 //
-// Solidity: function VALIDATORSET_CHANNELID() view returns(uint8)
-func (_Crosschain *CrosschainSession) VALIDATORSETCHANNELID() (uint8, error) {
-	return _Crosschain.Contract.VALIDATORSETCHANNELID(&_Crosschain.CallOpts)
+// Solidity: function ackRelayFee() view returns(uint256)
+func (_Crosschain *CrosschainSession) AckRelayFee() (*big.Int, error) {
+	return _Crosschain.Contract.AckRelayFee(&_Crosschain.CallOpts)
 }
 
-// VALIDATORSETCHANNELID is a free data retrieval call binding the contract method 0x99770281.
+// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
 //
-// Solidity: function VALIDATORSET_CHANNELID() view returns(uint8)
-func (_Crosschain *CrosschainCallerSession) VALIDATORSETCHANNELID() (uint8, error) {
-	return _Crosschain.Contract.VALIDATORSETCHANNELID(&_Crosschain.CallOpts)
+// Solidity: function ackRelayFee() view returns(uint256)
+func (_Crosschain *CrosschainCallerSession) AckRelayFee() (*big.Int, error) {
+	return _Crosschain.Contract.AckRelayFee(&_Crosschain.CallOpts)
 }
 
 // BatchSizeForOracle is a free data retrieval call binding the contract method 0x14b3023b.
@@ -679,6 +992,7 @@ func (_Crosschain *CrosschainCallerSession) VALIDATORSETCHANNELID() (uint8, erro
 func (_Crosschain *CrosschainCaller) BatchSizeForOracle(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "batchSizeForOracle")
+
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -686,6 +1000,7 @@ func (_Crosschain *CrosschainCaller) BatchSizeForOracle(opts *bind.CallOpts) (*b
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
+
 }
 
 // BatchSizeForOracle is a free data retrieval call binding the contract method 0x14b3023b.
@@ -708,6 +1023,7 @@ func (_Crosschain *CrosschainCallerSession) BatchSizeForOracle() (*big.Int, erro
 func (_Crosschain *CrosschainCaller) ChainId(opts *bind.CallOpts) (uint16, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "chainId")
+
 	if err != nil {
 		return *new(uint16), err
 	}
@@ -715,6 +1031,7 @@ func (_Crosschain *CrosschainCaller) ChainId(opts *bind.CallOpts) (uint16, error
 	out0 := *abi.ConvertType(out[0], new(uint16)).(*uint16)
 
 	return out0, err
+
 }
 
 // ChainId is a free data retrieval call binding the contract method 0x9a8a0592.
@@ -737,6 +1054,7 @@ func (_Crosschain *CrosschainCallerSession) ChainId() (uint16, error) {
 func (_Crosschain *CrosschainCaller) ChannelHandlerMap(opts *bind.CallOpts, arg0 uint8) (common.Address, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "channelHandlerMap", arg0)
+
 	if err != nil {
 		return *new(common.Address), err
 	}
@@ -744,6 +1062,7 @@ func (_Crosschain *CrosschainCaller) ChannelHandlerMap(opts *bind.CallOpts, arg0
 	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
 	return out0, err
+
 }
 
 // ChannelHandlerMap is a free data retrieval call binding the contract method 0xf77d0a34.
@@ -766,6 +1085,7 @@ func (_Crosschain *CrosschainCallerSession) ChannelHandlerMap(arg0 uint8) (commo
 func (_Crosschain *CrosschainCaller) ChannelReceiveSequenceMap(opts *bind.CallOpts, arg0 uint8) (uint64, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "channelReceiveSequenceMap", arg0)
+
 	if err != nil {
 		return *new(uint64), err
 	}
@@ -773,6 +1093,7 @@ func (_Crosschain *CrosschainCaller) ChannelReceiveSequenceMap(opts *bind.CallOp
 	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
 
 	return out0, err
+
 }
 
 // ChannelReceiveSequenceMap is a free data retrieval call binding the contract method 0xc27cdcfb.
@@ -795,6 +1116,7 @@ func (_Crosschain *CrosschainCallerSession) ChannelReceiveSequenceMap(arg0 uint8
 func (_Crosschain *CrosschainCaller) ChannelSendSequenceMap(opts *bind.CallOpts, arg0 uint8) (uint64, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "channelSendSequenceMap", arg0)
+
 	if err != nil {
 		return *new(uint64), err
 	}
@@ -802,6 +1124,7 @@ func (_Crosschain *CrosschainCaller) ChannelSendSequenceMap(opts *bind.CallOpts,
 	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
 
 	return out0, err
+
 }
 
 // ChannelSendSequenceMap is a free data retrieval call binding the contract method 0xe3b04805.
@@ -818,35 +1141,6 @@ func (_Crosschain *CrosschainCallerSession) ChannelSendSequenceMap(arg0 uint8) (
 	return _Crosschain.Contract.ChannelSendSequenceMap(&_Crosschain.CallOpts, arg0)
 }
 
-// ChannelSyncedHeaderMap is a free data retrieval call binding the contract method 0x3a648b15.
-//
-// Solidity: function channelSyncedHeaderMap(uint8 ) view returns(uint64)
-func (_Crosschain *CrosschainCaller) ChannelSyncedHeaderMap(opts *bind.CallOpts, arg0 uint8) (uint64, error) {
-	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "channelSyncedHeaderMap", arg0)
-	if err != nil {
-		return *new(uint64), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
-
-	return out0, err
-}
-
-// ChannelSyncedHeaderMap is a free data retrieval call binding the contract method 0x3a648b15.
-//
-// Solidity: function channelSyncedHeaderMap(uint8 ) view returns(uint64)
-func (_Crosschain *CrosschainSession) ChannelSyncedHeaderMap(arg0 uint8) (uint64, error) {
-	return _Crosschain.Contract.ChannelSyncedHeaderMap(&_Crosschain.CallOpts, arg0)
-}
-
-// ChannelSyncedHeaderMap is a free data retrieval call binding the contract method 0x3a648b15.
-//
-// Solidity: function channelSyncedHeaderMap(uint8 ) view returns(uint64)
-func (_Crosschain *CrosschainCallerSession) ChannelSyncedHeaderMap(arg0 uint8) (uint64, error) {
-	return _Crosschain.Contract.ChannelSyncedHeaderMap(&_Crosschain.CallOpts, arg0)
-}
-
 // EmergencyProposals is a free data retrieval call binding the contract method 0x6bacff2c.
 //
 // Solidity: function emergencyProposals(bytes32 ) view returns(uint16 quorum, uint128 expiredAt, bytes32 contentHash)
@@ -854,8 +1148,7 @@ func (_Crosschain *CrosschainCaller) EmergencyProposals(opts *bind.CallOpts, arg
 	Quorum      uint16
 	ExpiredAt   *big.Int
 	ContentHash [32]byte
-}, error,
-) {
+}, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "emergencyProposals", arg0)
 
@@ -873,6 +1166,7 @@ func (_Crosschain *CrosschainCaller) EmergencyProposals(opts *bind.CallOpts, arg
 	outstruct.ContentHash = *abi.ConvertType(out[2], new([32]byte)).(*[32]byte)
 
 	return *outstruct, err
+
 }
 
 // EmergencyProposals is a free data retrieval call binding the contract method 0x6bacff2c.
@@ -882,8 +1176,7 @@ func (_Crosschain *CrosschainSession) EmergencyProposals(arg0 [32]byte) (struct 
 	Quorum      uint16
 	ExpiredAt   *big.Int
 	ContentHash [32]byte
-}, error,
-) {
+}, error) {
 	return _Crosschain.Contract.EmergencyProposals(&_Crosschain.CallOpts, arg0)
 }
 
@@ -894,17 +1187,17 @@ func (_Crosschain *CrosschainCallerSession) EmergencyProposals(arg0 [32]byte) (s
 	Quorum      uint16
 	ExpiredAt   *big.Int
 	ContentHash [32]byte
-}, error,
-) {
+}, error) {
 	return _Crosschain.Contract.EmergencyProposals(&_Crosschain.CallOpts, arg0)
 }
 
-// EncodePayload is a free data retrieval call binding the contract method 0x3bdc47a6.
+// EncodePayload is a free data retrieval call binding the contract method 0x9c06ea47.
 //
-// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, bytes msgBytes) view returns(bytes)
-func (_Crosschain *CrosschainCaller) EncodePayload(opts *bind.CallOpts, packageType uint8, relayFee *big.Int, msgBytes []byte) ([]byte, error) {
+// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, uint256 ackRelayFee, bytes msgBytes) view returns(bytes)
+func (_Crosschain *CrosschainCaller) EncodePayload(opts *bind.CallOpts, packageType uint8, relayFee *big.Int, ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "encodePayload", packageType, relayFee, msgBytes)
+	err := _Crosschain.contract.Call(opts, &out, "encodePayload", packageType, relayFee, ackRelayFee, msgBytes)
+
 	if err != nil {
 		return *new([]byte), err
 	}
@@ -912,57 +1205,30 @@ func (_Crosschain *CrosschainCaller) EncodePayload(opts *bind.CallOpts, packageT
 	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
 
 	return out0, err
+
 }
 
-// EncodePayload is a free data retrieval call binding the contract method 0x3bdc47a6.
+// EncodePayload is a free data retrieval call binding the contract method 0x9c06ea47.
 //
-// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, bytes msgBytes) view returns(bytes)
-func (_Crosschain *CrosschainSession) EncodePayload(packageType uint8, relayFee *big.Int, msgBytes []byte) ([]byte, error) {
-	return _Crosschain.Contract.EncodePayload(&_Crosschain.CallOpts, packageType, relayFee, msgBytes)
+// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, uint256 ackRelayFee, bytes msgBytes) view returns(bytes)
+func (_Crosschain *CrosschainSession) EncodePayload(packageType uint8, relayFee *big.Int, ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
+	return _Crosschain.Contract.EncodePayload(&_Crosschain.CallOpts, packageType, relayFee, ackRelayFee, msgBytes)
 }
 
-// EncodePayload is a free data retrieval call binding the contract method 0x3bdc47a6.
+// EncodePayload is a free data retrieval call binding the contract method 0x9c06ea47.
 //
-// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, bytes msgBytes) view returns(bytes)
-func (_Crosschain *CrosschainCallerSession) EncodePayload(packageType uint8, relayFee *big.Int, msgBytes []byte) ([]byte, error) {
-	return _Crosschain.Contract.EncodePayload(&_Crosschain.CallOpts, packageType, relayFee, msgBytes)
+// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, uint256 ackRelayFee, bytes msgBytes) view returns(bytes)
+func (_Crosschain *CrosschainCallerSession) EncodePayload(packageType uint8, relayFee *big.Int, ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
+	return _Crosschain.Contract.EncodePayload(&_Crosschain.CallOpts, packageType, relayFee, ackRelayFee, msgBytes)
 }
 
-// GovHub is a free data retrieval call binding the contract method 0x3f9c44ec.
+// GnfdChainId is a free data retrieval call binding the contract method 0x96b1ec6e.
 //
-// Solidity: function govHub() view returns(address)
-func (_Crosschain *CrosschainCaller) GovHub(opts *bind.CallOpts) (common.Address, error) {
+// Solidity: function gnfdChainId() view returns(uint16)
+func (_Crosschain *CrosschainCaller) GnfdChainId(opts *bind.CallOpts) (uint16, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "govHub")
-	if err != nil {
-		return *new(common.Address), err
-	}
+	err := _Crosschain.contract.Call(opts, &out, "gnfdChainId")
 
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-
-	return out0, err
-}
-
-// GovHub is a free data retrieval call binding the contract method 0x3f9c44ec.
-//
-// Solidity: function govHub() view returns(address)
-func (_Crosschain *CrosschainSession) GovHub() (common.Address, error) {
-	return _Crosschain.Contract.GovHub(&_Crosschain.CallOpts)
-}
-
-// GovHub is a free data retrieval call binding the contract method 0x3f9c44ec.
-//
-// Solidity: function govHub() view returns(address)
-func (_Crosschain *CrosschainCallerSession) GovHub() (common.Address, error) {
-	return _Crosschain.Contract.GovHub(&_Crosschain.CallOpts)
-}
-
-// InsChainId is a free data retrieval call binding the contract method 0x70b6dca6.
-//
-// Solidity: function insChainId() view returns(uint16)
-func (_Crosschain *CrosschainCaller) InsChainId(opts *bind.CallOpts) (uint16, error) {
-	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "insChainId")
 	if err != nil {
 		return *new(uint16), err
 	}
@@ -970,49 +1236,21 @@ func (_Crosschain *CrosschainCaller) InsChainId(opts *bind.CallOpts) (uint16, er
 	out0 := *abi.ConvertType(out[0], new(uint16)).(*uint16)
 
 	return out0, err
+
 }
 
-// InsChainId is a free data retrieval call binding the contract method 0x70b6dca6.
+// GnfdChainId is a free data retrieval call binding the contract method 0x96b1ec6e.
 //
-// Solidity: function insChainId() view returns(uint16)
-func (_Crosschain *CrosschainSession) InsChainId() (uint16, error) {
-	return _Crosschain.Contract.InsChainId(&_Crosschain.CallOpts)
+// Solidity: function gnfdChainId() view returns(uint16)
+func (_Crosschain *CrosschainSession) GnfdChainId() (uint16, error) {
+	return _Crosschain.Contract.GnfdChainId(&_Crosschain.CallOpts)
 }
 
-// InsChainId is a free data retrieval call binding the contract method 0x70b6dca6.
+// GnfdChainId is a free data retrieval call binding the contract method 0x96b1ec6e.
 //
-// Solidity: function insChainId() view returns(uint16)
-func (_Crosschain *CrosschainCallerSession) InsChainId() (uint16, error) {
-	return _Crosschain.Contract.InsChainId(&_Crosschain.CallOpts)
-}
-
-// IsRelayRewardFromSystemReward is a free data retrieval call binding the contract method 0x422f9050.
-//
-// Solidity: function isRelayRewardFromSystemReward(uint8 ) view returns(bool)
-func (_Crosschain *CrosschainCaller) IsRelayRewardFromSystemReward(opts *bind.CallOpts, arg0 uint8) (bool, error) {
-	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "isRelayRewardFromSystemReward", arg0)
-	if err != nil {
-		return *new(bool), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-
-	return out0, err
-}
-
-// IsRelayRewardFromSystemReward is a free data retrieval call binding the contract method 0x422f9050.
-//
-// Solidity: function isRelayRewardFromSystemReward(uint8 ) view returns(bool)
-func (_Crosschain *CrosschainSession) IsRelayRewardFromSystemReward(arg0 uint8) (bool, error) {
-	return _Crosschain.Contract.IsRelayRewardFromSystemReward(&_Crosschain.CallOpts, arg0)
-}
-
-// IsRelayRewardFromSystemReward is a free data retrieval call binding the contract method 0x422f9050.
-//
-// Solidity: function isRelayRewardFromSystemReward(uint8 ) view returns(bool)
-func (_Crosschain *CrosschainCallerSession) IsRelayRewardFromSystemReward(arg0 uint8) (bool, error) {
-	return _Crosschain.Contract.IsRelayRewardFromSystemReward(&_Crosschain.CallOpts, arg0)
+// Solidity: function gnfdChainId() view returns(uint16)
+func (_Crosschain *CrosschainCallerSession) GnfdChainId() (uint16, error) {
+	return _Crosschain.Contract.GnfdChainId(&_Crosschain.CallOpts)
 }
 
 // IsSuspended is a free data retrieval call binding the contract method 0x1d130935.
@@ -1021,6 +1259,7 @@ func (_Crosschain *CrosschainCallerSession) IsRelayRewardFromSystemReward(arg0 u
 func (_Crosschain *CrosschainCaller) IsSuspended(opts *bind.CallOpts) (bool, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "isSuspended")
+
 	if err != nil {
 		return *new(bool), err
 	}
@@ -1028,6 +1267,7 @@ func (_Crosschain *CrosschainCaller) IsSuspended(opts *bind.CallOpts) (bool, err
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 
 	return out0, err
+
 }
 
 // IsSuspended is a free data retrieval call binding the contract method 0x1d130935.
@@ -1050,6 +1290,7 @@ func (_Crosschain *CrosschainCallerSession) IsSuspended() (bool, error) {
 func (_Crosschain *CrosschainCaller) OracleSequence(opts *bind.CallOpts) (int64, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "oracleSequence")
+
 	if err != nil {
 		return *new(int64), err
 	}
@@ -1057,6 +1298,7 @@ func (_Crosschain *CrosschainCaller) OracleSequence(opts *bind.CallOpts) (int64,
 	out0 := *abi.ConvertType(out[0], new(int64)).(*int64)
 
 	return out0, err
+
 }
 
 // OracleSequence is a free data retrieval call binding the contract method 0x2ff32aea.
@@ -1073,41 +1315,13 @@ func (_Crosschain *CrosschainCallerSession) OracleSequence() (int64, error) {
 	return _Crosschain.Contract.OracleSequence(&_Crosschain.CallOpts)
 }
 
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Crosschain *CrosschainCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "owner")
-	if err != nil {
-		return *new(common.Address), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-
-	return out0, err
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Crosschain *CrosschainSession) Owner() (common.Address, error) {
-	return _Crosschain.Contract.Owner(&_Crosschain.CallOpts)
-}
-
-// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
-//
-// Solidity: function owner() view returns(address)
-func (_Crosschain *CrosschainCallerSession) Owner() (common.Address, error) {
-	return _Crosschain.Contract.Owner(&_Crosschain.CallOpts)
-}
-
 // PreviousTxHeight is a free data retrieval call binding the contract method 0x308325f4.
 //
 // Solidity: function previousTxHeight() view returns(uint256)
 func (_Crosschain *CrosschainCaller) PreviousTxHeight(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "previousTxHeight")
+
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -1115,6 +1329,7 @@ func (_Crosschain *CrosschainCaller) PreviousTxHeight(opts *bind.CallOpts) (*big
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
+
 }
 
 // PreviousTxHeight is a free data retrieval call binding the contract method 0x308325f4.
@@ -1137,6 +1352,7 @@ func (_Crosschain *CrosschainCallerSession) PreviousTxHeight() (*big.Int, error)
 func (_Crosschain *CrosschainCaller) QuorumMap(opts *bind.CallOpts, arg0 [32]byte) (uint16, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "quorumMap", arg0)
+
 	if err != nil {
 		return *new(uint16), err
 	}
@@ -1144,6 +1360,7 @@ func (_Crosschain *CrosschainCaller) QuorumMap(opts *bind.CallOpts, arg0 [32]byt
 	out0 := *abi.ConvertType(out[0], new(uint16)).(*uint16)
 
 	return out0, err
+
 }
 
 // QuorumMap is a free data retrieval call binding the contract method 0x299b533d.
@@ -1166,6 +1383,7 @@ func (_Crosschain *CrosschainCallerSession) QuorumMap(arg0 [32]byte) (uint16, er
 func (_Crosschain *CrosschainCaller) RegisteredContractChannelMap(opts *bind.CallOpts, arg0 common.Address, arg1 uint8) (bool, error) {
 	var out []interface{}
 	err := _Crosschain.contract.Call(opts, &out, "registeredContractChannelMap", arg0, arg1)
+
 	if err != nil {
 		return *new(bool), err
 	}
@@ -1173,6 +1391,7 @@ func (_Crosschain *CrosschainCaller) RegisteredContractChannelMap(opts *bind.Cal
 	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 
 	return out0, err
+
 }
 
 // RegisteredContractChannelMap is a free data retrieval call binding the contract method 0xd31f968d.
@@ -1189,12 +1408,13 @@ func (_Crosschain *CrosschainCallerSession) RegisteredContractChannelMap(arg0 co
 	return _Crosschain.Contract.RegisteredContractChannelMap(&_Crosschain.CallOpts, arg0, arg1)
 }
 
-// TxCounter is a free data retrieval call binding the contract method 0x74f079b8.
+// RelayFee is a free data retrieval call binding the contract method 0x71d30863.
 //
-// Solidity: function txCounter() view returns(uint256)
-func (_Crosschain *CrosschainCaller) TxCounter(opts *bind.CallOpts) (*big.Int, error) {
+// Solidity: function relayFee() view returns(uint256)
+func (_Crosschain *CrosschainCaller) RelayFee(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "txCounter")
+	err := _Crosschain.contract.Call(opts, &out, "relayFee")
+
 	if err != nil {
 		return *new(*big.Int), err
 	}
@@ -1202,6 +1422,38 @@ func (_Crosschain *CrosschainCaller) TxCounter(opts *bind.CallOpts) (*big.Int, e
 	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
+
+}
+
+// RelayFee is a free data retrieval call binding the contract method 0x71d30863.
+//
+// Solidity: function relayFee() view returns(uint256)
+func (_Crosschain *CrosschainSession) RelayFee() (*big.Int, error) {
+	return _Crosschain.Contract.RelayFee(&_Crosschain.CallOpts)
+}
+
+// RelayFee is a free data retrieval call binding the contract method 0x71d30863.
+//
+// Solidity: function relayFee() view returns(uint256)
+func (_Crosschain *CrosschainCallerSession) RelayFee() (*big.Int, error) {
+	return _Crosschain.Contract.RelayFee(&_Crosschain.CallOpts)
+}
+
+// TxCounter is a free data retrieval call binding the contract method 0x74f079b8.
+//
+// Solidity: function txCounter() view returns(uint256)
+func (_Crosschain *CrosschainCaller) TxCounter(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "txCounter")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TxCounter is a free data retrieval call binding the contract method 0x74f079b8.
@@ -1260,46 +1512,25 @@ func (_Crosschain *CrosschainTransactorSession) HandlePackage(_payload []byte, _
 	return _Crosschain.Contract.HandlePackage(&_Crosschain.TransactOpts, _payload, _blsSignature, _validatorsBitSet)
 }
 
-// Initialize is a paid mutator transaction binding the contract method 0xe0dbcde5.
+// Initialize is a paid mutator transaction binding the contract method 0x13750946.
 //
-// Solidity: function initialize(uint16 _insChainId, address _govHub) returns()
-func (_Crosschain *CrosschainTransactor) Initialize(opts *bind.TransactOpts, _insChainId uint16, _govHub common.Address) (*types.Transaction, error) {
-	return _Crosschain.contract.Transact(opts, "initialize", _insChainId, _govHub)
+// Solidity: function initialize(uint16 _gnfdChainId) returns()
+func (_Crosschain *CrosschainTransactor) Initialize(opts *bind.TransactOpts, _gnfdChainId uint16) (*types.Transaction, error) {
+	return _Crosschain.contract.Transact(opts, "initialize", _gnfdChainId)
 }
 
-// Initialize is a paid mutator transaction binding the contract method 0xe0dbcde5.
+// Initialize is a paid mutator transaction binding the contract method 0x13750946.
 //
-// Solidity: function initialize(uint16 _insChainId, address _govHub) returns()
-func (_Crosschain *CrosschainSession) Initialize(_insChainId uint16, _govHub common.Address) (*types.Transaction, error) {
-	return _Crosschain.Contract.Initialize(&_Crosschain.TransactOpts, _insChainId, _govHub)
+// Solidity: function initialize(uint16 _gnfdChainId) returns()
+func (_Crosschain *CrosschainSession) Initialize(_gnfdChainId uint16) (*types.Transaction, error) {
+	return _Crosschain.Contract.Initialize(&_Crosschain.TransactOpts, _gnfdChainId)
 }
 
-// Initialize is a paid mutator transaction binding the contract method 0xe0dbcde5.
+// Initialize is a paid mutator transaction binding the contract method 0x13750946.
 //
-// Solidity: function initialize(uint16 _insChainId, address _govHub) returns()
-func (_Crosschain *CrosschainTransactorSession) Initialize(_insChainId uint16, _govHub common.Address) (*types.Transaction, error) {
-	return _Crosschain.Contract.Initialize(&_Crosschain.TransactOpts, _insChainId, _govHub)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_Crosschain *CrosschainTransactor) RenounceOwnership(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Crosschain.contract.Transact(opts, "renounceOwnership")
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_Crosschain *CrosschainSession) RenounceOwnership() (*types.Transaction, error) {
-	return _Crosschain.Contract.RenounceOwnership(&_Crosschain.TransactOpts)
-}
-
-// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
-//
-// Solidity: function renounceOwnership() returns()
-func (_Crosschain *CrosschainTransactorSession) RenounceOwnership() (*types.Transaction, error) {
-	return _Crosschain.Contract.RenounceOwnership(&_Crosschain.TransactOpts)
+// Solidity: function initialize(uint16 _gnfdChainId) returns()
+func (_Crosschain *CrosschainTransactorSession) Initialize(_gnfdChainId uint16) (*types.Transaction, error) {
+	return _Crosschain.Contract.Initialize(&_Crosschain.TransactOpts, _gnfdChainId)
 }
 
 // Reopen is a paid mutator transaction binding the contract method 0xccc108d7.
@@ -1323,25 +1554,25 @@ func (_Crosschain *CrosschainTransactorSession) Reopen() (*types.Transaction, er
 	return _Crosschain.Contract.Reopen(&_Crosschain.TransactOpts)
 }
 
-// SendSynPackage is a paid mutator transaction binding the contract method 0xf7a251d7.
+// SendSynPackage is a paid mutator transaction binding the contract method 0x8f884dda.
 //
-// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee) returns()
-func (_Crosschain *CrosschainTransactor) SendSynPackage(opts *bind.TransactOpts, channelId uint8, msgBytes []byte, relayFee *big.Int) (*types.Transaction, error) {
-	return _Crosschain.contract.Transact(opts, "sendSynPackage", channelId, msgBytes, relayFee)
+// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee, uint256 ackRelayFee) returns()
+func (_Crosschain *CrosschainTransactor) SendSynPackage(opts *bind.TransactOpts, channelId uint8, msgBytes []byte, relayFee *big.Int, ackRelayFee *big.Int) (*types.Transaction, error) {
+	return _Crosschain.contract.Transact(opts, "sendSynPackage", channelId, msgBytes, relayFee, ackRelayFee)
 }
 
-// SendSynPackage is a paid mutator transaction binding the contract method 0xf7a251d7.
+// SendSynPackage is a paid mutator transaction binding the contract method 0x8f884dda.
 //
-// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee) returns()
-func (_Crosschain *CrosschainSession) SendSynPackage(channelId uint8, msgBytes []byte, relayFee *big.Int) (*types.Transaction, error) {
-	return _Crosschain.Contract.SendSynPackage(&_Crosschain.TransactOpts, channelId, msgBytes, relayFee)
+// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee, uint256 ackRelayFee) returns()
+func (_Crosschain *CrosschainSession) SendSynPackage(channelId uint8, msgBytes []byte, relayFee *big.Int, ackRelayFee *big.Int) (*types.Transaction, error) {
+	return _Crosschain.Contract.SendSynPackage(&_Crosschain.TransactOpts, channelId, msgBytes, relayFee, ackRelayFee)
 }
 
-// SendSynPackage is a paid mutator transaction binding the contract method 0xf7a251d7.
+// SendSynPackage is a paid mutator transaction binding the contract method 0x8f884dda.
 //
-// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee) returns()
-func (_Crosschain *CrosschainTransactorSession) SendSynPackage(channelId uint8, msgBytes []byte, relayFee *big.Int) (*types.Transaction, error) {
-	return _Crosschain.Contract.SendSynPackage(&_Crosschain.TransactOpts, channelId, msgBytes, relayFee)
+// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee, uint256 ackRelayFee) returns()
+func (_Crosschain *CrosschainTransactorSession) SendSynPackage(channelId uint8, msgBytes []byte, relayFee *big.Int, ackRelayFee *big.Int) (*types.Transaction, error) {
+	return _Crosschain.Contract.SendSynPackage(&_Crosschain.TransactOpts, channelId, msgBytes, relayFee, ackRelayFee)
 }
 
 // Suspend is a paid mutator transaction binding the contract method 0xe6400bbe.
@@ -1363,27 +1594,6 @@ func (_Crosschain *CrosschainSession) Suspend() (*types.Transaction, error) {
 // Solidity: function suspend() returns()
 func (_Crosschain *CrosschainTransactorSession) Suspend() (*types.Transaction, error) {
 	return _Crosschain.Contract.Suspend(&_Crosschain.TransactOpts)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Crosschain *CrosschainTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
-	return _Crosschain.contract.Transact(opts, "transferOwnership", newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Crosschain *CrosschainSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Crosschain.Contract.TransferOwnership(&_Crosschain.TransactOpts, newOwner)
-}
-
-// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
-//
-// Solidity: function transferOwnership(address newOwner) returns()
-func (_Crosschain *CrosschainTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
-	return _Crosschain.Contract.TransferOwnership(&_Crosschain.TransactOpts, newOwner)
 }
 
 // CrosschainAddChannelIterator is returned from FilterAddChannel and is used to iterate over the raw logs and unpacked data for AddChannel events raised by the Crosschain contract.
@@ -1464,6 +1674,7 @@ type CrosschainAddChannel struct {
 //
 // Solidity: event AddChannel(uint8 indexed channelId, address indexed contractAddr)
 func (_Crosschain *CrosschainFilterer) FilterAddChannel(opts *bind.FilterOpts, channelId []uint8, contractAddr []common.Address) (*CrosschainAddChannelIterator, error) {
+
 	var channelIdRule []interface{}
 	for _, channelIdItem := range channelId {
 		channelIdRule = append(channelIdRule, channelIdItem)
@@ -1484,6 +1695,7 @@ func (_Crosschain *CrosschainFilterer) FilterAddChannel(opts *bind.FilterOpts, c
 //
 // Solidity: event AddChannel(uint8 indexed channelId, address indexed contractAddr)
 func (_Crosschain *CrosschainFilterer) WatchAddChannel(opts *bind.WatchOpts, sink chan<- *CrosschainAddChannel, channelId []uint8, contractAddr []common.Address) (event.Subscription, error) {
+
 	var channelIdRule []interface{}
 	for _, channelIdItem := range channelId {
 		channelIdRule = append(channelIdRule, channelIdItem)
@@ -1619,6 +1831,7 @@ type CrosschainCrossChainPackage struct {
 //
 // Solidity: event CrossChainPackage(uint32 srcChainId, uint32 dstChainId, uint64 indexed oracleSequence, uint64 indexed packageSequence, uint8 indexed channelId, bytes payload)
 func (_Crosschain *CrosschainFilterer) FilterCrossChainPackage(opts *bind.FilterOpts, oracleSequence []uint64, packageSequence []uint64, channelId []uint8) (*CrosschainCrossChainPackageIterator, error) {
+
 	var oracleSequenceRule []interface{}
 	for _, oracleSequenceItem := range oracleSequence {
 		oracleSequenceRule = append(oracleSequenceRule, oracleSequenceItem)
@@ -1643,6 +1856,7 @@ func (_Crosschain *CrosschainFilterer) FilterCrossChainPackage(opts *bind.Filter
 //
 // Solidity: event CrossChainPackage(uint32 srcChainId, uint32 dstChainId, uint64 indexed oracleSequence, uint64 indexed packageSequence, uint8 indexed channelId, bytes payload)
 func (_Crosschain *CrosschainFilterer) WatchCrossChainPackage(opts *bind.WatchOpts, sink chan<- *CrosschainCrossChainPackage, oracleSequence []uint64, packageSequence []uint64, channelId []uint8) (event.Subscription, error) {
+
 	var oracleSequenceRule []interface{}
 	for _, oracleSequenceItem := range oracleSequence {
 		oracleSequenceRule = append(oracleSequenceRule, oracleSequenceItem)
@@ -1778,6 +1992,7 @@ type CrosschainEnableOrDisableChannel struct {
 //
 // Solidity: event EnableOrDisableChannel(uint8 indexed channelId, bool isEnable)
 func (_Crosschain *CrosschainFilterer) FilterEnableOrDisableChannel(opts *bind.FilterOpts, channelId []uint8) (*CrosschainEnableOrDisableChannelIterator, error) {
+
 	var channelIdRule []interface{}
 	for _, channelIdItem := range channelId {
 		channelIdRule = append(channelIdRule, channelIdItem)
@@ -1794,6 +2009,7 @@ func (_Crosschain *CrosschainFilterer) FilterEnableOrDisableChannel(opts *bind.F
 //
 // Solidity: event EnableOrDisableChannel(uint8 indexed channelId, bool isEnable)
 func (_Crosschain *CrosschainFilterer) WatchEnableOrDisableChannel(opts *bind.WatchOpts, sink chan<- *CrosschainEnableOrDisableChannel, channelId []uint8) (event.Subscription, error) {
+
 	var channelIdRule []interface{}
 	for _, channelIdItem := range channelId {
 		channelIdRule = append(channelIdRule, channelIdItem)
@@ -1920,6 +2136,7 @@ type CrosschainInitialized struct {
 //
 // Solidity: event Initialized(uint8 version)
 func (_Crosschain *CrosschainFilterer) FilterInitialized(opts *bind.FilterOpts) (*CrosschainInitializedIterator, error) {
+
 	logs, sub, err := _Crosschain.contract.FilterLogs(opts, "Initialized")
 	if err != nil {
 		return nil, err
@@ -1931,6 +2148,7 @@ func (_Crosschain *CrosschainFilterer) FilterInitialized(opts *bind.FilterOpts) 
 //
 // Solidity: event Initialized(uint8 version)
 func (_Crosschain *CrosschainFilterer) WatchInitialized(opts *bind.WatchOpts, sink chan<- *CrosschainInitialized) (event.Subscription, error) {
+
 	logs, sub, err := _Crosschain.contract.WatchLogs(opts, "Initialized")
 	if err != nil {
 		return nil, err
@@ -1969,157 +2187,6 @@ func (_Crosschain *CrosschainFilterer) WatchInitialized(opts *bind.WatchOpts, si
 func (_Crosschain *CrosschainFilterer) ParseInitialized(log types.Log) (*CrosschainInitialized, error) {
 	event := new(CrosschainInitialized)
 	if err := _Crosschain.contract.UnpackLog(event, "Initialized", log); err != nil {
-		return nil, err
-	}
-	event.Raw = log
-	return event, nil
-}
-
-// CrosschainOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the Crosschain contract.
-type CrosschainOwnershipTransferredIterator struct {
-	Event *CrosschainOwnershipTransferred // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *CrosschainOwnershipTransferredIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(CrosschainOwnershipTransferred)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(CrosschainOwnershipTransferred)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *CrosschainOwnershipTransferredIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *CrosschainOwnershipTransferredIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// CrosschainOwnershipTransferred represents a OwnershipTransferred event raised by the Crosschain contract.
-type CrosschainOwnershipTransferred struct {
-	PreviousOwner common.Address
-	NewOwner      common.Address
-	Raw           types.Log // Blockchain specific contextual infos
-}
-
-// FilterOwnershipTransferred is a free log retrieval operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
-//
-// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
-func (_Crosschain *CrosschainFilterer) FilterOwnershipTransferred(opts *bind.FilterOpts, previousOwner []common.Address, newOwner []common.Address) (*CrosschainOwnershipTransferredIterator, error) {
-	var previousOwnerRule []interface{}
-	for _, previousOwnerItem := range previousOwner {
-		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
-	}
-	var newOwnerRule []interface{}
-	for _, newOwnerItem := range newOwner {
-		newOwnerRule = append(newOwnerRule, newOwnerItem)
-	}
-
-	logs, sub, err := _Crosschain.contract.FilterLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
-	if err != nil {
-		return nil, err
-	}
-	return &CrosschainOwnershipTransferredIterator{contract: _Crosschain.contract, event: "OwnershipTransferred", logs: logs, sub: sub}, nil
-}
-
-// WatchOwnershipTransferred is a free log subscription operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
-//
-// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
-func (_Crosschain *CrosschainFilterer) WatchOwnershipTransferred(opts *bind.WatchOpts, sink chan<- *CrosschainOwnershipTransferred, previousOwner []common.Address, newOwner []common.Address) (event.Subscription, error) {
-	var previousOwnerRule []interface{}
-	for _, previousOwnerItem := range previousOwner {
-		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
-	}
-	var newOwnerRule []interface{}
-	for _, newOwnerItem := range newOwner {
-		newOwnerRule = append(newOwnerRule, newOwnerItem)
-	}
-
-	logs, sub, err := _Crosschain.contract.WatchLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(CrosschainOwnershipTransferred)
-				if err := _Crosschain.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseOwnershipTransferred is a log parse operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
-//
-// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
-func (_Crosschain *CrosschainFilterer) ParseOwnershipTransferred(log types.Log) (*CrosschainOwnershipTransferred, error) {
-	event := new(CrosschainOwnershipTransferred)
-	if err := _Crosschain.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -2204,6 +2271,7 @@ type CrosschainParamChange struct {
 //
 // Solidity: event ParamChange(string key, bytes value)
 func (_Crosschain *CrosschainFilterer) FilterParamChange(opts *bind.FilterOpts) (*CrosschainParamChangeIterator, error) {
+
 	logs, sub, err := _Crosschain.contract.FilterLogs(opts, "ParamChange")
 	if err != nil {
 		return nil, err
@@ -2215,6 +2283,7 @@ func (_Crosschain *CrosschainFilterer) FilterParamChange(opts *bind.FilterOpts) 
 //
 // Solidity: event ParamChange(string key, bytes value)
 func (_Crosschain *CrosschainFilterer) WatchParamChange(opts *bind.WatchOpts, sink chan<- *CrosschainParamChange) (event.Subscription, error) {
+
 	logs, sub, err := _Crosschain.contract.WatchLogs(opts, "ParamChange")
 	if err != nil {
 		return nil, err
@@ -2340,6 +2409,7 @@ type CrosschainProposalSubmitted struct {
 //
 // Solidity: event ProposalSubmitted(bytes32 indexed proposalTypeHash, address indexed proposer, uint128 quorum, uint128 expiredAt, bytes32 contentHash)
 func (_Crosschain *CrosschainFilterer) FilterProposalSubmitted(opts *bind.FilterOpts, proposalTypeHash [][32]byte, proposer []common.Address) (*CrosschainProposalSubmittedIterator, error) {
+
 	var proposalTypeHashRule []interface{}
 	for _, proposalTypeHashItem := range proposalTypeHash {
 		proposalTypeHashRule = append(proposalTypeHashRule, proposalTypeHashItem)
@@ -2360,6 +2430,7 @@ func (_Crosschain *CrosschainFilterer) FilterProposalSubmitted(opts *bind.Filter
 //
 // Solidity: event ProposalSubmitted(bytes32 indexed proposalTypeHash, address indexed proposer, uint128 quorum, uint128 expiredAt, bytes32 contentHash)
 func (_Crosschain *CrosschainFilterer) WatchProposalSubmitted(opts *bind.WatchOpts, sink chan<- *CrosschainProposalSubmitted, proposalTypeHash [][32]byte, proposer []common.Address) (event.Subscription, error) {
+
 	var proposalTypeHashRule []interface{}
 	for _, proposalTypeHashItem := range proposalTypeHash {
 		proposalTypeHashRule = append(proposalTypeHashRule, proposalTypeHashItem)
@@ -2492,6 +2563,7 @@ type CrosschainReceivedPackage struct {
 //
 // Solidity: event ReceivedPackage(uint8 packageType, uint64 indexed packageSequence, uint8 indexed channelId)
 func (_Crosschain *CrosschainFilterer) FilterReceivedPackage(opts *bind.FilterOpts, packageSequence []uint64, channelId []uint8) (*CrosschainReceivedPackageIterator, error) {
+
 	var packageSequenceRule []interface{}
 	for _, packageSequenceItem := range packageSequence {
 		packageSequenceRule = append(packageSequenceRule, packageSequenceItem)
@@ -2512,6 +2584,7 @@ func (_Crosschain *CrosschainFilterer) FilterReceivedPackage(opts *bind.FilterOp
 //
 // Solidity: event ReceivedPackage(uint8 packageType, uint64 indexed packageSequence, uint8 indexed channelId)
 func (_Crosschain *CrosschainFilterer) WatchReceivedPackage(opts *bind.WatchOpts, sink chan<- *CrosschainReceivedPackage, packageSequence []uint64, channelId []uint8) (event.Subscription, error) {
+
 	var packageSequenceRule []interface{}
 	for _, packageSequenceItem := range packageSequence {
 		packageSequenceRule = append(packageSequenceRule, packageSequenceItem)
@@ -2642,6 +2715,7 @@ type CrosschainReopened struct {
 //
 // Solidity: event Reopened(address indexed executor)
 func (_Crosschain *CrosschainFilterer) FilterReopened(opts *bind.FilterOpts, executor []common.Address) (*CrosschainReopenedIterator, error) {
+
 	var executorRule []interface{}
 	for _, executorItem := range executor {
 		executorRule = append(executorRule, executorItem)
@@ -2658,6 +2732,7 @@ func (_Crosschain *CrosschainFilterer) FilterReopened(opts *bind.FilterOpts, exe
 //
 // Solidity: event Reopened(address indexed executor)
 func (_Crosschain *CrosschainFilterer) WatchReopened(opts *bind.WatchOpts, sink chan<- *CrosschainReopened, executor []common.Address) (event.Subscription, error) {
+
 	var executorRule []interface{}
 	for _, executorItem := range executor {
 		executorRule = append(executorRule, executorItem)
@@ -2784,6 +2859,7 @@ type CrosschainSuspended struct {
 //
 // Solidity: event Suspended(address indexed executor)
 func (_Crosschain *CrosschainFilterer) FilterSuspended(opts *bind.FilterOpts, executor []common.Address) (*CrosschainSuspendedIterator, error) {
+
 	var executorRule []interface{}
 	for _, executorItem := range executor {
 		executorRule = append(executorRule, executorItem)
@@ -2800,6 +2876,7 @@ func (_Crosschain *CrosschainFilterer) FilterSuspended(opts *bind.FilterOpts, ex
 //
 // Solidity: event Suspended(address indexed executor)
 func (_Crosschain *CrosschainFilterer) WatchSuspended(opts *bind.WatchOpts, sink chan<- *CrosschainSuspended, executor []common.Address) (event.Subscription, error) {
+
 	var executorRule []interface{}
 	for _, executorItem := range executor {
 		executorRule = append(executorRule, executorItem)
@@ -2927,6 +3004,7 @@ type CrosschainUnexpectedFailureAssertionInPackageHandler struct {
 //
 // Solidity: event UnexpectedFailureAssertionInPackageHandler(address indexed contractAddr, bytes lowLevelData)
 func (_Crosschain *CrosschainFilterer) FilterUnexpectedFailureAssertionInPackageHandler(opts *bind.FilterOpts, contractAddr []common.Address) (*CrosschainUnexpectedFailureAssertionInPackageHandlerIterator, error) {
+
 	var contractAddrRule []interface{}
 	for _, contractAddrItem := range contractAddr {
 		contractAddrRule = append(contractAddrRule, contractAddrItem)
@@ -2943,6 +3021,7 @@ func (_Crosschain *CrosschainFilterer) FilterUnexpectedFailureAssertionInPackage
 //
 // Solidity: event UnexpectedFailureAssertionInPackageHandler(address indexed contractAddr, bytes lowLevelData)
 func (_Crosschain *CrosschainFilterer) WatchUnexpectedFailureAssertionInPackageHandler(opts *bind.WatchOpts, sink chan<- *CrosschainUnexpectedFailureAssertionInPackageHandler, contractAddr []common.Address) (event.Subscription, error) {
+
 	var contractAddrRule []interface{}
 	for _, contractAddrItem := range contractAddr {
 		contractAddrRule = append(contractAddrRule, contractAddrItem)
@@ -3070,6 +3149,7 @@ type CrosschainUnexpectedRevertInPackageHandler struct {
 //
 // Solidity: event UnexpectedRevertInPackageHandler(address indexed contractAddr, string reason)
 func (_Crosschain *CrosschainFilterer) FilterUnexpectedRevertInPackageHandler(opts *bind.FilterOpts, contractAddr []common.Address) (*CrosschainUnexpectedRevertInPackageHandlerIterator, error) {
+
 	var contractAddrRule []interface{}
 	for _, contractAddrItem := range contractAddr {
 		contractAddrRule = append(contractAddrRule, contractAddrItem)
@@ -3086,6 +3166,7 @@ func (_Crosschain *CrosschainFilterer) FilterUnexpectedRevertInPackageHandler(op
 //
 // Solidity: event UnexpectedRevertInPackageHandler(address indexed contractAddr, string reason)
 func (_Crosschain *CrosschainFilterer) WatchUnexpectedRevertInPackageHandler(opts *bind.WatchOpts, sink chan<- *CrosschainUnexpectedRevertInPackageHandler, contractAddr []common.Address) (event.Subscription, error) {
+
 	var contractAddrRule []interface{}
 	for _, contractAddrItem := range contractAddr {
 		contractAddrRule = append(contractAddrRule, contractAddrItem)
@@ -3214,6 +3295,7 @@ type CrosschainUnsupportedPackage struct {
 //
 // Solidity: event UnsupportedPackage(uint64 indexed packageSequence, uint8 indexed channelId, bytes payload)
 func (_Crosschain *CrosschainFilterer) FilterUnsupportedPackage(opts *bind.FilterOpts, packageSequence []uint64, channelId []uint8) (*CrosschainUnsupportedPackageIterator, error) {
+
 	var packageSequenceRule []interface{}
 	for _, packageSequenceItem := range packageSequence {
 		packageSequenceRule = append(packageSequenceRule, packageSequenceItem)
@@ -3234,6 +3316,7 @@ func (_Crosschain *CrosschainFilterer) FilterUnsupportedPackage(opts *bind.Filte
 //
 // Solidity: event UnsupportedPackage(uint64 indexed packageSequence, uint8 indexed channelId, bytes payload)
 func (_Crosschain *CrosschainFilterer) WatchUnsupportedPackage(opts *bind.WatchOpts, sink chan<- *CrosschainUnsupportedPackage, packageSequence []uint64, channelId []uint8) (event.Subscription, error) {
+
 	var packageSequenceRule []interface{}
 	for _, packageSequenceItem := range packageSequence {
 		packageSequenceRule = append(packageSequenceRule, packageSequenceItem)
