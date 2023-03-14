@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sync"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -28,7 +29,6 @@ import (
 )
 
 type GreenfieldVoteProcessor struct {
-	votePoolExecutor   *VotePoolExecutor
 	daoManager         *dao.DaoManager
 	config             *config.Config
 	signer             *VoteSigner
@@ -37,14 +37,13 @@ type GreenfieldVoteProcessor struct {
 }
 
 func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
-	greenfieldExecutor *executor.GreenfieldExecutor, votePoolExecutor *VotePoolExecutor) *GreenfieldVoteProcessor {
+	greenfieldExecutor *executor.GreenfieldExecutor) *GreenfieldVoteProcessor {
 	return &GreenfieldVoteProcessor{
 		config:             cfg,
 		daoManager:         dao,
 		signer:             signer,
 		greenfieldExecutor: greenfieldExecutor,
-		votePoolExecutor:   votePoolExecutor,
-		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
 	}
 }
 
@@ -53,13 +52,14 @@ func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
 	for {
 		err := p.signAndBroadcast()
 		if err != nil {
+			logging.Logger.Errorf("encounter error, err: %s", err.Error())
 			time.Sleep(RetryInterval)
 		}
 	}
 }
 
 func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
-	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeightWithRetry()
+	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeight()
 	if err != nil {
 		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
 		return err
@@ -85,22 +85,21 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 	// for every tx, we are going to sign it and broadcast vote of it.
 	for _, tx := range txs {
-		nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannel(types.ChannelId(tx.ChannelId))
-		if err != nil {
-			return err
-		}
 
 		// in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
 		// transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
-		if tx.Sequence < nextDeliverySequence {
-			err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered)
-			if err != nil {
-				logging.Logger.Errorf("failed to update packages error %s", err.Error())
+		isFilled, err := p.isTxSequenceFilled(tx)
+		if err != nil {
+			return err
+		}
+		if isFilled {
+			if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
 				return err
 			}
 			logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
 			continue
 		}
+
 		aggregatedPayload, err := p.aggregatePayloadForTx(tx)
 		if err != nil {
 			return err
@@ -109,7 +108,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 		// broadcast v
 		if err = retry.Do(func() error {
-			err = p.votePoolExecutor.BroadcastVote(v)
+			err = p.greenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 			}
@@ -145,8 +144,8 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 func (p *GreenfieldVoteProcessor) CollectVotesLoop() {
 	for {
-		err := p.collectVotes()
-		if err != nil {
+		if err := p.collectVotes(); err != nil {
+			logging.Logger.Errorf("encounter error, err: %s", err.Error())
 			time.Sleep(RetryInterval)
 		}
 	}
@@ -158,17 +157,51 @@ func (p *GreenfieldVoteProcessor) collectVotes() error {
 		logging.Logger.Errorf("failed to get voted transactions from db, error: %s", err.Error())
 		return err
 	}
-	for _, tx := range txs {
-		err := p.prepareEnoughValidVotesForTx(tx)
-		if err != nil {
-			return err
+	wg := new(sync.WaitGroup)
+	errCh := make(chan error)
+	waitCh := make(chan struct{})
+	go func() {
+		for _, tx := range txs {
+			wg.Add(1)
+			go p.collectVoteForTx(tx, errCh, wg)
 		}
-		err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.AllVoted)
-		if err != nil {
+		wg.Wait()
+		close(waitCh)
+	}()
+	for {
+		select {
+		case err := <-errCh:
 			return err
+		case <-waitCh:
+			return nil
 		}
 	}
-	return nil
+}
+
+func (p *GreenfieldVoteProcessor) collectVoteForTx(tx *model.GreenfieldRelayTransaction, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+	isFilled, err := p.isTxSequenceFilled(tx)
+	if err != nil {
+		errChan <- err
+		return
+	}
+	if isFilled {
+		if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
+			errChan <- err
+			return
+		}
+		logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
+		return
+	}
+
+	if err = p.prepareEnoughValidVotesForTx(tx); err != nil {
+		errChan <- err
+		return
+	}
+	if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.AllVoted); err != nil {
+		errChan <- err
+		return
+	}
 }
 
 // prepareEnoughValidVotesForTx fetches and validate votes result, store in vote table
@@ -183,8 +216,7 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 		return err
 	}
 
-	err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id)
-	if err != nil {
+	if err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id); err != nil {
 		return err
 	}
 	return nil
@@ -197,6 +229,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
+
 	for range ticker.C {
 		triedTimes++
 		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
@@ -206,29 +239,30 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				logging.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
 				return err
 			}
-			return nil
+			return errors.New("exceed max retry")
 		}
 
-		queriedVotes, err := p.votePoolExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
+		queriedVotes, err := p.greenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
 		if err != nil {
-			logging.Logger.Errorf("encounter error when query votes. will retry.")
 			return err
 		}
 		validVotesCountPerReq := len(queriedVotes)
 		if validVotesCountPerReq == 0 {
+			if err := p.reBroadcastVote(localVote); err != nil {
+				return err
+			}
 			continue
 		}
 		isLocalVoteIncluded := false
 
 		for _, v := range queriedVotes {
+
 			if !p.isVotePubKeyValid(v, validators) {
-				logging.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
 				validVotesCountPerReq--
 				continue
 			}
 
 			if err := VerifySignature(v, localVote.EventHash); err != nil {
-				logging.Logger.Errorf("verify vote's signature failed,  err=%s", err)
 				validVotesCountPerReq--
 				continue
 			}
@@ -250,8 +284,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				continue
 			}
 			// a vote result persisted into DB should be valid, unique.
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload))
-			if err != nil {
+			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload)); err != nil {
 				return err
 			}
 		}
@@ -261,13 +294,9 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 		if validVotesTotalCount > len(validators)*2/3 {
 			return nil
 		}
+
 		if !isLocalVoteIncluded {
-			v, err := DtoToEntity(localVote)
-			if err != nil {
-				return err
-			}
-			err = p.votePoolExecutor.BroadcastVote(v)
-			if err != nil {
+			if err := p.reBroadcastVote(localVote); err != nil {
 				return err
 			}
 		}
@@ -337,4 +366,20 @@ func (p *GreenfieldVoteProcessor) txFeeToBytes(txFee string) ([]byte, error) {
 	feeBytes := make([]byte, 32)
 	fee.FillBytes(feeBytes)
 	return feeBytes, nil
+}
+
+func (p *GreenfieldVoteProcessor) isTxSequenceFilled(tx *model.GreenfieldRelayTransaction) (bool, error) {
+	nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannel(types.ChannelId(tx.ChannelId))
+	if err != nil {
+		return false, err
+	}
+	return tx.Sequence < nextDeliverySequence, nil
+}
+
+func (p *GreenfieldVoteProcessor) reBroadcastVote(localVote *model.Vote) error {
+	v, err := DtoToEntity(localVote)
+	if err != nil {
+		return err
+	}
+	return p.greenfieldExecutor.BroadcastVote(v)
 }

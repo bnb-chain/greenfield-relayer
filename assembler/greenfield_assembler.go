@@ -2,6 +2,7 @@ package assembler
 
 import (
 	"encoding/hex"
+	"errors"
 	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
@@ -21,16 +22,16 @@ type GreenfieldAssembler struct {
 	bscExecutor        *executor.BSCExecutor
 	greenfieldExecutor *executor.GreenfieldExecutor
 	daoManager         *dao.DaoManager
-	votePoolExecutor   *vote.VotePoolExecutor
+	blsPubKey          string
 }
 
-func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor, votePoolExecutor *vote.VotePoolExecutor) *GreenfieldAssembler {
+func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor) *GreenfieldAssembler {
 	return &GreenfieldAssembler{
 		config:             cfg,
 		greenfieldExecutor: executor,
 		daoManager:         dao,
 		bscExecutor:        bscExecutor,
-		votePoolExecutor:   votePoolExecutor,
+		blsPubKey:          hex.EncodeToString(util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey)),
 	}
 }
 
@@ -43,8 +44,7 @@ func (a *GreenfieldAssembler) AssembleTransactionsLoop() {
 
 func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId types.ChannelId) {
 	for {
-		err := a.process(channelId)
-		if err != nil {
+		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
 			time.Sleep(common.RetryInterval)
 		}
@@ -83,9 +83,11 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 	if err != nil {
 		return err
 	}
+	relayerIdx := util.IndexOf(a.blsPubKey, relayerBlsPubKeys)
+	if relayerIdx == -1 {
+		return errors.New(" not a relayer. ")
+	}
 
-	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.votePoolExecutor.GetBlsPrivateKey())
-	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerBlsPubKeys)
 	firstInturnRelayerIdx := int(tx.TxTime) % len(relayerBlsPubKeys)
 	txRelayStartTime := tx.TxTime + a.config.RelayConfig.GreenfieldToBSCRelayingDelayTime
 	logging.Logger.Infof("tx will be relayed starting at %d", txRelayStartTime)
@@ -128,11 +130,10 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 					return err
 				}
 				logging.Logger.Infof("delivered transaction to BSC with txHash %s", txHash.String())
-				err = a.daoManager.GreenfieldDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String())
-				if err != nil {
-					logging.Logger.Errorf("failed to update Tx with channel id %d and sequence %d to status 'Delivered', error=%s", tx.ChannelId, tx.Sequence, err.Error())
+				if err = a.daoManager.GreenfieldDao.UpdateTransactionClaimedTxHash(tx.Id, txHash.String()); err != nil {
 					return err
 				}
+				time.Sleep(executor.BSCSequenceUpdateLatency)
 				return nil
 			}
 		}
@@ -140,7 +141,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 }
 
 func (a *GreenfieldAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64, channelID types.ChannelId) {
-	ticker := time.NewTicker(common.RetryInterval)
+	ticker := time.NewTicker(common.RetrieveSequenceInterval)
 	defer ticker.Stop()
 	for range ticker.C {
 		nextDeliverySequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannel(channelID)

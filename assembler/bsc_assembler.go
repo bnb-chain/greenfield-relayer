@@ -2,6 +2,7 @@ package assembler
 
 import (
 	"encoding/hex"
+	"errors"
 	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
@@ -20,16 +21,16 @@ type BSCAssembler struct {
 	greenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
 	daoManager         *dao.DaoManager
-	votePoolExecutor   *vote.VotePoolExecutor
+	blsPubKey          string
 }
 
-func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, votePoolExecutor *vote.VotePoolExecutor, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
+func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
 	return &BSCAssembler{
 		config:             cfg,
 		bscExecutor:        executor,
 		daoManager:         dao,
-		votePoolExecutor:   votePoolExecutor,
 		greenfieldExecutor: greenfieldExecutor,
+		blsPubKey:          hex.EncodeToString(util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey)),
 	}
 }
 
@@ -40,8 +41,7 @@ func (a *BSCAssembler) AssemblePackagesAndClaimLoop() {
 
 func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.ChannelId) {
 	for {
-		err := a.process(channelId)
-		if err != nil {
+		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
 			time.Sleep(common.RetryInterval)
 		}
@@ -53,8 +53,8 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	var pkgIds []int64
-	pkgs, err := a.daoManager.BSCDao.GetAllVotedPackages(nextSequence)
+
+	pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequenceAndStatus(nextSequence, db.AllVoted)
 	if err != nil {
 		logging.Logger.Errorf("failed to get all validator voted tx with channel id %d and sequence : %d", channelId, nextSequence)
 		return err
@@ -62,6 +62,8 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if len(pkgs) == 0 {
 		return nil
 	}
+
+	var pkgIds []int64
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
 	}
@@ -89,8 +91,11 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	// packages for same oracle sequence share one timestamp
 	pkgTs := pkgs[0].TxTime
 
-	relayerPubKey := util.BlsPubKeyFromPrivKeyStr(a.getBlsPrivateKey())
-	relayerIdx := util.IndexOf(hex.EncodeToString(relayerPubKey), relayerPubKeys)
+	relayerIdx := util.IndexOf(a.blsPubKey, relayerPubKeys)
+	if relayerIdx == -1 {
+		return errors.New(" relayer's bls pub key not found. ")
+	}
+
 	firstInturnRelayerIdx := int(pkgTs) % len(relayerPubKeys)
 	packagesRelayStartTime := pkgTs + a.config.RelayConfig.BSCToGreenfieldRelayingDelayTime
 	logging.Logger.Infof("packages will be relayed starting at %d", packagesRelayStartTime)
@@ -133,11 +138,10 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 					return err
 				}
 				logging.Logger.Infof("claimed transaction with txHash %s", txHash)
-				err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Delivered, txHash)
-				if err != nil {
-					logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
+				if err = a.daoManager.BSCDao.UpdateBatchPackagesClaimedTxHash(pkgIds, txHash); err != nil {
 					return err
 				}
+				time.Sleep(executor.GnfdSequenceUpdateLatency)
 				return nil
 			}
 		}
@@ -145,7 +149,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 }
 
 func (a *BSCAssembler) validateSequenceFilled(filled chan struct{}, errC chan error, sequence uint64) {
-	ticker := time.NewTicker(common.RetryInterval)
+	ticker := time.NewTicker(common.RetrieveSequenceInterval)
 	defer ticker.Stop()
 	for range ticker.C {
 		nextDeliverySequence, err := a.bscExecutor.GetNextDeliveryOracleSequence()
@@ -157,8 +161,4 @@ func (a *BSCAssembler) validateSequenceFilled(filled chan struct{}, errC chan er
 			filled <- struct{}{}
 		}
 	}
-}
-
-func (a *BSCAssembler) getBlsPrivateKey() string {
-	return a.config.VotePoolConfig.BlsPrivateKey
 }

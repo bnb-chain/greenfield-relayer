@@ -11,19 +11,17 @@ type BSCRelayer struct {
 	Listener           *listener.BSCListener
 	GreenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
-	VotePoolExecutor   *vote.VotePoolExecutor
 	voteProcessor      *vote.BSCVoteProcessor
 	assembler          *assembler.BSCAssembler
 }
 
-func NewBSCRelayer(listener *listener.BSCListener, greenfieldExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.BSCVoteProcessor, bscAssembler *assembler.BSCAssembler,
-) *BSCRelayer {
+func NewBSCRelayer(listener *listener.BSCListener, greenfieldExecutor *executor.GreenfieldExecutor,
+	bscExecutor *executor.BSCExecutor, voteProcessor *vote.BSCVoteProcessor,
+	bscAssembler *assembler.BSCAssembler) *BSCRelayer {
 	return &BSCRelayer{
 		Listener:           listener,
 		GreenfieldExecutor: greenfieldExecutor,
 		bscExecutor:        bscExecutor,
-		VotePoolExecutor:   votePoolExecutor,
 		voteProcessor:      voteProcessor,
 		assembler:          bscAssembler,
 	}

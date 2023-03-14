@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -28,30 +30,27 @@ import (
 )
 
 type BSCVoteProcessor struct {
-	votePoolExecutor *VotePoolExecutor
-	daoManager       *dao.DaoManager
-	config           *config.Config
-	signer           *VoteSigner
-	bscExecutor      *executor.BSCExecutor
-	blsPublicKey     []byte
+	daoManager   *dao.DaoManager
+	config       *config.Config
+	signer       *VoteSigner
+	bscExecutor  *executor.BSCExecutor
+	blsPublicKey []byte
 }
 
-func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *VotePoolExecutor) *BSCVoteProcessor {
+func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor) *BSCVoteProcessor {
 	return &BSCVoteProcessor{
-		config:           cfg,
-		daoManager:       dao,
-		signer:           signer,
-		bscExecutor:      bscExecutor,
-		votePoolExecutor: votePoolExecutor,
-		blsPublicKey:     util.BlsPubKeyFromPrivKeyStr(cfg.VotePoolConfig.BlsPrivateKey),
+		config:       cfg,
+		daoManager:   dao,
+		signer:       signer,
+		bscExecutor:  bscExecutor,
+		blsPublicKey: util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
 	}
 }
 
 func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 	for {
-		err := p.signAndBroadcast()
-		if err != nil {
+		if err := p.signAndBroadcast(); err != nil {
+			logging.Logger.Errorf("encounter error, err: %s", err.Error())
 			time.Sleep(RetryInterval)
 		}
 	}
@@ -114,21 +113,21 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		}
 
 		// check if oracle sequence is filled on greenfield, if so, update packages status to filled and skip to next oracle sequence
-		nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequence()
+		isFilled, err := p.isOracleSequenceFilled(seq)
 		if err != nil {
 			return err
 		}
-		if seq < nextDeliverySeqOnGreenfield {
-			err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered)
-			if err != nil {
-				logging.Logger.Errorf("failed to update packages error %s", err.Error())
+		if isFilled {
+			if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
 				return err
 			}
-			logging.Logger.Infof("packages' oracle sequence %d is less than nex delivery oracle sequence %d", seq, nextDeliverySeqOnGreenfield)
+			logging.Logger.Infof("oracle sequence %d has already been filled", seq)
 			continue
 		}
-
 		encodedPayload, err := rlp.EncodeToBytes(aggPkgs)
+		if err != nil {
+			return fmt.Errorf("encode packages error, err=%s", err.Error())
+		}
 		blsClaim := oracletypes.BlsClaim{
 			// chain ids are validated when packages persisted into DB, non-matched ones would be omitted
 			SrcChainId:  uint32(p.config.BSCConfig.ChainId),
@@ -138,15 +137,12 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			Payload:     encodedPayload,
 		}
 		eventHash := blsClaim.GetSignBytes()
-		if err != nil {
-			return fmt.Errorf("encode packages error, err=%s", err.Error())
-		}
 		channelId := common.OracleChannelId
 		v := p.constructSignedVote(eventHash[:])
 
 		// broadcast v
 		if err = retry.Do(func() error {
-			err = p.votePoolExecutor.BroadcastVote(v)
+			err = p.bscExecutor.GreenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for events with channel id %d and sequence %d", channelId, seq)
 			}
@@ -181,8 +177,8 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 
 func (p *BSCVoteProcessor) CollectVotesLoop() {
 	for {
-		err := p.collectVotes()
-		if err != nil {
+		if err := p.collectVotes(); err != nil {
+			logging.Logger.Errorf("encounter error, err: %s", err.Error())
 			time.Sleep(RetryInterval)
 		}
 	}
@@ -194,31 +190,58 @@ func (p *BSCVoteProcessor) collectVotes() error {
 		logging.Logger.Errorf("failed to get voted packages from db, error: %s", err.Error())
 		return err
 	}
-
 	pkgsGroupByOracleSeq := make(map[uint64][]*model.BscRelayPackage)
 	for _, pkg := range pkgs {
 		pkgsGroupByOracleSeq[pkg.OracleSequence] = append(pkgsGroupByOracleSeq[pkg.OracleSequence], pkg)
 	}
-
-	for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
-		var pkgIds []int64
-		oracleChannelId := common.OracleChannelId
-
-		for _, tx := range pkgsForSeq {
-			pkgIds = append(pkgIds, tx.Id)
+	wg := new(sync.WaitGroup)
+	errCh := make(chan error)
+	waitCh := make(chan struct{})
+	go func() {
+		for seq, pkgsForSeq := range pkgsGroupByOracleSeq {
+			wg.Add(1)
+			go p.collectVoteForPackages(pkgsForSeq, seq, errCh, wg)
 		}
-
-		err := p.prepareEnoughValidVotesForPackages(oracleChannelId, seq, pkgIds)
-		if err != nil {
+		wg.Wait()
+		close(waitCh)
+	}()
+	for {
+		select {
+		case err := <-errCh:
 			return err
-		}
-
-		err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.AllVoted)
-		if err != nil {
-			return err
+		case <-waitCh:
+			return nil
 		}
 	}
-	return nil
+}
+
+func (p *BSCVoteProcessor) collectVoteForPackages(pkgsForSeq []*model.BscRelayPackage, seq uint64, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+	var pkgIds []int64
+	for _, tx := range pkgsForSeq {
+		pkgIds = append(pkgIds, tx.Id)
+	}
+	isFilled, err := p.isOracleSequenceFilled(seq)
+	if err != nil {
+		errChan <- err
+		return
+	}
+	if isFilled {
+		if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Delivered); err != nil {
+			errChan <- err
+			return
+		}
+		logging.Logger.Infof("oracle sequence %d has already been filled", seq)
+		return
+	}
+	if err := p.prepareEnoughValidVotesForPackages(common.OracleChannelId, seq, pkgIds); err != nil {
+		errChan <- err
+		return
+	}
+	if err = p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.AllVoted); err != nil {
+		errChan <- err
+		return
+	}
 }
 
 // prepareEnoughValidVotesForPackages will prepare fetch and validate votes result, store in votes
@@ -232,8 +255,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.Ch
 		return err
 	}
 	// Query from votePool until there are more than 2/3 votes
-	err = p.queryMoreThanTwoThirdValidVotes(localVote, validators, pkgIds)
-	if err != nil {
+	if err = p.queryMoreThanTwoThirdValidVotes(localVote, validators, pkgIds); err != nil {
 		return err
 	}
 	return nil
@@ -246,6 +268,8 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
+	logging.Logger.Infof("queries votes for for channel %d and seq %d", channelId, seq)
+
 	for range ticker.C {
 		triedTimes++
 		if triedTimes > QueryVotepoolMaxRetryTimes {
@@ -253,9 +277,9 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				logging.Logger.Errorf("failed to update packages status to 'Saved', packages' id=%v", pkgIds)
 				return err
 			}
-			return nil
+			return errors.New("exceed max retry")
 		}
-		queriedVotes, err := p.votePoolExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
+		queriedVotes, err := p.bscExecutor.GreenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
 		if err != nil {
 			logging.Logger.Errorf("encounter error when query votes.")
 			return err
@@ -264,19 +288,20 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 		validVotesCntPerReq := len(queriedVotes)
 
 		if validVotesCntPerReq == 0 {
+			if err := p.reBroadcastVote(localVote); err != nil {
+				return err
+			}
 			continue
 		}
 		isLocalVoteIncluded := false
 
 		for _, v := range queriedVotes {
 			if !p.isVotePubKeyValid(v, validators) {
-				logging.Logger.Errorf("vote's pub-key %s does not belong to any validator", hex.EncodeToString(v.PubKey[:]))
 				validVotesCntPerReq--
 				continue
 			}
 
 			if err := VerifySignature(v, localVote.EventHash[:]); err != nil {
-				logging.Logger.Errorf("verify vote's signature failed,  err=%s", err)
 				validVotesCntPerReq--
 				continue
 			}
@@ -295,8 +320,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				validVotesCntPerReq--
 				continue
 			}
-			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload))
-			if err != nil {
+			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload)); err != nil {
 				return err
 			}
 		}
@@ -307,12 +331,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 			return nil
 		}
 		if !isLocalVoteIncluded {
-			v, err := DtoToEntity(localVote)
-			if err != nil {
-				return err
-			}
-			err = p.votePoolExecutor.BroadcastVote(v)
-			if err != nil {
+			if err := p.reBroadcastVote(localVote); err != nil {
 				return err
 			}
 		}
@@ -336,4 +355,20 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmt
 		}
 	}
 	return false
+}
+
+func (p *BSCVoteProcessor) isOracleSequenceFilled(seq uint64) (bool, error) {
+	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequence()
+	if err != nil {
+		return false, err
+	}
+	return seq < nextDeliverySeqOnGreenfield, nil
+}
+
+func (p *BSCVoteProcessor) reBroadcastVote(localVote *model.Vote) error {
+	v, err := DtoToEntity(localVote)
+	if err != nil {
+		return err
+	}
+	return p.bscExecutor.GreenfieldExecutor.BroadcastVote(v)
 }

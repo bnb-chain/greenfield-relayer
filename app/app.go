@@ -42,26 +42,24 @@ func NewApp(cfg *config.Config) *App {
 	greenfieldExecutor.SetBSCExecutor(bscExecutor)
 	bscExecutor.SetGreenfieldExecutor(greenfieldExecutor)
 
-	votePoolExecutor := vote.NewVotePoolExecutor(cfg)
-
 	// listeners
 	greenfieldListener := listener.NewGreenfieldListener(cfg, greenfieldExecutor, bscExecutor, daoManager)
 	bscListener := listener.NewBSCListener(cfg, bscExecutor, greenfieldExecutor, daoManager)
 
 	// vote signer
-	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.VotePoolConfig.BlsPrivateKey))
+	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.GreenfieldConfig.BlsPrivateKey))
 
 	// voteProcessors
-	greenfieldVoteProcessor := vote.NewGreenfieldVoteProcessor(cfg, daoManager, signer, greenfieldExecutor, votePoolExecutor)
-	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor, votePoolExecutor)
+	greenfieldVoteProcessor := vote.NewGreenfieldVoteProcessor(cfg, daoManager, signer, greenfieldExecutor)
+	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor)
 
 	// assemblers
-	greenfieldAssembler := assembler.NewGreenfieldAssembler(cfg, greenfieldExecutor, daoManager, bscExecutor, votePoolExecutor)
-	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, votePoolExecutor, greenfieldExecutor)
+	greenfieldAssembler := assembler.NewGreenfieldAssembler(cfg, greenfieldExecutor, daoManager, bscExecutor)
+	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, greenfieldExecutor)
 
 	// relayers
-	gnfdRelayer := relayer.NewGreenfieldRelayer(greenfieldListener, greenfieldExecutor, bscExecutor, votePoolExecutor, greenfieldVoteProcessor, greenfieldAssembler)
-	bscRelayer := relayer.NewBSCRelayer(bscListener, greenfieldExecutor, bscExecutor, votePoolExecutor, bscVoteProcessor, bscAssembler)
+	gnfdRelayer := relayer.NewGreenfieldRelayer(greenfieldListener, greenfieldExecutor, bscExecutor, greenfieldVoteProcessor, greenfieldAssembler)
+	bscRelayer := relayer.NewBSCRelayer(bscListener, greenfieldExecutor, bscExecutor, bscVoteProcessor, bscAssembler)
 
 	return &App{
 		BSCRelayer:  bscRelayer,

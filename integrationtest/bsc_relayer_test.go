@@ -71,7 +71,7 @@ func TestClaimPackagesSucceed(t *testing.T) {
 	// This is needed in local testing, if move to use testnet, can trigger transaction use cli.
 	go vote.BroadcastVotesFromOtherRelayers(
 		[]string{Relayer1HexBlsPrivKey, Relayer2HexBlsPrivKey},
-		daoManager, app.BSCRelayer.VotePoolExecutor, channelId, oracleSeq, 2)
+		daoManager, app.BSCRelayer.GreenfieldExecutor, channelId, oracleSeq, 2)
 
 	// The first in-turn relayer has 40 seconds relaying window, so that need to wait for a  while if current one is not the first in-turn.
 	// sleep for all processes have done their work, if there are more validators, might need to set this larger due to

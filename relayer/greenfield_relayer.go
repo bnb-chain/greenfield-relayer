@@ -11,19 +11,16 @@ type GreenfieldRelayer struct {
 	Listener            *listener.GreenfieldListener
 	GreenfieldExecutor  *executor.GreenfieldExecutor
 	bscExecutor         *executor.BSCExecutor
-	votePoolExecutor    *vote.VotePoolExecutor
 	voteProcessor       *vote.GreenfieldVoteProcessor
 	greenfieldAssembler *assembler.GreenfieldAssembler
 }
 
-func NewGreenfieldRelayer(listener *listener.GreenfieldListener, greenfieldExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor,
-	votePoolExecutor *vote.VotePoolExecutor, voteProcessor *vote.GreenfieldVoteProcessor, greenfieldAssembler *assembler.GreenfieldAssembler,
+func NewGreenfieldRelayer(listener *listener.GreenfieldListener, greenfieldExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor, voteProcessor *vote.GreenfieldVoteProcessor, greenfieldAssembler *assembler.GreenfieldAssembler,
 ) *GreenfieldRelayer {
 	return &GreenfieldRelayer{
 		Listener:            listener,
 		GreenfieldExecutor:  greenfieldExecutor,
 		bscExecutor:         bscExecutor,
-		votePoolExecutor:    votePoolExecutor,
 		voteProcessor:       voteProcessor,
 		greenfieldAssembler: greenfieldAssembler,
 	}
@@ -56,8 +53,4 @@ func (r *GreenfieldRelayer) AssembleTransactionsLoop() {
 
 func (r *GreenfieldRelayer) UpdateCachedLatestValidatorsLoop() {
 	r.GreenfieldExecutor.UpdateCachedLatestValidatorsLoop() // cache validators queried from greenfield, update it every 1 minute
-}
-
-func (r *GreenfieldRelayer) UpdateClientLoop() {
-	r.GreenfieldExecutor.UpdateClientLoop()
 }

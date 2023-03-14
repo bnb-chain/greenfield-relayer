@@ -10,24 +10,25 @@ import (
 
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
+	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
 const (
-	LocalRelayerHexBlsPrivKey = "275ebf409f5caa121bdc37841660b4548bfbf81eb8593442640ffe0b66dfc86f"
+	LocalRelayerHexBlsPrivKey = "your_private_key"
 )
 
 // PrivKeys Bls Private keys from other mock relayers
 var PrivKeys = []string{
-	"60e5839445580b001576ce8fb0b08cf2b37f8289faaf49a2a3d1e36dbbe588a1",
-	"4b4d06d9c4af19c175962190596ed7e01e1b818821ef4cbf593f6ec84345a0f0",
+	"your_private_key",
+	"your_private_key",
 }
 
 // BroadcastVotesFromOtherRelayers for mimic multi relayers when bsc -> gnfd
 func BroadcastVotesFromOtherRelayers(
 	privateKeysList []string,
 	daoManager *dao.DaoManager,
-	votePoolExecutor *VotePoolExecutor, channelId uint8, seq uint64, eventType uint8) {
+	gnfdExecutor *executor.GreenfieldExecutor, channelId uint8, seq uint64, eventType uint8) {
 	var vote *model.Vote
 	// retry to query vote from local DB
 	for {
@@ -55,7 +56,7 @@ func BroadcastVotesFromOtherRelayers(
 			EventType: votepool.EventType(eventType),
 			EventHash: vote.EventHash[:],
 		}
-		err = votePoolExecutor.BroadcastVote(mockVoteFromRelayer)
+		err = gnfdExecutor.BroadcastVote(mockVoteFromRelayer)
 		if err != nil {
 			panic(err)
 		}
