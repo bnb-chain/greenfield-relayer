@@ -72,7 +72,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 		now := time.Now().Unix()
 		timeDiff := now - int64(inturnRelayer.Start)
 
-		if timeDiff < BSCSequenceUpdateWaitingTime {
+		if timeDiff < a.config.RelayConfig.BSCSequenceUpdateLatency {
 			if timeDiff < 0 {
 				return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.Start)
 			}
@@ -87,7 +87,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 		}
 		logging.Logger.Debug("relay as inturn relayer")
 	} else {
-		time.Sleep(BSCSequenceUpdateWaitingTime * time.Second)
+		time.Sleep(time.Duration(a.config.RelayConfig.BSCSequenceUpdateLatency))
 		startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 		if err != nil {
 			return err

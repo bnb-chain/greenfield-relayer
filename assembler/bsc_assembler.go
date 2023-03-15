@@ -68,7 +68,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		now := time.Now().Unix()
 		timeDiff := now - int64(inturnRelayer.RelayInterval.Start)
 
-		if timeDiff < GNFDSequenceUpdateWaitingTime {
+		if timeDiff < a.config.RelayConfig.GreenfieldSequenceUpdateLatency {
 			if timeDiff < 0 {
 				return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.RelayInterval.Start)
 			}
@@ -84,7 +84,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		logging.Logger.Debug("relay as inturn relayer")
 	} else {
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
-		time.Sleep(GNFDSequenceUpdateWaitingTime * time.Second)
+		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency))
 		startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 		if err != nil {
 			return err
