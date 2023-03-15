@@ -69,8 +69,13 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 
 		// in-turn relayer get the start sequence from chain first time, it starts to relay after the  sequence
 		// get updated
-		timeDiff := time.Now().Unix() - int64(inturnRelayer.Start)
+		now := time.Now().Unix()
+		timeDiff := now - int64(inturnRelayer.Start)
+
 		if timeDiff < BSCSequenceUpdateWaitingTime {
+			if timeDiff < 0 {
+				return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.Start)
+			}
 			time.Sleep(time.Duration(timeDiff))
 			startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 			if err != nil {
@@ -122,21 +127,16 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 			return nil
 		}
 
-		if err := a.processTx(tx, nonce); err != nil {
+		if err := a.processTx(tx, nonce, isInturnRelyer); err != nil {
 			return err
 		}
 		logging.Logger.Infof("relayed tx with channel id %d and sequence %d ", tx.ChannelId, tx.Sequence)
-
-		// update next delivery sequence in DB for inturn relayer
-		if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), i+1); err != nil {
-			return err
-		}
 		nonce++
 	}
 	return nil
 }
 
-func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, nonce uint64) error {
+func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, nonce uint64, isInturnRelyer bool) error {
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
 	if err != nil {
@@ -157,9 +157,23 @@ func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, no
 		return err
 	}
 	logging.Logger.Infof("relayed transaction with channel id %d and sequence %d, get txHash %s", tx.ChannelId, tx.Sequence, txHash)
+
+	// update next delivery sequence in DB for inturn relayer, for non-inturn relayer, there is enough time for
+	// sequence update, so they can track next start seq from chain
+	if !isInturnRelyer {
+		if err = a.daoManager.GreenfieldDao.UpdateTransactionClaimedTxHash(tx.Id, txHash.String()); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if err = a.daoManager.GreenfieldDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String()); err != nil {
 		return err
 	}
+	if err = a.daoManager.SequenceDao.Upsert(tx.ChannelId, tx.Sequence+1); err != nil {
+		return err
+	}
+
 	return nil
 }
 

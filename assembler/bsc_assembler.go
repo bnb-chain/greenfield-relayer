@@ -65,8 +65,13 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		startSequence = uint64(seq.Sequence)
 
 		// in-turn relayer get the start sequence from chain first time, it starts to relay after the sequence gets updated
-		timeDiff := time.Now().Unix() - int64(inturnRelayer.RelayInterval.Start)
+		now := time.Now().Unix()
+		timeDiff := now - int64(inturnRelayer.RelayInterval.Start)
+
 		if timeDiff < GNFDSequenceUpdateWaitingTime {
+			if timeDiff < 0 {
+				return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.RelayInterval.Start)
+			}
 			time.Sleep(time.Duration(timeDiff))
 			startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 			if err != nil {
@@ -100,6 +105,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if err != nil {
 		return err
 	}
+
 	for i := startSequence; i <= uint64(endSequence); i++ {
 		pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(i)
 		if err != nil {
@@ -119,20 +125,17 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		if !isInturnRelyer && time.Now().Unix() < pkgTime+a.config.RelayConfig.BSCToGreenfieldInturnRelayerTimeout {
 			return nil
 		}
-		if err := a.processPkgs(pkgs, uint8(channelId), i, nonce); err != nil {
+		if err := a.processPkgs(pkgs, uint8(channelId), i, nonce, isInturnRelyer); err != nil {
 			return err
 		}
 		logging.Logger.Infof("relayed packages with oracle sequence %d ", i)
-		// update next delivery sequence in DB
-		if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), i+1); err != nil {
-			return err
-		}
+
 		nonce++
 	}
 	return nil
 }
 
-func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint8, sequence uint64, nonce uint64) error {
+func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint8, sequence uint64, nonce uint64, isInturnRelyer bool) error {
 	// Get votes result for a packages, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(channelId, sequence)
 	if err != nil {
@@ -160,9 +163,20 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
 	}
+	if !isInturnRelyer {
+		if err = a.daoManager.BSCDao.UpdateBatchPackagesClaimedTxHash(pkgIds, txHash); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Delivered, txHash); err != nil {
 		logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
 		return err
 	}
+	if err = a.daoManager.SequenceDao.Upsert(channelId, sequence+1); err != nil {
+		return err
+	}
+
 	return nil
 }
