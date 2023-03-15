@@ -23,7 +23,7 @@ func TestGetBlockHeight(t *testing.T) {
 }
 
 func TestGetNextReceiveSequence(t *testing.T) {
-	seq, err := InitBSCExecutor().GetNextReceiveSequenceForChannel(1)
+	seq, err := InitBSCExecutor().GetNextReceiveSequenceForChannelWithRetry(1)
 	require.NoError(t, err)
 	t.Log(seq)
 }
@@ -60,7 +60,7 @@ func TestSyncTendermintHeader(t *testing.T) {
 	curLightClientHeight, err := e.GetLightClientLatestHeight()
 	require.NoError(t, err)
 	t.Log(curLightClientHeight)
-	hash, err := e.SyncTendermintLightBlock(10)
+	hash, err := e.SyncTendermintLightBlock(2)
 	require.NoError(t, err)
 	time.Sleep(10 * time.Second)
 	t.Log(hash.String())
@@ -94,5 +94,4 @@ func TestGetRelayerInterval(t *testing.T) {
 	t.Log(r.BlsPublicKey)
 	t.Log(r.Start)
 	t.Log(r.End)
-
 }

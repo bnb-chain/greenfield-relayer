@@ -377,7 +377,7 @@ func (p *GreenfieldVoteProcessor) txFeeToBytes(txFee string) ([]byte, error) {
 }
 
 func (p *GreenfieldVoteProcessor) isTxSequenceFilled(tx *model.GreenfieldRelayTransaction) (bool, error) {
-	nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannel(types.ChannelId(tx.ChannelId))
+	nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(types.ChannelId(tx.ChannelId))
 	if err != nil {
 		return false, err
 	}

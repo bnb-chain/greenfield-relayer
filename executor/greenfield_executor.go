@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"github.com/avast/retry-go/v4"
 	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client/chain"
 	sdkkeys "github.com/bnb-chain/greenfield-go-sdk/keys"
 	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
@@ -144,9 +145,21 @@ func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, er
 	return protoBlock.Marshal()
 }
 
-// GetNextDeliverySequenceForChannel calls dest chain(BSC) to return a sequence # which should be used.
-func (e *GreenfieldExecutor) GetNextDeliverySequenceForChannel(channelID types.ChannelId) (uint64, error) {
-	sequence, err := e.BscExecutor.GetNextReceiveSequenceForChannel(channelID)
+// GetNextDeliverySequenceForChannelWithRetry calls dest chain(BSC) to return a sequence # which should be used.
+func (e *GreenfieldExecutor) GetNextDeliverySequenceForChannelWithRetry(channelID types.ChannelId) (sequence uint64, err error) {
+	return sequence, retry.Do(func() error {
+		sequence, err = e.getNextDeliverySequenceForChannel(channelID)
+		return err
+	}, relayercommon.RtyAttem,
+		relayercommon.RtyDelay,
+		relayercommon.RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			logging.Logger.Infof("failed to query sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
+		}))
+}
+
+func (e *GreenfieldExecutor) getNextDeliverySequenceForChannel(channelID types.ChannelId) (uint64, error) {
+	sequence, err := e.BscExecutor.GetNextReceiveSequenceForChannelWithRetry(channelID)
 	if err != nil {
 		return 0, err
 	}

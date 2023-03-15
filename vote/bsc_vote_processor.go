@@ -160,6 +160,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			if err != nil {
 				return err
 			}
+			logging.Logger.Infof("vote with channel id %d and seq %d is %v", uint8(channelId), seq, exist)
 			if !exist {
 				err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, uint8(channelId), seq, encodedPayload))
 				if err != nil {
@@ -366,7 +367,7 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmt
 }
 
 func (p *BSCVoteProcessor) isOracleSequenceFilled(seq uint64) (bool, error) {
-	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequence()
+	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 	if err != nil {
 		return false, err
 	}

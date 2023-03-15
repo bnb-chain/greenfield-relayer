@@ -57,14 +57,17 @@ func (d *BSCDao) GetLeastSavedPackagesHeight() (uint64, error) {
 	return uint64(result.Int64), nil
 }
 
-func (d *BSCDao) GetLatestOracleSequenceByStatus(status db.TxStatus) (uint64, error) {
+func (d *BSCDao) GetLatestOracleSequenceByStatus(status db.TxStatus) (int64, error) {
 	var result sql.NullInt64
 	res := d.DB.Table("bsc_relay_package").Select("MAX(oracle_sequence)").Where("status = ?", status)
 	err := res.Row().Scan(&result)
 	if err != nil {
 		return 0, err
 	}
-	return uint64(result.Int64), nil
+	if !result.Valid {
+		return -1, nil
+	}
+	return result.Int64, nil
 }
 
 func (d *BSCDao) GetPackagesByOracleSequence(sequence uint64) ([]*model.BscRelayPackage, error) {
@@ -89,6 +92,13 @@ func (d *BSCDao) UpdateBatchPackagesStatus(txIds []int64, status db.TxStatus) er
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
 			model.BscRelayPackage{Status: status, UpdatedTime: time.Now().Unix()}).Error
+	})
+}
+
+func (d *BSCDao) UpdateBatchPackagesStatusToDelivered(seq uint64) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		return dbTx.Model(model.BscRelayPackage{}).Where("oracle_sequence < ? and status = 2", seq).Updates(
+			model.BscRelayPackage{Status: db.Delivered, UpdatedTime: time.Now().Unix()}).Error
 	})
 }
 

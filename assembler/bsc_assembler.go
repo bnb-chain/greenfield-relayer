@@ -41,7 +41,7 @@ func (a *BSCAssembler) AssemblePackagesAndClaimLoop() {
 }
 
 func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.ChannelId) {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(InturnRelayerAssembleInterval)
 	for range ticker.C {
 		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
@@ -58,25 +58,32 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	isInturnRelyer := inturnRelayer.BlsPubKey == a.blsPubKey
 	var startSequence uint64
 	if isInturnRelyer {
-
 		// get processed sequence from DB
 		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
-		startSequence = uint64(seq.Sequence + 1)
+		startSequence = uint64(seq.Sequence)
 
-		// in-turn relayer get the start sequence from chain first time, it starts to relay after the  sequence
-		// get updated
-		for uint64(time.Now().Unix())-inturnRelayer.RelayInterval.Start < 10 {
-			time.Sleep(1 * time.Second)
-			startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequence()
+		// in-turn relayer get the start sequence from chain first time, it starts to relay after the sequence gets updated
+		timeDiff := time.Now().Unix() - int64(inturnRelayer.RelayInterval.Start)
+		if timeDiff < GNFDSequenceUpdateWaitingTime {
+			time.Sleep(time.Duration(timeDiff))
+			startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 			if err != nil {
 				return err
 			}
+			if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), startSequence); err != nil {
+				return err
+			}
 		}
+		logging.Logger.Debug("relay as inturn relayer")
 	} else {
-		// non-inturn relayer retry every 10 second, get the sequence from chain
-		time.Sleep(10 * time.Second)
-		startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequence()
+		// non-inturn relayer retries every 10 second, gets the sequence from chain
+		time.Sleep(GNFDSequenceUpdateWaitingTime * time.Second)
+		startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 		if err != nil {
+			return err
+		}
+		logging.Logger.Debug("relay as non-inturn relayer")
+		if err := a.daoManager.BSCDao.UpdateBatchPackagesStatusToDelivered(startSequence); err != nil {
 			return err
 		}
 	}
@@ -84,11 +91,14 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if err != nil {
 		return err
 	}
+	if endSequence == -1 {
+		return nil
+	}
 	nonce, err := a.greenfieldExecutor.GetNonce()
 	if err != nil {
 		return err
 	}
-	for i := startSequence; i <= endSequence; i++ {
+	for i := startSequence; i <= uint64(endSequence); i++ {
 		pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(i)
 		if err != nil {
 			return err
@@ -99,18 +109,20 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		status := pkgs[0].Status
 		pkgTime := pkgs[0].TxTime
 
-		if status != db.AllVoted {
+		if status != db.AllVoted && status != db.Delivered {
 			return fmt.Errorf("packages with oracle sequence %d does not get enough votes yet", i)
 		}
+
+		// non-inturn relayer can not relay tx within the timeout of in-turn relayer
 		if !isInturnRelyer && time.Now().Unix() < pkgTime+a.config.RelayConfig.BSCToGreenfieldInturnRelayerTimeout {
 			return nil
 		}
-		logging.Logger.Infof("relay packages with oracle sequence %d ", i)
 		if err := a.processPkgs(pkgs, uint8(channelId), i, nonce); err != nil {
 			return err
 		}
-		// update latest processed sequence
-		if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), i); err != nil {
+		logging.Logger.Infof("relayed packages with oracle sequence %d ", i)
+		// update next delivery sequence in DB
+		if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), i+1); err != nil {
 			return err
 		}
 		nonce++
