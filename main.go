@@ -76,7 +76,7 @@ func main() {
 	}
 
 	if cfg == nil {
-		fmt.Println("failed to get configuration")
+		panic("failed to get configuration")
 		return
 	}
 

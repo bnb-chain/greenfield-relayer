@@ -79,15 +79,6 @@ func (d *BSCDao) GetPackagesByOracleSequence(sequence uint64) ([]*model.BscRelay
 	return pkgs, nil
 }
 
-func (d *BSCDao) GetPackagesByOracleSequenceAndStatus(sequence uint64, status db.TxStatus) ([]*model.BscRelayPackage, error) {
-	pkgs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("oracle_sequence = ? and status = ? ", sequence, status).Find(&pkgs).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, err
-	}
-	return pkgs, nil
-}
-
 func (d *BSCDao) UpdateBatchPackagesStatus(txIds []int64, status db.TxStatus) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
@@ -99,13 +90,6 @@ func (d *BSCDao) UpdateBatchPackagesStatusToDelivered(seq uint64) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.BscRelayPackage{}).Where("oracle_sequence < ? and status = 2", seq).Updates(
 			model.BscRelayPackage{Status: db.Delivered, UpdatedTime: time.Now().Unix()}).Error
-	})
-}
-
-func (d *BSCDao) UpdateBatchPackagesClaimedTxHash(txIds []int64, claimTxHash string) error {
-	return d.DB.Transaction(func(dbTx *gorm.DB) error {
-		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
-			model.BscRelayPackage{UpdatedTime: time.Now().Unix(), ClaimTxHash: claimTxHash}).Error
 	})
 }
 

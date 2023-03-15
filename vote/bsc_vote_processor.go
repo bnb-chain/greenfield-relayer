@@ -160,7 +160,6 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			if err != nil {
 				return err
 			}
-			logging.Logger.Infof("vote with channel id %d and seq %d is %v", uint8(channelId), seq, exist)
 			if !exist {
 				err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, uint8(channelId), seq, encodedPayload))
 				if err != nil {
@@ -260,7 +259,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.Ch
 	if err != nil {
 		return err
 	}
-	if count > int64(len(validators)) {
+	if count > int64(len(validators))*2/3 {
 		return nil
 	}
 	// Query from votePool until there are more than 2/3 votes

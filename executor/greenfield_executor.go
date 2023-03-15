@@ -86,26 +86,20 @@ func getGreenfieldPrivateKey(cfg *config.GreenfieldConfig) string {
 	return privateKey
 }
 
-func (e *GreenfieldExecutor) getRpcClient() (client.Client, error) {
-	client := e.gnfdClients.GetClient()
-	return client.TendermintClient.RpcClient.TmClient, nil
+func (e *GreenfieldExecutor) getRpcClient() client.Client {
+	return e.gnfdClients.GetClient().TendermintClient.RpcClient.TmClient
 }
 
-func (e *GreenfieldExecutor) getGnfdClient() (*sdkclient.GreenfieldClient, error) {
-	client := e.gnfdClients.GetClient()
-	return client.GreenfieldClient, nil
+func (e *GreenfieldExecutor) getGnfdClient() *sdkclient.GreenfieldClient {
+	return e.gnfdClients.GetClient().GreenfieldClient
 }
 
 func (e *GreenfieldExecutor) GetBlockAndBlockResultAtHeight(height int64) (*tmtypes.Block, *ctypes.ResultBlockResults, error) {
-	client, err := e.getRpcClient()
+	block, err := e.getRpcClient().Block(context.Background(), &height)
 	if err != nil {
 		return nil, nil, err
 	}
-	block, err := client.Block(context.Background(), &height)
-	if err != nil {
-		return nil, nil, err
-	}
-	blockResults, err := client.BlockResults(context.Background(), &height)
+	blockResults, err := e.getRpcClient().BlockResults(context.Background(), &height)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,15 +112,11 @@ func (e *GreenfieldExecutor) GetLatestBlockHeight() (latestHeight uint64, err er
 }
 
 func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, error) {
-	client, err := e.getRpcClient()
+	validators, err := e.getRpcClient().Validators(context.Background(), &height, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	validators, err := client.Validators(context.Background(), &height, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	commit, err := client.Commit(context.Background(), &height)
+	commit, err := e.getRpcClient().Commit(context.Background(), &height)
 	if err != nil {
 		return nil, err
 	}
@@ -167,11 +157,7 @@ func (e *GreenfieldExecutor) getNextDeliverySequenceForChannel(channelID types.C
 }
 
 func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
-	gnfdClient, err := e.getGnfdClient()
-	if err != nil {
-		return 0, err
-	}
-	res, err := gnfdClient.CrosschainQueryClient.ReceiveSequence(
+	res, err := e.getGnfdClient().CrosschainQueryClient.ReceiveSequence(
 		context.Background(),
 		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(relayercommon.OracleChannelId)},
 	)
@@ -183,11 +169,8 @@ func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 
 // GetNextReceiveSequenceForChannel gets the sequence specifically for bsc -> gnfd package's channel
 func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.ChannelId) (uint64, error) {
-	gnfdClient, err := e.getGnfdClient()
-	if err != nil {
-		return 0, err
-	}
-	res, err := gnfdClient.ReceiveSequence(
+
+	res, err := e.getGnfdClient().ReceiveSequence(
 		context.Background(),
 		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},
 	)
@@ -198,11 +181,7 @@ func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.Ch
 }
 
 func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, error) {
-	client, err := e.getRpcClient()
-	if err != nil {
-		return nil, err
-	}
-	validators, err := client.Validators(context.Background(), nil, nil, nil)
+	validators, err := e.getRpcClient().Validators(context.Background(), nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -210,12 +189,8 @@ func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, erro
 }
 
 func (e *GreenfieldExecutor) QueryValidatorsAtHeight(height uint64) ([]*tmtypes.Validator, error) {
-	client, err := e.getRpcClient()
-	if err != nil {
-		return nil, err
-	}
 	h := int64(height)
-	validators, err := client.Validators(context.Background(), &h, nil, nil)
+	validators, err := e.getRpcClient().Validators(context.Background(), &h, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -258,18 +233,10 @@ func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 }
 
 func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
-	gnfdClient, err := e.getGnfdClient()
-	if err != nil {
-		return 0, err
-	}
-	return gnfdClient.GetNonce()
+	return e.getGnfdClient().GetNonce()
 }
 
 func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
-	gnfdClient, err := e.getGnfdClient()
-	if err != nil {
-		return "", err
-	}
 	msgClaim := oracletypes.NewMsgClaim(
 		e.address,
 		e.getSrcChainId(),
@@ -280,7 +247,7 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 		voteAddressSet,
 		aggregatedSig,
 	)
-	txRes, err := gnfdClient.BroadcastTx(
+	txRes, err := e.getGnfdClient().BroadcastTx(
 		[]sdk.Msg{msgClaim},
 		&sdktypes.TxOption{
 			Nonce: nonce,
@@ -296,20 +263,15 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 }
 
 func (e *GreenfieldExecutor) GetInturnRelayer() (*oracletypes.QueryInturnRelayerResponse, error) {
-	gnfdClient, err := e.getGnfdClient()
-	if err != nil {
-		return nil, err
-	}
-	return gnfdClient.OracleQueryClient.InturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
+	return e.getGnfdClient().OracleQueryClient.InturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
 }
 
 func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
-	client := e.gnfdClients.GetClient()
 	queryMap := make(map[string]interface{})
 	queryMap[VotePoolQueryParameterEventType] = int(eventType)
 	queryMap[VotePoolQueryParameterEventHash] = eventHash
 	var queryVote ctypes.ResultQueryVote
-	_, err := client.JsonRpcClient.Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
+	_, err := e.gnfdClients.GetClient().JsonRpcClient.Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
 	if err != nil {
 		return nil, err
 	}
@@ -317,10 +279,9 @@ func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, even
 }
 
 func (e *GreenfieldExecutor) BroadcastVote(v *votepool.Vote) error {
-	client := e.gnfdClients.GetClient()
 	broadcastMap := make(map[string]interface{})
 	broadcastMap[VotePoolBroadcastParameterKey] = *v
-	_, err := client.JsonRpcClient.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &ctypes.ResultBroadcastVote{})
+	_, err := e.gnfdClients.GetClient().JsonRpcClient.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &ctypes.ResultBroadcastVote{})
 	if err != nil {
 		return err
 	}

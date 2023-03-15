@@ -220,7 +220,7 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 	if err != nil {
 		return err
 	}
-	if count > int64(len(validators)) {
+	if count > int64(len(validators))*2/3 {
 		return nil
 	}
 
