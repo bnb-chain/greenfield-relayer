@@ -60,8 +60,11 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 	isInturnRelyer := inturnRelayer.BlsPublicKey == a.blsPubKey
 	var startSequence uint64
 	if isInturnRelyer {
-		// get next deliveried sequence from DB
+		// get next delivered sequence from DB
 		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
+		if err != nil {
+			return err
+		}
 		startSequence = uint64(seq.Sequence)
 
 		// in-turn relayer get the start sequence from chain first time, it starts to relay after the  sequence

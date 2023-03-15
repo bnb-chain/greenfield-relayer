@@ -58,8 +58,10 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	isInturnRelyer := inturnRelayer.BlsPubKey == a.blsPubKey
 	var startSequence uint64
 	if isInturnRelyer {
-		// get processed sequence from DB
 		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
+		if err != nil {
+			return err
+		}
 		startSequence = uint64(seq.Sequence)
 
 		// in-turn relayer get the start sequence from chain first time, it starts to relay after the sequence gets updated
