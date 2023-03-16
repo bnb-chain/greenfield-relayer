@@ -9,8 +9,8 @@
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "87f8766544c0af4db90781bd5f55e60a21bd723aa8046aa24b788337536499a9",
-    "bls_private_key": "271658db6891f6cda5c55dcdc6e798f4eb4fa8918b429633378273c82588ab6d",
+    "private_key": "your_private_key",
+    "bls_private_key": "your_private_key",
     "number_of_blocks_for_finality": 1,
     "chain_id": 18,
     "start_height": 1,
@@ -25,7 +25,7 @@
     "rpc_addrs": [
       "http://127.0.0.1:8502"
     ],
-    "private_key": "87f8766544c0af4db90781bd5f55e60a21bd723aa8046aa24b788337536499a9",
+    "private_key": "your_private_key",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,

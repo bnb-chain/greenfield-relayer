@@ -3,9 +3,9 @@ package assembler
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/common"
 	"time"
 
+	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"

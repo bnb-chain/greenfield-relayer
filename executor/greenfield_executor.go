@@ -6,14 +6,9 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/avast/retry-go/v4"
-	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	sdkkeys "github.com/bnb-chain/greenfield-go-sdk/keys"
-	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
-	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
-	"github.com/bnb-chain/greenfield-relayer/config"
-	"github.com/bnb-chain/greenfield-relayer/logging"
-	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
@@ -22,10 +17,16 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/votepool"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"time"
+
+	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client/chain"
+	sdkkeys "github.com/bnb-chain/greenfield-go-sdk/keys"
+	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
+	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/types"
 )
 
 type GreenfieldExecutor struct {
@@ -107,8 +108,7 @@ func (e *GreenfieldExecutor) GetBlockAndBlockResultAtHeight(height int64) (*tmty
 }
 
 func (e *GreenfieldExecutor) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	client := e.gnfdClients.GetClient()
-	return uint64(client.Height), nil
+	return uint64(e.gnfdClients.GetClient().Height), nil
 }
 
 func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, error) {

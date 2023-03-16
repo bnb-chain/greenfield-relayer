@@ -1,10 +1,11 @@
 package dao
 
 import (
-	"github.com/bnb-chain/greenfield-relayer/common"
-	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	"github.com/bnb-chain/greenfield-relayer/common"
+	"github.com/bnb-chain/greenfield-relayer/db/model"
 )
 
 const OFFSET = 100

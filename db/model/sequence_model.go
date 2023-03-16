@@ -1,6 +1,8 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 // Sequence used to store next delivery sequence for channels
 type Sequence struct {
