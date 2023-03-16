@@ -25,7 +25,7 @@
     "rpc_addrs": [
       "http://127.0.0.1:8502"
     ],
-    "private_key": "your_private_key",
+    "private_key": "adadsasdsdasad",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 10,
