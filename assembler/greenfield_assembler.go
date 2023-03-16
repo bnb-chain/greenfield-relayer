@@ -43,16 +43,16 @@ func (a *GreenfieldAssembler) AssembleTransactionsLoop() {
 }
 
 func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId types.ChannelId) {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(common.RetryInterval)
 	for range ticker.C {
 		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
-			time.Sleep(common.RetryInterval)
 		}
 	}
 }
 
 func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
+	logging.Logger.Infof("current time is %d", time.Now().Unix())
 	inturnRelayer, err := a.bscExecutor.GetInturnRelayer()
 	if err != nil {
 		return err
@@ -76,7 +76,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 			if timeDiff < 0 {
 				return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.Start)
 			}
-			time.Sleep(time.Duration(timeDiff))
+			time.Sleep(time.Duration(timeDiff) * time.Second)
 			startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 			if err != nil {
 				return err
@@ -85,14 +85,14 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 				return err
 			}
 		}
-		logging.Logger.Debug("relay as inturn relayer")
+		logging.Logger.Debug("gnfd relay as in-turn relayer")
 	} else {
-		time.Sleep(time.Duration(a.config.RelayConfig.BSCSequenceUpdateLatency))
+		time.Sleep(time.Duration(a.config.RelayConfig.BSCSequenceUpdateLatency) * time.Second)
 		startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 		if err != nil {
 			return err
 		}
-		logging.Logger.Debug("relay as non-inturn relayer")
+		logging.Logger.Debug("gnfd relay as out-turn relayer")
 		if err := a.daoManager.GreenfieldDao.UpdateBatchTransactionStatusToDelivered(startSequence); err != nil {
 			return err
 		}

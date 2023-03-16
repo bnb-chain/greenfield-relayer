@@ -41,11 +41,10 @@ func (a *BSCAssembler) AssemblePackagesAndClaimLoop() {
 }
 
 func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.ChannelId) {
-	ticker := time.NewTicker(InturnRelayerAssembleInterval)
+	ticker := time.NewTicker(common.RetryInterval)
 	for range ticker.C {
 		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
-			time.Sleep(common.RetryInterval)
 		}
 	}
 }
@@ -72,7 +71,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 			if timeDiff < 0 {
 				return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.RelayInterval.Start)
 			}
-			time.Sleep(time.Duration(timeDiff))
+			time.Sleep(time.Duration(timeDiff) * time.Second)
 			startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 			if err != nil {
 				return err
@@ -81,15 +80,15 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 				return err
 			}
 		}
-		logging.Logger.Debug("relay as inturn relayer")
+		logging.Logger.Debug("bsc relay as in-turn relayer")
 	} else {
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
-		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency))
+		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)
 		startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 		if err != nil {
 			return err
 		}
-		logging.Logger.Debug("relay as non-inturn relayer")
+		logging.Logger.Debug("bsc relay as out-turn relayer")
 		if err := a.daoManager.BSCDao.UpdateBatchPackagesStatusToDelivered(startSequence); err != nil {
 			return err
 		}
