@@ -180,6 +180,25 @@
         {
           "indexed": true,
           "internalType": "address",
+          "name": "refundAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "refundAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "RefundFeeTooLow",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
           "name": "executor",
           "type": "address"
         }
@@ -278,19 +297,6 @@
     },
     {
       "inputs": [],
-      "name": "APP_CHANNEL_ID",
-      "outputs": [
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "BUCKET_CHANNEL_ID",
       "outputs": [
         {
@@ -336,6 +342,25 @@
           "internalType": "address",
           "name": "",
           "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "ConfigSlots",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -427,19 +452,6 @@
           "internalType": "address",
           "name": "",
           "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "IN_TURN_RELAYER_VALIDITY_PERIOD",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -590,7 +602,7 @@
     },
     {
       "inputs": [],
-      "name": "ackRelayFee",
+      "name": "batchSizeForOracle",
       "outputs": [
         {
           "internalType": "uint256",
@@ -603,7 +615,7 @@
     },
     {
       "inputs": [],
-      "name": "batchSizeForOracle",
+      "name": "callbackGasPrice",
       "outputs": [
         {
           "internalType": "uint256",
@@ -735,12 +747,12 @@
         },
         {
           "internalType": "uint256",
-          "name": "relayFee",
+          "name": "_relayFee",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "ackRelayFee",
+          "name": "_ackRelayFee",
           "type": "uint256"
         },
         {
@@ -755,6 +767,24 @@
           "internalType": "bytes",
           "name": "",
           "type": "bytes"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getRelayFees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "_relayFee",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_minAckRelayFee",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -797,6 +827,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "inTurnRelayerValidityPeriod",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint16",
@@ -817,6 +860,19 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minAckRelayFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -925,12 +981,12 @@
         },
         {
           "internalType": "uint256",
-          "name": "relayFee",
+          "name": "_relayFee",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "ackRelayFee",
+          "name": "_ackRelayFee",
           "type": "uint256"
         }
       ],
@@ -957,6 +1013,47 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "key",
+          "type": "string"
+        },
+        {
+          "internalType": "bytes",
+          "name": "value",
+          "type": "bytes"
+        }
+      ],
+      "name": "updateParam",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "versionInfo",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "version",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
       "type": "function"
     }
   ]

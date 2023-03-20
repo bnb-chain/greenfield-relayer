@@ -31,7 +31,7 @@ var (
 
 // CrosschainMetaData contains all meta data concerning the Crosschain contract.
 var CrosschainMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"}],\"name\":\"AddChannel\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"srcChainId\",\"type\":\"uint32\"},{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"dstChainId\",\"type\":\"uint32\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"oracleSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"name\":\"CrossChainPackage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"isEnable\",\"type\":\"bool\"}],\"name\":\"EnableOrDisableChannel\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"ParamChange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"proposalTypeHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"proposer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"quorum\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"expiredAt\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"contentHash\",\"type\":\"bytes32\"}],\"name\":\"ProposalSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"packageType\",\"type\":\"uint8\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"}],\"name\":\"ReceivedPackage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"}],\"name\":\"Reopened\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"}],\"name\":\"Suspended\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"lowLevelData\",\"type\":\"bytes\"}],\"name\":\"UnexpectedFailureAssertionInPackageHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"reason\",\"type\":\"string\"}],\"name\":\"UnexpectedRevertInPackageHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"name\":\"UnsupportedPackage\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ACK_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"APP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CANCEL_TRANSFER_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CROSS_CHAIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EMERGENCY_PROPOSAL_EXPIRE_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EMPTY_CONTENT_HASH\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FAIL_ACK_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"IN_TURN_RELAYER_VALIDITY_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"LIGHT_CLIENT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PROXY_ADMIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"REOPEN_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SUSPEND_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SYN_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TOKEN_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_IN_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_OUT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ackRelayFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"batchSizeForOracle\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attacker\",\"type\":\"address\"}],\"name\":\"cancelTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelHandlerMap\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelReceiveSequenceMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelSendSequenceMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"emergencyProposals\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"quorum\",\"type\":\"uint16\"},{\"internalType\":\"uint128\",\"name\":\"expiredAt\",\"type\":\"uint128\"},{\"internalType\":\"bytes32\",\"name\":\"contentHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"packageType\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"relayFee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"ackRelayFee\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"msgBytes\",\"type\":\"bytes\"}],\"name\":\"encodePayload\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gnfdChainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"_blsSignature\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_validatorsBitSet\",\"type\":\"uint256\"}],\"name\":\"handlePackage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"_gnfdChainId\",\"type\":\"uint16\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isSuspended\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"oracleSequence\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"\",\"type\":\"int64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"previousTxHeight\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"quorumMap\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"registeredContractChannelMap\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"relayFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"reopen\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"internalType\":\"bytes\",\"name\":\"msgBytes\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"relayFee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"ackRelayFee\",\"type\":\"uint256\"}],\"name\":\"sendSynPackage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"suspend\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"txCounter\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"}],\"name\":\"AddChannel\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"srcChainId\",\"type\":\"uint32\"},{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"dstChainId\",\"type\":\"uint32\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"oracleSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"name\":\"CrossChainPackage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"isEnable\",\"type\":\"bool\"}],\"name\":\"EnableOrDisableChannel\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"ParamChange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"proposalTypeHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"proposer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"quorum\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"expiredAt\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"contentHash\",\"type\":\"bytes32\"}],\"name\":\"ProposalSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"packageType\",\"type\":\"uint8\"},{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"}],\"name\":\"ReceivedPackage\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"refundAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"refundAmount\",\"type\":\"uint256\"}],\"name\":\"RefundFeeTooLow\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"}],\"name\":\"Reopened\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"}],\"name\":\"Suspended\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"lowLevelData\",\"type\":\"bytes\"}],\"name\":\"UnexpectedFailureAssertionInPackageHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"contractAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"reason\",\"type\":\"string\"}],\"name\":\"UnexpectedRevertInPackageHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"packageSequence\",\"type\":\"uint64\"},{\"indexed\":true,\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"name\":\"UnsupportedPackage\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ACK_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CANCEL_TRANSFER_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CROSS_CHAIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"ConfigSlots\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EMERGENCY_PROPOSAL_EXPIRE_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EMPTY_CONTENT_HASH\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FAIL_ACK_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"LIGHT_CLIENT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PROXY_ADMIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"REOPEN_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SUSPEND_PROPOSAL\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SYN_PACKAGE\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TOKEN_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_IN_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_OUT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"batchSizeForOracle\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"callbackGasPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attacker\",\"type\":\"address\"}],\"name\":\"cancelTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelHandlerMap\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelReceiveSequenceMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"channelSendSequenceMap\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"emergencyProposals\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"quorum\",\"type\":\"uint16\"},{\"internalType\":\"uint128\",\"name\":\"expiredAt\",\"type\":\"uint128\"},{\"internalType\":\"bytes32\",\"name\":\"contentHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"packageType\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"_relayFee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_ackRelayFee\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"msgBytes\",\"type\":\"bytes\"}],\"name\":\"encodePayload\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRelayFees\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"_relayFee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_minAckRelayFee\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gnfdChainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"_blsSignature\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_validatorsBitSet\",\"type\":\"uint256\"}],\"name\":\"handlePackage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"inTurnRelayerValidityPeriod\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"_gnfdChainId\",\"type\":\"uint16\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isSuspended\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minAckRelayFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"oracleSequence\",\"outputs\":[{\"internalType\":\"int64\",\"name\":\"\",\"type\":\"int64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"previousTxHeight\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"quorumMap\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"name\":\"registeredContractChannelMap\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"relayFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"reopen\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"channelId\",\"type\":\"uint8\"},{\"internalType\":\"bytes\",\"name\":\"msgBytes\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_relayFee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_ackRelayFee\",\"type\":\"uint256\"}],\"name\":\"sendSynPackage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"suspend\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"txCounter\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"updateParam\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"versionInfo\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
 }
 
 // CrosschainABI is the input ABI used to generate the binding from.
@@ -211,37 +211,6 @@ func (_Crosschain *CrosschainCallerSession) ACKPACKAGE() (uint8, error) {
 	return _Crosschain.Contract.ACKPACKAGE(&_Crosschain.CallOpts)
 }
 
-// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
-//
-// Solidity: function APP_CHANNEL_ID() view returns(uint8)
-func (_Crosschain *CrosschainCaller) APPCHANNELID(opts *bind.CallOpts) (uint8, error) {
-	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "APP_CHANNEL_ID")
-
-	if err != nil {
-		return *new(uint8), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
-
-	return out0, err
-
-}
-
-// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
-//
-// Solidity: function APP_CHANNEL_ID() view returns(uint8)
-func (_Crosschain *CrosschainSession) APPCHANNELID() (uint8, error) {
-	return _Crosschain.Contract.APPCHANNELID(&_Crosschain.CallOpts)
-}
-
-// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
-//
-// Solidity: function APP_CHANNEL_ID() view returns(uint8)
-func (_Crosschain *CrosschainCallerSession) APPCHANNELID() (uint8, error) {
-	return _Crosschain.Contract.APPCHANNELID(&_Crosschain.CallOpts)
-}
-
 // BUCKETCHANNELID is a free data retrieval call binding the contract method 0x73f1e3c3.
 //
 // Solidity: function BUCKET_CHANNEL_ID() view returns(uint8)
@@ -364,6 +333,37 @@ func (_Crosschain *CrosschainSession) CROSSCHAIN() (common.Address, error) {
 // Solidity: function CROSS_CHAIN() view returns(address)
 func (_Crosschain *CrosschainCallerSession) CROSSCHAIN() (common.Address, error) {
 	return _Crosschain.Contract.CROSSCHAIN(&_Crosschain.CallOpts)
+}
+
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
+//
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Crosschain *CrosschainCaller) ConfigSlots(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "ConfigSlots", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
+//
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Crosschain *CrosschainSession) ConfigSlots(arg0 *big.Int) (*big.Int, error) {
+	return _Crosschain.Contract.ConfigSlots(&_Crosschain.CallOpts, arg0)
+}
+
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
+//
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Crosschain *CrosschainCallerSession) ConfigSlots(arg0 *big.Int) (*big.Int, error) {
+	return _Crosschain.Contract.ConfigSlots(&_Crosschain.CallOpts, arg0)
 }
 
 // EMERGENCYPROPOSALEXPIREPERIOD is a free data retrieval call binding the contract method 0xdc404331.
@@ -581,37 +581,6 @@ func (_Crosschain *CrosschainSession) GROUPHUB() (common.Address, error) {
 // Solidity: function GROUP_HUB() view returns(address)
 func (_Crosschain *CrosschainCallerSession) GROUPHUB() (common.Address, error) {
 	return _Crosschain.Contract.GROUPHUB(&_Crosschain.CallOpts)
-}
-
-// INTURNRELAYERVALIDITYPERIOD is a free data retrieval call binding the contract method 0xe036ead6.
-//
-// Solidity: function IN_TURN_RELAYER_VALIDITY_PERIOD() view returns(uint256)
-func (_Crosschain *CrosschainCaller) INTURNRELAYERVALIDITYPERIOD(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "IN_TURN_RELAYER_VALIDITY_PERIOD")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// INTURNRELAYERVALIDITYPERIOD is a free data retrieval call binding the contract method 0xe036ead6.
-//
-// Solidity: function IN_TURN_RELAYER_VALIDITY_PERIOD() view returns(uint256)
-func (_Crosschain *CrosschainSession) INTURNRELAYERVALIDITYPERIOD() (*big.Int, error) {
-	return _Crosschain.Contract.INTURNRELAYERVALIDITYPERIOD(&_Crosschain.CallOpts)
-}
-
-// INTURNRELAYERVALIDITYPERIOD is a free data retrieval call binding the contract method 0xe036ead6.
-//
-// Solidity: function IN_TURN_RELAYER_VALIDITY_PERIOD() view returns(uint256)
-func (_Crosschain *CrosschainCallerSession) INTURNRELAYERVALIDITYPERIOD() (*big.Int, error) {
-	return _Crosschain.Contract.INTURNRELAYERVALIDITYPERIOD(&_Crosschain.CallOpts)
 }
 
 // LIGHTCLIENT is a free data retrieval call binding the contract method 0xe613ae00.
@@ -955,37 +924,6 @@ func (_Crosschain *CrosschainCallerSession) TRANSFEROUTCHANNELID() (uint8, error
 	return _Crosschain.Contract.TRANSFEROUTCHANNELID(&_Crosschain.CallOpts)
 }
 
-// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
-//
-// Solidity: function ackRelayFee() view returns(uint256)
-func (_Crosschain *CrosschainCaller) AckRelayFee(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "ackRelayFee")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
-//
-// Solidity: function ackRelayFee() view returns(uint256)
-func (_Crosschain *CrosschainSession) AckRelayFee() (*big.Int, error) {
-	return _Crosschain.Contract.AckRelayFee(&_Crosschain.CallOpts)
-}
-
-// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
-//
-// Solidity: function ackRelayFee() view returns(uint256)
-func (_Crosschain *CrosschainCallerSession) AckRelayFee() (*big.Int, error) {
-	return _Crosschain.Contract.AckRelayFee(&_Crosschain.CallOpts)
-}
-
 // BatchSizeForOracle is a free data retrieval call binding the contract method 0x14b3023b.
 //
 // Solidity: function batchSizeForOracle() view returns(uint256)
@@ -1015,6 +953,37 @@ func (_Crosschain *CrosschainSession) BatchSizeForOracle() (*big.Int, error) {
 // Solidity: function batchSizeForOracle() view returns(uint256)
 func (_Crosschain *CrosschainCallerSession) BatchSizeForOracle() (*big.Int, error) {
 	return _Crosschain.Contract.BatchSizeForOracle(&_Crosschain.CallOpts)
+}
+
+// CallbackGasPrice is a free data retrieval call binding the contract method 0xbf903247.
+//
+// Solidity: function callbackGasPrice() view returns(uint256)
+func (_Crosschain *CrosschainCaller) CallbackGasPrice(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "callbackGasPrice")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// CallbackGasPrice is a free data retrieval call binding the contract method 0xbf903247.
+//
+// Solidity: function callbackGasPrice() view returns(uint256)
+func (_Crosschain *CrosschainSession) CallbackGasPrice() (*big.Int, error) {
+	return _Crosschain.Contract.CallbackGasPrice(&_Crosschain.CallOpts)
+}
+
+// CallbackGasPrice is a free data retrieval call binding the contract method 0xbf903247.
+//
+// Solidity: function callbackGasPrice() view returns(uint256)
+func (_Crosschain *CrosschainCallerSession) CallbackGasPrice() (*big.Int, error) {
+	return _Crosschain.Contract.CallbackGasPrice(&_Crosschain.CallOpts)
 }
 
 // ChainId is a free data retrieval call binding the contract method 0x9a8a0592.
@@ -1193,10 +1162,10 @@ func (_Crosschain *CrosschainCallerSession) EmergencyProposals(arg0 [32]byte) (s
 
 // EncodePayload is a free data retrieval call binding the contract method 0x9c06ea47.
 //
-// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, uint256 ackRelayFee, bytes msgBytes) view returns(bytes)
-func (_Crosschain *CrosschainCaller) EncodePayload(opts *bind.CallOpts, packageType uint8, relayFee *big.Int, ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
+// Solidity: function encodePayload(uint8 packageType, uint256 _relayFee, uint256 _ackRelayFee, bytes msgBytes) view returns(bytes)
+func (_Crosschain *CrosschainCaller) EncodePayload(opts *bind.CallOpts, packageType uint8, _relayFee *big.Int, _ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
 	var out []interface{}
-	err := _Crosschain.contract.Call(opts, &out, "encodePayload", packageType, relayFee, ackRelayFee, msgBytes)
+	err := _Crosschain.contract.Call(opts, &out, "encodePayload", packageType, _relayFee, _ackRelayFee, msgBytes)
 
 	if err != nil {
 		return *new([]byte), err
@@ -1210,16 +1179,61 @@ func (_Crosschain *CrosschainCaller) EncodePayload(opts *bind.CallOpts, packageT
 
 // EncodePayload is a free data retrieval call binding the contract method 0x9c06ea47.
 //
-// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, uint256 ackRelayFee, bytes msgBytes) view returns(bytes)
-func (_Crosschain *CrosschainSession) EncodePayload(packageType uint8, relayFee *big.Int, ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
-	return _Crosschain.Contract.EncodePayload(&_Crosschain.CallOpts, packageType, relayFee, ackRelayFee, msgBytes)
+// Solidity: function encodePayload(uint8 packageType, uint256 _relayFee, uint256 _ackRelayFee, bytes msgBytes) view returns(bytes)
+func (_Crosschain *CrosschainSession) EncodePayload(packageType uint8, _relayFee *big.Int, _ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
+	return _Crosschain.Contract.EncodePayload(&_Crosschain.CallOpts, packageType, _relayFee, _ackRelayFee, msgBytes)
 }
 
 // EncodePayload is a free data retrieval call binding the contract method 0x9c06ea47.
 //
-// Solidity: function encodePayload(uint8 packageType, uint256 relayFee, uint256 ackRelayFee, bytes msgBytes) view returns(bytes)
-func (_Crosschain *CrosschainCallerSession) EncodePayload(packageType uint8, relayFee *big.Int, ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
-	return _Crosschain.Contract.EncodePayload(&_Crosschain.CallOpts, packageType, relayFee, ackRelayFee, msgBytes)
+// Solidity: function encodePayload(uint8 packageType, uint256 _relayFee, uint256 _ackRelayFee, bytes msgBytes) view returns(bytes)
+func (_Crosschain *CrosschainCallerSession) EncodePayload(packageType uint8, _relayFee *big.Int, _ackRelayFee *big.Int, msgBytes []byte) ([]byte, error) {
+	return _Crosschain.Contract.EncodePayload(&_Crosschain.CallOpts, packageType, _relayFee, _ackRelayFee, msgBytes)
+}
+
+// GetRelayFees is a free data retrieval call binding the contract method 0x54912a97.
+//
+// Solidity: function getRelayFees() view returns(uint256 _relayFee, uint256 _minAckRelayFee)
+func (_Crosschain *CrosschainCaller) GetRelayFees(opts *bind.CallOpts) (struct {
+	RelayFee       *big.Int
+	MinAckRelayFee *big.Int
+}, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "getRelayFees")
+
+	outstruct := new(struct {
+		RelayFee       *big.Int
+		MinAckRelayFee *big.Int
+	})
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.RelayFee = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.MinAckRelayFee = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
+}
+
+// GetRelayFees is a free data retrieval call binding the contract method 0x54912a97.
+//
+// Solidity: function getRelayFees() view returns(uint256 _relayFee, uint256 _minAckRelayFee)
+func (_Crosschain *CrosschainSession) GetRelayFees() (struct {
+	RelayFee       *big.Int
+	MinAckRelayFee *big.Int
+}, error) {
+	return _Crosschain.Contract.GetRelayFees(&_Crosschain.CallOpts)
+}
+
+// GetRelayFees is a free data retrieval call binding the contract method 0x54912a97.
+//
+// Solidity: function getRelayFees() view returns(uint256 _relayFee, uint256 _minAckRelayFee)
+func (_Crosschain *CrosschainCallerSession) GetRelayFees() (struct {
+	RelayFee       *big.Int
+	MinAckRelayFee *big.Int
+}, error) {
+	return _Crosschain.Contract.GetRelayFees(&_Crosschain.CallOpts)
 }
 
 // GnfdChainId is a free data retrieval call binding the contract method 0x96b1ec6e.
@@ -1253,6 +1267,37 @@ func (_Crosschain *CrosschainCallerSession) GnfdChainId() (uint16, error) {
 	return _Crosschain.Contract.GnfdChainId(&_Crosschain.CallOpts)
 }
 
+// InTurnRelayerValidityPeriod is a free data retrieval call binding the contract method 0xf4efa5a7.
+//
+// Solidity: function inTurnRelayerValidityPeriod() view returns(uint256)
+func (_Crosschain *CrosschainCaller) InTurnRelayerValidityPeriod(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "inTurnRelayerValidityPeriod")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// InTurnRelayerValidityPeriod is a free data retrieval call binding the contract method 0xf4efa5a7.
+//
+// Solidity: function inTurnRelayerValidityPeriod() view returns(uint256)
+func (_Crosschain *CrosschainSession) InTurnRelayerValidityPeriod() (*big.Int, error) {
+	return _Crosschain.Contract.InTurnRelayerValidityPeriod(&_Crosschain.CallOpts)
+}
+
+// InTurnRelayerValidityPeriod is a free data retrieval call binding the contract method 0xf4efa5a7.
+//
+// Solidity: function inTurnRelayerValidityPeriod() view returns(uint256)
+func (_Crosschain *CrosschainCallerSession) InTurnRelayerValidityPeriod() (*big.Int, error) {
+	return _Crosschain.Contract.InTurnRelayerValidityPeriod(&_Crosschain.CallOpts)
+}
+
 // IsSuspended is a free data retrieval call binding the contract method 0x1d130935.
 //
 // Solidity: function isSuspended() view returns(bool)
@@ -1282,6 +1327,37 @@ func (_Crosschain *CrosschainSession) IsSuspended() (bool, error) {
 // Solidity: function isSuspended() view returns(bool)
 func (_Crosschain *CrosschainCallerSession) IsSuspended() (bool, error) {
 	return _Crosschain.Contract.IsSuspended(&_Crosschain.CallOpts)
+}
+
+// MinAckRelayFee is a free data retrieval call binding the contract method 0x84597cdf.
+//
+// Solidity: function minAckRelayFee() view returns(uint256)
+func (_Crosschain *CrosschainCaller) MinAckRelayFee(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "minAckRelayFee")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// MinAckRelayFee is a free data retrieval call binding the contract method 0x84597cdf.
+//
+// Solidity: function minAckRelayFee() view returns(uint256)
+func (_Crosschain *CrosschainSession) MinAckRelayFee() (*big.Int, error) {
+	return _Crosschain.Contract.MinAckRelayFee(&_Crosschain.CallOpts)
+}
+
+// MinAckRelayFee is a free data retrieval call binding the contract method 0x84597cdf.
+//
+// Solidity: function minAckRelayFee() view returns(uint256)
+func (_Crosschain *CrosschainCallerSession) MinAckRelayFee() (*big.Int, error) {
+	return _Crosschain.Contract.MinAckRelayFee(&_Crosschain.CallOpts)
 }
 
 // OracleSequence is a free data retrieval call binding the contract method 0x2ff32aea.
@@ -1470,6 +1546,56 @@ func (_Crosschain *CrosschainCallerSession) TxCounter() (*big.Int, error) {
 	return _Crosschain.Contract.TxCounter(&_Crosschain.CallOpts)
 }
 
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Crosschain *CrosschainCaller) VersionInfo(opts *bind.CallOpts) (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	var out []interface{}
+	err := _Crosschain.contract.Call(opts, &out, "versionInfo")
+
+	outstruct := new(struct {
+		Version     *big.Int
+		Name        string
+		Description string
+	})
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Version = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.Name = *abi.ConvertType(out[1], new(string)).(*string)
+	outstruct.Description = *abi.ConvertType(out[2], new(string)).(*string)
+
+	return *outstruct, err
+
+}
+
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Crosschain *CrosschainSession) VersionInfo() (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	return _Crosschain.Contract.VersionInfo(&_Crosschain.CallOpts)
+}
+
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Crosschain *CrosschainCallerSession) VersionInfo() (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	return _Crosschain.Contract.VersionInfo(&_Crosschain.CallOpts)
+}
+
 // CancelTransfer is a paid mutator transaction binding the contract method 0xa7c1e629.
 //
 // Solidity: function cancelTransfer(address attacker) returns()
@@ -1556,23 +1682,23 @@ func (_Crosschain *CrosschainTransactorSession) Reopen() (*types.Transaction, er
 
 // SendSynPackage is a paid mutator transaction binding the contract method 0x8f884dda.
 //
-// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee, uint256 ackRelayFee) returns()
-func (_Crosschain *CrosschainTransactor) SendSynPackage(opts *bind.TransactOpts, channelId uint8, msgBytes []byte, relayFee *big.Int, ackRelayFee *big.Int) (*types.Transaction, error) {
-	return _Crosschain.contract.Transact(opts, "sendSynPackage", channelId, msgBytes, relayFee, ackRelayFee)
+// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 _relayFee, uint256 _ackRelayFee) returns()
+func (_Crosschain *CrosschainTransactor) SendSynPackage(opts *bind.TransactOpts, channelId uint8, msgBytes []byte, _relayFee *big.Int, _ackRelayFee *big.Int) (*types.Transaction, error) {
+	return _Crosschain.contract.Transact(opts, "sendSynPackage", channelId, msgBytes, _relayFee, _ackRelayFee)
 }
 
 // SendSynPackage is a paid mutator transaction binding the contract method 0x8f884dda.
 //
-// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee, uint256 ackRelayFee) returns()
-func (_Crosschain *CrosschainSession) SendSynPackage(channelId uint8, msgBytes []byte, relayFee *big.Int, ackRelayFee *big.Int) (*types.Transaction, error) {
-	return _Crosschain.Contract.SendSynPackage(&_Crosschain.TransactOpts, channelId, msgBytes, relayFee, ackRelayFee)
+// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 _relayFee, uint256 _ackRelayFee) returns()
+func (_Crosschain *CrosschainSession) SendSynPackage(channelId uint8, msgBytes []byte, _relayFee *big.Int, _ackRelayFee *big.Int) (*types.Transaction, error) {
+	return _Crosschain.Contract.SendSynPackage(&_Crosschain.TransactOpts, channelId, msgBytes, _relayFee, _ackRelayFee)
 }
 
 // SendSynPackage is a paid mutator transaction binding the contract method 0x8f884dda.
 //
-// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 relayFee, uint256 ackRelayFee) returns()
-func (_Crosschain *CrosschainTransactorSession) SendSynPackage(channelId uint8, msgBytes []byte, relayFee *big.Int, ackRelayFee *big.Int) (*types.Transaction, error) {
-	return _Crosschain.Contract.SendSynPackage(&_Crosschain.TransactOpts, channelId, msgBytes, relayFee, ackRelayFee)
+// Solidity: function sendSynPackage(uint8 channelId, bytes msgBytes, uint256 _relayFee, uint256 _ackRelayFee) returns()
+func (_Crosschain *CrosschainTransactorSession) SendSynPackage(channelId uint8, msgBytes []byte, _relayFee *big.Int, _ackRelayFee *big.Int) (*types.Transaction, error) {
+	return _Crosschain.Contract.SendSynPackage(&_Crosschain.TransactOpts, channelId, msgBytes, _relayFee, _ackRelayFee)
 }
 
 // Suspend is a paid mutator transaction binding the contract method 0xe6400bbe.
@@ -1594,6 +1720,27 @@ func (_Crosschain *CrosschainSession) Suspend() (*types.Transaction, error) {
 // Solidity: function suspend() returns()
 func (_Crosschain *CrosschainTransactorSession) Suspend() (*types.Transaction, error) {
 	return _Crosschain.Contract.Suspend(&_Crosschain.TransactOpts)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Crosschain *CrosschainTransactor) UpdateParam(opts *bind.TransactOpts, key string, value []byte) (*types.Transaction, error) {
+	return _Crosschain.contract.Transact(opts, "updateParam", key, value)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Crosschain *CrosschainSession) UpdateParam(key string, value []byte) (*types.Transaction, error) {
+	return _Crosschain.Contract.UpdateParam(&_Crosschain.TransactOpts, key, value)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Crosschain *CrosschainTransactorSession) UpdateParam(key string, value []byte) (*types.Transaction, error) {
+	return _Crosschain.Contract.UpdateParam(&_Crosschain.TransactOpts, key, value)
 }
 
 // CrosschainAddChannelIterator is returned from FilterAddChannel and is used to iterate over the raw logs and unpacked data for AddChannel events raised by the Crosschain contract.
@@ -2632,6 +2779,151 @@ func (_Crosschain *CrosschainFilterer) WatchReceivedPackage(opts *bind.WatchOpts
 func (_Crosschain *CrosschainFilterer) ParseReceivedPackage(log types.Log) (*CrosschainReceivedPackage, error) {
 	event := new(CrosschainReceivedPackage)
 	if err := _Crosschain.contract.UnpackLog(event, "ReceivedPackage", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// CrosschainRefundFeeTooLowIterator is returned from FilterRefundFeeTooLow and is used to iterate over the raw logs and unpacked data for RefundFeeTooLow events raised by the Crosschain contract.
+type CrosschainRefundFeeTooLowIterator struct {
+	Event *CrosschainRefundFeeTooLow // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *CrosschainRefundFeeTooLowIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(CrosschainRefundFeeTooLow)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(CrosschainRefundFeeTooLow)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *CrosschainRefundFeeTooLowIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *CrosschainRefundFeeTooLowIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// CrosschainRefundFeeTooLow represents a RefundFeeTooLow event raised by the Crosschain contract.
+type CrosschainRefundFeeTooLow struct {
+	RefundAddress common.Address
+	RefundAmount  *big.Int
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// FilterRefundFeeTooLow is a free log retrieval operation binding the contract event 0x2f105d220bc08ba7bba16e6acd59f2132bb02df4da1d56ed75a8917b1953495c.
+//
+// Solidity: event RefundFeeTooLow(address indexed refundAddress, uint256 refundAmount)
+func (_Crosschain *CrosschainFilterer) FilterRefundFeeTooLow(opts *bind.FilterOpts, refundAddress []common.Address) (*CrosschainRefundFeeTooLowIterator, error) {
+
+	var refundAddressRule []interface{}
+	for _, refundAddressItem := range refundAddress {
+		refundAddressRule = append(refundAddressRule, refundAddressItem)
+	}
+
+	logs, sub, err := _Crosschain.contract.FilterLogs(opts, "RefundFeeTooLow", refundAddressRule)
+	if err != nil {
+		return nil, err
+	}
+	return &CrosschainRefundFeeTooLowIterator{contract: _Crosschain.contract, event: "RefundFeeTooLow", logs: logs, sub: sub}, nil
+}
+
+// WatchRefundFeeTooLow is a free log subscription operation binding the contract event 0x2f105d220bc08ba7bba16e6acd59f2132bb02df4da1d56ed75a8917b1953495c.
+//
+// Solidity: event RefundFeeTooLow(address indexed refundAddress, uint256 refundAmount)
+func (_Crosschain *CrosschainFilterer) WatchRefundFeeTooLow(opts *bind.WatchOpts, sink chan<- *CrosschainRefundFeeTooLow, refundAddress []common.Address) (event.Subscription, error) {
+
+	var refundAddressRule []interface{}
+	for _, refundAddressItem := range refundAddress {
+		refundAddressRule = append(refundAddressRule, refundAddressItem)
+	}
+
+	logs, sub, err := _Crosschain.contract.WatchLogs(opts, "RefundFeeTooLow", refundAddressRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(CrosschainRefundFeeTooLow)
+				if err := _Crosschain.contract.UnpackLog(event, "RefundFeeTooLow", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseRefundFeeTooLow is a log parse operation binding the contract event 0x2f105d220bc08ba7bba16e6acd59f2132bb02df4da1d56ed75a8917b1953495c.
+//
+// Solidity: event RefundFeeTooLow(address indexed refundAddress, uint256 refundAmount)
+func (_Crosschain *CrosschainFilterer) ParseRefundFeeTooLow(log types.Log) (*CrosschainRefundFeeTooLow, error) {
+	event := new(CrosschainRefundFeeTooLow)
+	if err := _Crosschain.contract.UnpackLog(event, "RefundFeeTooLow", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

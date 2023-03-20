@@ -39,7 +39,7 @@ type ILightClientInturnRelayer struct {
 
 // GreenfieldlightclientMetaData contains all meta data concerning the Greenfieldlightclient contract.
 var GreenfieldlightclientMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"height\",\"type\":\"uint64\"}],\"name\":\"InitConsensusState\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"height\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"validatorSetChanged\",\"type\":\"bool\"}],\"name\":\"UpdatedConsensusState\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"APP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BLS_SIGNATURE_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CHAIN_ID_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CONSENSUS_STATE_BASE_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CONSENSUS_STATE_BYTES_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CROSS_CHAIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HEADER_VALIDATE_CONTRACT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HEIGHT_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"IN_TURN_RELAYER_RELAY_INTERVAL\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"LIGHT_CLIENT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MESSAGE_HASH_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PACKAGE_VERIFY_CONTRACT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PROXY_ADMIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_ADDRESS_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_BLS_KEY_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TOKEN_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_IN_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_OUT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_BYTES_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_PUB_KEY_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_SET_HASH_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_VOTING_POWER_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ackRelayFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"blsPubKeys\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"_blsPubKeys\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"consensusStateBytes\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayer\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"blsKey\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"end\",\"type\":\"uint256\"}],\"internalType\":\"structILightClient.InturnRelayer\",\"name\":\"relayer\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayerBlsPubKey\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRelayers\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gnfdHeight\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_initConsensusStateBytes\",\"type\":\"bytes\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nextValidatorSetHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"relayFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"name\":\"submitters\",\"outputs\":[{\"internalType\":\"addresspayable\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_lightBlock\",\"type\":\"bytes\"},{\"internalType\":\"uint64\",\"name\":\"_height\",\"type\":\"uint64\"}],\"name\":\"syncLightBlock\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"validatorSet\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"pubKey\",\"type\":\"bytes32\"},{\"internalType\":\"int64\",\"name\":\"votingPower\",\"type\":\"int64\"},{\"internalType\":\"address\",\"name\":\"relayerAddress\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"relayerBlsKey\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"_blsSignature\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_validatorSetBitMap\",\"type\":\"uint256\"}],\"name\":\"verifyPackage\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"height\",\"type\":\"uint64\"}],\"name\":\"InitConsensusState\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"ParamChange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"height\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"validatorSetChanged\",\"type\":\"bool\"}],\"name\":\"UpdatedConsensusState\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"BLS_SIGNATURE_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CHAIN_ID_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CONSENSUS_STATE_BASE_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CONSENSUS_STATE_BYTES_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CROSS_CHAIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"ConfigSlots\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HEADER_VALIDATE_CONTRACT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HEIGHT_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"LIGHT_CLIENT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MESSAGE_HASH_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PACKAGE_VERIFY_CONTRACT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PROXY_ADMIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_ADDRESS_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_BLS_KEY_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TOKEN_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_IN_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_OUT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_BYTES_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_PUB_KEY_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_SET_HASH_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_VOTING_POWER_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"blsPubKeys\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"_blsPubKeys\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"consensusStateBytes\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayer\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"blsKey\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"end\",\"type\":\"uint256\"}],\"internalType\":\"structILightClient.InturnRelayer\",\"name\":\"relayer\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayerBlsPubKey\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRelayers\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gnfdHeight\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"inTurnRelayerRelayInterval\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_initConsensusStateBytes\",\"type\":\"bytes\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nextValidatorSetHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"name\":\"submitters\",\"outputs\":[{\"internalType\":\"addresspayable\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_lightBlock\",\"type\":\"bytes\"},{\"internalType\":\"uint64\",\"name\":\"_height\",\"type\":\"uint64\"}],\"name\":\"syncLightBlock\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"updateParam\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"validatorSet\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"pubKey\",\"type\":\"bytes32\"},{\"internalType\":\"int64\",\"name\":\"votingPower\",\"type\":\"int64\"},{\"internalType\":\"address\",\"name\":\"relayerAddress\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"relayerBlsKey\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"_blsSignature\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_validatorSetBitMap\",\"type\":\"uint256\"}],\"name\":\"verifyPackage\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"versionInfo\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
 }
 
 // GreenfieldlightclientABI is the input ABI used to generate the binding from.
@@ -186,37 +186,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientTransactorRaw) Transfer(opts 
 // Transact invokes the (paid) contract method with params as input values.
 func (_Greenfieldlightclient *GreenfieldlightclientTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _Greenfieldlightclient.Contract.contract.Transact(opts, method, params...)
-}
-
-// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
-//
-// Solidity: function APP_CHANNEL_ID() view returns(uint8)
-func (_Greenfieldlightclient *GreenfieldlightclientCaller) APPCHANNELID(opts *bind.CallOpts) (uint8, error) {
-	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "APP_CHANNEL_ID")
-
-	if err != nil {
-		return *new(uint8), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
-
-	return out0, err
-
-}
-
-// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
-//
-// Solidity: function APP_CHANNEL_ID() view returns(uint8)
-func (_Greenfieldlightclient *GreenfieldlightclientSession) APPCHANNELID() (uint8, error) {
-	return _Greenfieldlightclient.Contract.APPCHANNELID(&_Greenfieldlightclient.CallOpts)
-}
-
-// APPCHANNELID is a free data retrieval call binding the contract method 0x1124de3a.
-//
-// Solidity: function APP_CHANNEL_ID() view returns(uint8)
-func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) APPCHANNELID() (uint8, error) {
-	return _Greenfieldlightclient.Contract.APPCHANNELID(&_Greenfieldlightclient.CallOpts)
 }
 
 // BLSSIGNATURELENGTH is a free data retrieval call binding the contract method 0xdfe5b236.
@@ -436,6 +405,37 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) CROSSCHAIN() (
 	return _Greenfieldlightclient.Contract.CROSSCHAIN(&_Greenfieldlightclient.CallOpts)
 }
 
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
+//
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) ConfigSlots(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "ConfigSlots", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
+//
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) ConfigSlots(arg0 *big.Int) (*big.Int, error) {
+	return _Greenfieldlightclient.Contract.ConfigSlots(&_Greenfieldlightclient.CallOpts, arg0)
+}
+
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
+//
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) ConfigSlots(arg0 *big.Int) (*big.Int, error) {
+	return _Greenfieldlightclient.Contract.ConfigSlots(&_Greenfieldlightclient.CallOpts, arg0)
+}
+
 // GOVCHANNELID is a free data retrieval call binding the contract method 0x81d91480.
 //
 // Solidity: function GOV_CHANNEL_ID() view returns(uint8)
@@ -620,37 +620,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientSession) HEIGHTLENGTH() (*big
 // Solidity: function HEIGHT_LENGTH() view returns(uint256)
 func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) HEIGHTLENGTH() (*big.Int, error) {
 	return _Greenfieldlightclient.Contract.HEIGHTLENGTH(&_Greenfieldlightclient.CallOpts)
-}
-
-// INTURNRELAYERRELAYINTERVAL is a free data retrieval call binding the contract method 0x7ab4fc69.
-//
-// Solidity: function IN_TURN_RELAYER_RELAY_INTERVAL() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientCaller) INTURNRELAYERRELAYINTERVAL(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "IN_TURN_RELAYER_RELAY_INTERVAL")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// INTURNRELAYERRELAYINTERVAL is a free data retrieval call binding the contract method 0x7ab4fc69.
-//
-// Solidity: function IN_TURN_RELAYER_RELAY_INTERVAL() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientSession) INTURNRELAYERRELAYINTERVAL() (*big.Int, error) {
-	return _Greenfieldlightclient.Contract.INTURNRELAYERRELAYINTERVAL(&_Greenfieldlightclient.CallOpts)
-}
-
-// INTURNRELAYERRELAYINTERVAL is a free data retrieval call binding the contract method 0x7ab4fc69.
-//
-// Solidity: function IN_TURN_RELAYER_RELAY_INTERVAL() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) INTURNRELAYERRELAYINTERVAL() (*big.Int, error) {
-	return _Greenfieldlightclient.Contract.INTURNRELAYERRELAYINTERVAL(&_Greenfieldlightclient.CallOpts)
 }
 
 // LIGHTCLIENT is a free data retrieval call binding the contract method 0xe613ae00.
@@ -1149,37 +1118,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) VALIDATORVOTIN
 	return _Greenfieldlightclient.Contract.VALIDATORVOTINGPOWERLENGTH(&_Greenfieldlightclient.CallOpts)
 }
 
-// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
-//
-// Solidity: function ackRelayFee() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientCaller) AckRelayFee(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "ackRelayFee")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
-//
-// Solidity: function ackRelayFee() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientSession) AckRelayFee() (*big.Int, error) {
-	return _Greenfieldlightclient.Contract.AckRelayFee(&_Greenfieldlightclient.CallOpts)
-}
-
-// AckRelayFee is a free data retrieval call binding the contract method 0x6ab31754.
-//
-// Solidity: function ackRelayFee() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) AckRelayFee() (*big.Int, error) {
-	return _Greenfieldlightclient.Contract.AckRelayFee(&_Greenfieldlightclient.CallOpts)
-}
-
 // BlsPubKeys is a free data retrieval call binding the contract method 0xbb9dae06.
 //
 // Solidity: function blsPubKeys() view returns(bytes _blsPubKeys)
@@ -1428,6 +1366,37 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GnfdHeight() (
 	return _Greenfieldlightclient.Contract.GnfdHeight(&_Greenfieldlightclient.CallOpts)
 }
 
+// InTurnRelayerRelayInterval is a free data retrieval call binding the contract method 0x3f8e2a84.
+//
+// Solidity: function inTurnRelayerRelayInterval() view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) InTurnRelayerRelayInterval(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "inTurnRelayerRelayInterval")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// InTurnRelayerRelayInterval is a free data retrieval call binding the contract method 0x3f8e2a84.
+//
+// Solidity: function inTurnRelayerRelayInterval() view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) InTurnRelayerRelayInterval() (*big.Int, error) {
+	return _Greenfieldlightclient.Contract.InTurnRelayerRelayInterval(&_Greenfieldlightclient.CallOpts)
+}
+
+// InTurnRelayerRelayInterval is a free data retrieval call binding the contract method 0x3f8e2a84.
+//
+// Solidity: function inTurnRelayerRelayInterval() view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) InTurnRelayerRelayInterval() (*big.Int, error) {
+	return _Greenfieldlightclient.Contract.InTurnRelayerRelayInterval(&_Greenfieldlightclient.CallOpts)
+}
+
 // NextValidatorSetHash is a free data retrieval call binding the contract method 0x752d3b89.
 //
 // Solidity: function nextValidatorSetHash() view returns(bytes32)
@@ -1457,37 +1426,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientSession) NextValidatorSetHash
 // Solidity: function nextValidatorSetHash() view returns(bytes32)
 func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) NextValidatorSetHash() ([32]byte, error) {
 	return _Greenfieldlightclient.Contract.NextValidatorSetHash(&_Greenfieldlightclient.CallOpts)
-}
-
-// RelayFee is a free data retrieval call binding the contract method 0x71d30863.
-//
-// Solidity: function relayFee() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientCaller) RelayFee(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "relayFee")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// RelayFee is a free data retrieval call binding the contract method 0x71d30863.
-//
-// Solidity: function relayFee() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientSession) RelayFee() (*big.Int, error) {
-	return _Greenfieldlightclient.Contract.RelayFee(&_Greenfieldlightclient.CallOpts)
-}
-
-// RelayFee is a free data retrieval call binding the contract method 0x71d30863.
-//
-// Solidity: function relayFee() view returns(uint256)
-func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) RelayFee() (*big.Int, error) {
-	return _Greenfieldlightclient.Contract.RelayFee(&_Greenfieldlightclient.CallOpts)
 }
 
 // Submitters is a free data retrieval call binding the contract method 0xda8d08f0.
@@ -1607,6 +1545,56 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) VerifyPackage(
 	return _Greenfieldlightclient.Contract.VerifyPackage(&_Greenfieldlightclient.CallOpts, _payload, _blsSignature, _validatorSetBitMap)
 }
 
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) VersionInfo(opts *bind.CallOpts) (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "versionInfo")
+
+	outstruct := new(struct {
+		Version     *big.Int
+		Name        string
+		Description string
+	})
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Version = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.Name = *abi.ConvertType(out[1], new(string)).(*string)
+	outstruct.Description = *abi.ConvertType(out[2], new(string)).(*string)
+
+	return *outstruct, err
+
+}
+
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) VersionInfo() (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	return _Greenfieldlightclient.Contract.VersionInfo(&_Greenfieldlightclient.CallOpts)
+}
+
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) VersionInfo() (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	return _Greenfieldlightclient.Contract.VersionInfo(&_Greenfieldlightclient.CallOpts)
+}
+
 // Initialize is a paid mutator transaction binding the contract method 0x439fab91.
 //
 // Solidity: function initialize(bytes _initConsensusStateBytes) returns()
@@ -1647,6 +1635,27 @@ func (_Greenfieldlightclient *GreenfieldlightclientSession) SyncLightBlock(_ligh
 // Solidity: function syncLightBlock(bytes _lightBlock, uint64 _height) returns(bool)
 func (_Greenfieldlightclient *GreenfieldlightclientTransactorSession) SyncLightBlock(_lightBlock []byte, _height uint64) (*types.Transaction, error) {
 	return _Greenfieldlightclient.Contract.SyncLightBlock(&_Greenfieldlightclient.TransactOpts, _lightBlock, _height)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Greenfieldlightclient *GreenfieldlightclientTransactor) UpdateParam(opts *bind.TransactOpts, key string, value []byte) (*types.Transaction, error) {
+	return _Greenfieldlightclient.contract.Transact(opts, "updateParam", key, value)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Greenfieldlightclient *GreenfieldlightclientSession) UpdateParam(key string, value []byte) (*types.Transaction, error) {
+	return _Greenfieldlightclient.Contract.UpdateParam(&_Greenfieldlightclient.TransactOpts, key, value)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Greenfieldlightclient *GreenfieldlightclientTransactorSession) UpdateParam(key string, value []byte) (*types.Transaction, error) {
+	return _Greenfieldlightclient.Contract.UpdateParam(&_Greenfieldlightclient.TransactOpts, key, value)
 }
 
 // GreenfieldlightclientInitConsensusStateIterator is returned from FilterInitConsensusState and is used to iterate over the raw logs and unpacked data for InitConsensusState events raised by the Greenfieldlightclient contract.
@@ -1911,6 +1920,141 @@ func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchInitialized(op
 func (_Greenfieldlightclient *GreenfieldlightclientFilterer) ParseInitialized(log types.Log) (*GreenfieldlightclientInitialized, error) {
 	event := new(GreenfieldlightclientInitialized)
 	if err := _Greenfieldlightclient.contract.UnpackLog(event, "Initialized", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// GreenfieldlightclientParamChangeIterator is returned from FilterParamChange and is used to iterate over the raw logs and unpacked data for ParamChange events raised by the Greenfieldlightclient contract.
+type GreenfieldlightclientParamChangeIterator struct {
+	Event *GreenfieldlightclientParamChange // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *GreenfieldlightclientParamChangeIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(GreenfieldlightclientParamChange)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(GreenfieldlightclientParamChange)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *GreenfieldlightclientParamChangeIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *GreenfieldlightclientParamChangeIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// GreenfieldlightclientParamChange represents a ParamChange event raised by the Greenfieldlightclient contract.
+type GreenfieldlightclientParamChange struct {
+	Key   string
+	Value []byte
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// FilterParamChange is a free log retrieval operation binding the contract event 0xf1ce9b2cbf50eeb05769a29e2543fd350cab46894a7dd9978a12d534bb20e633.
+//
+// Solidity: event ParamChange(string key, bytes value)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) FilterParamChange(opts *bind.FilterOpts) (*GreenfieldlightclientParamChangeIterator, error) {
+
+	logs, sub, err := _Greenfieldlightclient.contract.FilterLogs(opts, "ParamChange")
+	if err != nil {
+		return nil, err
+	}
+	return &GreenfieldlightclientParamChangeIterator{contract: _Greenfieldlightclient.contract, event: "ParamChange", logs: logs, sub: sub}, nil
+}
+
+// WatchParamChange is a free log subscription operation binding the contract event 0xf1ce9b2cbf50eeb05769a29e2543fd350cab46894a7dd9978a12d534bb20e633.
+//
+// Solidity: event ParamChange(string key, bytes value)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchParamChange(opts *bind.WatchOpts, sink chan<- *GreenfieldlightclientParamChange) (event.Subscription, error) {
+
+	logs, sub, err := _Greenfieldlightclient.contract.WatchLogs(opts, "ParamChange")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(GreenfieldlightclientParamChange)
+				if err := _Greenfieldlightclient.contract.UnpackLog(event, "ParamChange", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseParamChange is a log parse operation binding the contract event 0xf1ce9b2cbf50eeb05769a29e2543fd350cab46894a7dd9978a12d534bb20e633.
+//
+// Solidity: event ParamChange(string key, bytes value)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) ParseParamChange(log types.Log) (*GreenfieldlightclientParamChange, error) {
+	event := new(GreenfieldlightclientParamChange)
+	if err := _Greenfieldlightclient.contract.UnpackLog(event, "ParamChange", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
