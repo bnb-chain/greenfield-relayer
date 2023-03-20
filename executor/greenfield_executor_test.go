@@ -36,6 +36,13 @@ func TestGetNextReceiveSequenceForChannel(t *testing.T) {
 	t.Log(oracleSeq)
 }
 
+func TestGetInturnRelayer(t *testing.T) {
+	e := InitGnfdExecutor()
+	relayer, err := e.GetInturnRelayer()
+	require.NoError(t, err)
+	t.Log(relayer)
+}
+
 func TestGetConsensusStatus(t *testing.T) {
 	e := InitGnfdExecutor()
 	rpcClient := e.getRpcClient()
