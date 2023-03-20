@@ -36,10 +36,16 @@ func TestGetNextReceiveSequenceForChannel(t *testing.T) {
 	t.Log(oracleSeq)
 }
 
+func TestGetInturnRelayer(t *testing.T) {
+	e := InitGnfdExecutor()
+	relayer, err := e.GetInturnRelayer()
+	require.NoError(t, err)
+	t.Log(relayer)
+}
+
 func TestGetConsensusStatus(t *testing.T) {
 	e := InitGnfdExecutor()
-	rpcClient, err := e.getRpcClient()
-	assert.NoError(t, err)
+	rpcClient := e.getRpcClient()
 	h := int64(1)
 	validators, err := rpcClient.Validators(context.Background(), &h, nil, nil)
 	assert.NoError(t, err)
@@ -59,8 +65,7 @@ func TestGetConsensusStatus(t *testing.T) {
 
 func TestGetLatestValidators(t *testing.T) {
 	e := InitGnfdExecutor()
-	rpcClient, err := e.getRpcClient()
-	assert.NoError(t, err)
+	rpcClient := e.getRpcClient()
 	validators, err := rpcClient.Validators(context.Background(), nil, nil, nil)
 	assert.NoError(t, err)
 	for i, validator := range validators.Validators {

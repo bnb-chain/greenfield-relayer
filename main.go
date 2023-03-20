@@ -76,8 +76,7 @@ func main() {
 	}
 
 	if cfg == nil {
-		fmt.Println("failed to get configuration")
-		return
+		panic("failed to get configuration")
 	}
 
 	logging.InitLogger(&cfg.LogConfig)

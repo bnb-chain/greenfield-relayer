@@ -254,6 +254,14 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.Ch
 	if err != nil {
 		return err
 	}
+
+	count, err := p.daoManager.VoteDao.GetVotesCountByChannelIdAndSequence(uint8(channelId), sequence)
+	if err != nil {
+		return err
+	}
+	if count > int64(len(validators))*2/3 {
+		return nil
+	}
 	// Query from votePool until there are more than 2/3 votes
 	if err = p.queryMoreThanTwoThirdValidVotes(localVote, validators, pkgIds); err != nil {
 		return err
@@ -358,7 +366,7 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmt
 }
 
 func (p *BSCVoteProcessor) isOracleSequenceFilled(seq uint64) (bool, error) {
-	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequence()
+	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 	if err != nil {
 		return false, err
 	}

@@ -29,9 +29,17 @@ var (
 	_ = abi.ConvertType
 )
 
+// ILightClientInturnRelayer is an auto generated low-level Go binding around an user-defined struct.
+type ILightClientInturnRelayer struct {
+	Addr   common.Address
+	BlsKey []byte
+	Start  *big.Int
+	End    *big.Int
+}
+
 // GreenfieldlightclientMetaData contains all meta data concerning the Greenfieldlightclient contract.
 var GreenfieldlightclientMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"height\",\"type\":\"uint64\"}],\"name\":\"initConsensusState\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"height\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"validatorSetChanged\",\"type\":\"bool\"}],\"name\":\"updateConsensusState\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"APP_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BLS_SIGNATURE_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CHAIN_ID_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CODE_OK\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CONSENSUS_STATE_BASE_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CONSENSUS_STATE_BYTES_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CROSS_CHAIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ERROR_FAIL_DECODE\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HEADER_VALIDATE_CONTRACT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HEIGHT_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"LIGHT_CLIENT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MESSAGE_HASH_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PACKAGE_VERIFY_CONTRACT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PROXY_ADMIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_ADDRESS_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_BLS_KEY_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TOKEN_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_IN_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_OUT_CHANNELID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_BYTES_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_PUB_KEY_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_SET_HASH_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_VOTING_POWER_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"blsPubKeys\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"_blsPubKeys\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"consensusStateBytes\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRelayers\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gnfdHeight\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"initialGnfdHeight\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_initConsensusStateBytes\",\"type\":\"bytes\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nextValidatorSetHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"name\":\"submitters\",\"outputs\":[{\"internalType\":\"addresspayable\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_lightBlock\",\"type\":\"bytes\"},{\"internalType\":\"uint64\",\"name\":\"_height\",\"type\":\"uint64\"}],\"name\":\"syncLightBlock\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"validatorSet\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"pubKey\",\"type\":\"bytes32\"},{\"internalType\":\"int64\",\"name\":\"votingPower\",\"type\":\"int64\"},{\"internalType\":\"address\",\"name\":\"relayerAddress\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"relayerBlsKey\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"_blsSignature\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_validatorSetBitMap\",\"type\":\"uint256\"}],\"name\":\"verifyPackage\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"height\",\"type\":\"uint64\"}],\"name\":\"InitConsensusState\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"ParamChange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"height\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"validatorSetChanged\",\"type\":\"bool\"}],\"name\":\"UpdatedConsensusState\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"BLS_SIGNATURE_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BUCKET_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CHAIN_ID_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CONSENSUS_STATE_BASE_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CONSENSUS_STATE_BYTES_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CROSS_CHAIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"ConfigSlots\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GOV_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"GROUP_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HEADER_VALIDATE_CONTRACT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HEIGHT_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"LIGHT_CLIENT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MESSAGE_HASH_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OBJECT_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PACKAGE_VERIFY_CONTRACT\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PROXY_ADMIN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_ADDRESS_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_BLS_KEY_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"RELAYER_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TOKEN_HUB\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_IN_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TRANSFER_OUT_CHANNEL_ID\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_BYTES_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_PUB_KEY_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_SET_HASH_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"VALIDATOR_VOTING_POWER_LENGTH\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"blsPubKeys\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"_blsPubKeys\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"consensusStateBytes\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayer\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"blsKey\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"end\",\"type\":\"uint256\"}],\"internalType\":\"structILightClient.InturnRelayer\",\"name\":\"relayer\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getInturnRelayerBlsPubKey\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRelayers\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gnfdHeight\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"inTurnRelayerRelayInterval\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_initConsensusStateBytes\",\"type\":\"bytes\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nextValidatorSetHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"name\":\"submitters\",\"outputs\":[{\"internalType\":\"addresspayable\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_lightBlock\",\"type\":\"bytes\"},{\"internalType\":\"uint64\",\"name\":\"_height\",\"type\":\"uint64\"}],\"name\":\"syncLightBlock\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"value\",\"type\":\"bytes\"}],\"name\":\"updateParam\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"validatorSet\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"pubKey\",\"type\":\"bytes32\"},{\"internalType\":\"int64\",\"name\":\"votingPower\",\"type\":\"int64\"},{\"internalType\":\"address\",\"name\":\"relayerAddress\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"relayerBlsKey\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"_payload\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"_blsSignature\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"_validatorSetBitMap\",\"type\":\"uint256\"}],\"name\":\"verifyPackage\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"versionInfo\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
 }
 
 // GreenfieldlightclientABI is the input ABI used to generate the binding from.
@@ -180,37 +188,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientTransactorRaw) Transact(opts 
 	return _Greenfieldlightclient.Contract.contract.Transact(opts, method, params...)
 }
 
-// APPCHANNELID is a free data retrieval call binding the contract method 0x63ee4ac4.
-//
-// Solidity: function APP_CHANNELID() view returns(uint8)
-func (_Greenfieldlightclient *GreenfieldlightclientCaller) APPCHANNELID(opts *bind.CallOpts) (uint8, error) {
-	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "APP_CHANNELID")
-
-	if err != nil {
-		return *new(uint8), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
-
-	return out0, err
-
-}
-
-// APPCHANNELID is a free data retrieval call binding the contract method 0x63ee4ac4.
-//
-// Solidity: function APP_CHANNELID() view returns(uint8)
-func (_Greenfieldlightclient *GreenfieldlightclientSession) APPCHANNELID() (uint8, error) {
-	return _Greenfieldlightclient.Contract.APPCHANNELID(&_Greenfieldlightclient.CallOpts)
-}
-
-// APPCHANNELID is a free data retrieval call binding the contract method 0x63ee4ac4.
-//
-// Solidity: function APP_CHANNELID() view returns(uint8)
-func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) APPCHANNELID() (uint8, error) {
-	return _Greenfieldlightclient.Contract.APPCHANNELID(&_Greenfieldlightclient.CallOpts)
-}
-
 // BLSSIGNATURELENGTH is a free data retrieval call binding the contract method 0xdfe5b236.
 //
 // Solidity: function BLS_SIGNATURE_LENGTH() view returns(uint256)
@@ -242,6 +219,68 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) BLSSIGNATURELE
 	return _Greenfieldlightclient.Contract.BLSSIGNATURELENGTH(&_Greenfieldlightclient.CallOpts)
 }
 
+// BUCKETCHANNELID is a free data retrieval call binding the contract method 0x73f1e3c3.
+//
+// Solidity: function BUCKET_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) BUCKETCHANNELID(opts *bind.CallOpts) (uint8, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "BUCKET_CHANNEL_ID")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// BUCKETCHANNELID is a free data retrieval call binding the contract method 0x73f1e3c3.
+//
+// Solidity: function BUCKET_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) BUCKETCHANNELID() (uint8, error) {
+	return _Greenfieldlightclient.Contract.BUCKETCHANNELID(&_Greenfieldlightclient.CallOpts)
+}
+
+// BUCKETCHANNELID is a free data retrieval call binding the contract method 0x73f1e3c3.
+//
+// Solidity: function BUCKET_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) BUCKETCHANNELID() (uint8, error) {
+	return _Greenfieldlightclient.Contract.BUCKETCHANNELID(&_Greenfieldlightclient.CallOpts)
+}
+
+// BUCKETHUB is a free data retrieval call binding the contract method 0x7afffdd2.
+//
+// Solidity: function BUCKET_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) BUCKETHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "BUCKET_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// BUCKETHUB is a free data retrieval call binding the contract method 0x7afffdd2.
+//
+// Solidity: function BUCKET_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) BUCKETHUB() (common.Address, error) {
+	return _Greenfieldlightclient.Contract.BUCKETHUB(&_Greenfieldlightclient.CallOpts)
+}
+
+// BUCKETHUB is a free data retrieval call binding the contract method 0x7afffdd2.
+//
+// Solidity: function BUCKET_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) BUCKETHUB() (common.Address, error) {
+	return _Greenfieldlightclient.Contract.BUCKETHUB(&_Greenfieldlightclient.CallOpts)
+}
+
 // CHAINIDLENGTH is a free data retrieval call binding the contract method 0x72ca1fe3.
 //
 // Solidity: function CHAIN_ID_LENGTH() view returns(uint256)
@@ -271,37 +310,6 @@ func (_Greenfieldlightclient *GreenfieldlightclientSession) CHAINIDLENGTH() (*bi
 // Solidity: function CHAIN_ID_LENGTH() view returns(uint256)
 func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) CHAINIDLENGTH() (*big.Int, error) {
 	return _Greenfieldlightclient.Contract.CHAINIDLENGTH(&_Greenfieldlightclient.CallOpts)
-}
-
-// CODEOK is a free data retrieval call binding the contract method 0xab51bb96.
-//
-// Solidity: function CODE_OK() view returns(uint32)
-func (_Greenfieldlightclient *GreenfieldlightclientCaller) CODEOK(opts *bind.CallOpts) (uint32, error) {
-	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "CODE_OK")
-
-	if err != nil {
-		return *new(uint32), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
-
-	return out0, err
-
-}
-
-// CODEOK is a free data retrieval call binding the contract method 0xab51bb96.
-//
-// Solidity: function CODE_OK() view returns(uint32)
-func (_Greenfieldlightclient *GreenfieldlightclientSession) CODEOK() (uint32, error) {
-	return _Greenfieldlightclient.Contract.CODEOK(&_Greenfieldlightclient.CallOpts)
-}
-
-// CODEOK is a free data retrieval call binding the contract method 0xab51bb96.
-//
-// Solidity: function CODE_OK() view returns(uint32)
-func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) CODEOK() (uint32, error) {
-	return _Greenfieldlightclient.Contract.CODEOK(&_Greenfieldlightclient.CallOpts)
 }
 
 // CONSENSUSSTATEBASELENGTH is a free data retrieval call binding the contract method 0x7e8982bd.
@@ -397,43 +405,43 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) CROSSCHAIN() (
 	return _Greenfieldlightclient.Contract.CROSSCHAIN(&_Greenfieldlightclient.CallOpts)
 }
 
-// ERRORFAILDECODE is a free data retrieval call binding the contract method 0x0bee7a67.
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
 //
-// Solidity: function ERROR_FAIL_DECODE() view returns(uint32)
-func (_Greenfieldlightclient *GreenfieldlightclientCaller) ERRORFAILDECODE(opts *bind.CallOpts) (uint32, error) {
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) ConfigSlots(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
 	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "ERROR_FAIL_DECODE")
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "ConfigSlots", arg0)
 
 	if err != nil {
-		return *new(uint32), err
+		return *new(*big.Int), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
 
 }
 
-// ERRORFAILDECODE is a free data retrieval call binding the contract method 0x0bee7a67.
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
 //
-// Solidity: function ERROR_FAIL_DECODE() view returns(uint32)
-func (_Greenfieldlightclient *GreenfieldlightclientSession) ERRORFAILDECODE() (uint32, error) {
-	return _Greenfieldlightclient.Contract.ERRORFAILDECODE(&_Greenfieldlightclient.CallOpts)
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) ConfigSlots(arg0 *big.Int) (*big.Int, error) {
+	return _Greenfieldlightclient.Contract.ConfigSlots(&_Greenfieldlightclient.CallOpts, arg0)
 }
 
-// ERRORFAILDECODE is a free data retrieval call binding the contract method 0x0bee7a67.
+// ConfigSlots is a free data retrieval call binding the contract method 0xb76e4aca.
 //
-// Solidity: function ERROR_FAIL_DECODE() view returns(uint32)
-func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) ERRORFAILDECODE() (uint32, error) {
-	return _Greenfieldlightclient.Contract.ERRORFAILDECODE(&_Greenfieldlightclient.CallOpts)
+// Solidity: function ConfigSlots(uint256 ) view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) ConfigSlots(arg0 *big.Int) (*big.Int, error) {
+	return _Greenfieldlightclient.Contract.ConfigSlots(&_Greenfieldlightclient.CallOpts, arg0)
 }
 
-// GOVCHANNELID is a free data retrieval call binding the contract method 0x96713da9.
+// GOVCHANNELID is a free data retrieval call binding the contract method 0x81d91480.
 //
-// Solidity: function GOV_CHANNELID() view returns(uint8)
+// Solidity: function GOV_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) GOVCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "GOV_CHANNELID")
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "GOV_CHANNEL_ID")
 
 	if err != nil {
 		return *new(uint8), err
@@ -445,16 +453,16 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) GOVCHANNELID(opts *bi
 
 }
 
-// GOVCHANNELID is a free data retrieval call binding the contract method 0x96713da9.
+// GOVCHANNELID is a free data retrieval call binding the contract method 0x81d91480.
 //
-// Solidity: function GOV_CHANNELID() view returns(uint8)
+// Solidity: function GOV_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientSession) GOVCHANNELID() (uint8, error) {
 	return _Greenfieldlightclient.Contract.GOVCHANNELID(&_Greenfieldlightclient.CallOpts)
 }
 
-// GOVCHANNELID is a free data retrieval call binding the contract method 0x96713da9.
+// GOVCHANNELID is a free data retrieval call binding the contract method 0x81d91480.
 //
-// Solidity: function GOV_CHANNELID() view returns(uint8)
+// Solidity: function GOV_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GOVCHANNELID() (uint8, error) {
 	return _Greenfieldlightclient.Contract.GOVCHANNELID(&_Greenfieldlightclient.CallOpts)
 }
@@ -488,6 +496,68 @@ func (_Greenfieldlightclient *GreenfieldlightclientSession) GOVHUB() (common.Add
 // Solidity: function GOV_HUB() view returns(address)
 func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GOVHUB() (common.Address, error) {
 	return _Greenfieldlightclient.Contract.GOVHUB(&_Greenfieldlightclient.CallOpts)
+}
+
+// GROUPCHANNELID is a free data retrieval call binding the contract method 0xe02e86b0.
+//
+// Solidity: function GROUP_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) GROUPCHANNELID(opts *bind.CallOpts) (uint8, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "GROUP_CHANNEL_ID")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// GROUPCHANNELID is a free data retrieval call binding the contract method 0xe02e86b0.
+//
+// Solidity: function GROUP_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) GROUPCHANNELID() (uint8, error) {
+	return _Greenfieldlightclient.Contract.GROUPCHANNELID(&_Greenfieldlightclient.CallOpts)
+}
+
+// GROUPCHANNELID is a free data retrieval call binding the contract method 0xe02e86b0.
+//
+// Solidity: function GROUP_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GROUPCHANNELID() (uint8, error) {
+	return _Greenfieldlightclient.Contract.GROUPCHANNELID(&_Greenfieldlightclient.CallOpts)
+}
+
+// GROUPHUB is a free data retrieval call binding the contract method 0x46934fc8.
+//
+// Solidity: function GROUP_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) GROUPHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "GROUP_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GROUPHUB is a free data retrieval call binding the contract method 0x46934fc8.
+//
+// Solidity: function GROUP_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) GROUPHUB() (common.Address, error) {
+	return _Greenfieldlightclient.Contract.GROUPHUB(&_Greenfieldlightclient.CallOpts)
+}
+
+// GROUPHUB is a free data retrieval call binding the contract method 0x46934fc8.
+//
+// Solidity: function GROUP_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GROUPHUB() (common.Address, error) {
+	return _Greenfieldlightclient.Contract.GROUPHUB(&_Greenfieldlightclient.CallOpts)
 }
 
 // HEADERVALIDATECONTRACT is a free data retrieval call binding the contract method 0x9c079c59.
@@ -612,6 +682,68 @@ func (_Greenfieldlightclient *GreenfieldlightclientSession) MESSAGEHASHLENGTH() 
 // Solidity: function MESSAGE_HASH_LENGTH() view returns(uint256)
 func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) MESSAGEHASHLENGTH() (*big.Int, error) {
 	return _Greenfieldlightclient.Contract.MESSAGEHASHLENGTH(&_Greenfieldlightclient.CallOpts)
+}
+
+// OBJECTCHANNELID is a free data retrieval call binding the contract method 0xeac78b33.
+//
+// Solidity: function OBJECT_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) OBJECTCHANNELID(opts *bind.CallOpts) (uint8, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "OBJECT_CHANNEL_ID")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// OBJECTCHANNELID is a free data retrieval call binding the contract method 0xeac78b33.
+//
+// Solidity: function OBJECT_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) OBJECTCHANNELID() (uint8, error) {
+	return _Greenfieldlightclient.Contract.OBJECTCHANNELID(&_Greenfieldlightclient.CallOpts)
+}
+
+// OBJECTCHANNELID is a free data retrieval call binding the contract method 0xeac78b33.
+//
+// Solidity: function OBJECT_CHANNEL_ID() view returns(uint8)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) OBJECTCHANNELID() (uint8, error) {
+	return _Greenfieldlightclient.Contract.OBJECTCHANNELID(&_Greenfieldlightclient.CallOpts)
+}
+
+// OBJECTHUB is a free data retrieval call binding the contract method 0x7d2e3084.
+//
+// Solidity: function OBJECT_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) OBJECTHUB(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "OBJECT_HUB")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// OBJECTHUB is a free data retrieval call binding the contract method 0x7d2e3084.
+//
+// Solidity: function OBJECT_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) OBJECTHUB() (common.Address, error) {
+	return _Greenfieldlightclient.Contract.OBJECTHUB(&_Greenfieldlightclient.CallOpts)
+}
+
+// OBJECTHUB is a free data retrieval call binding the contract method 0x7d2e3084.
+//
+// Solidity: function OBJECT_HUB() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) OBJECTHUB() (common.Address, error) {
+	return _Greenfieldlightclient.Contract.OBJECTHUB(&_Greenfieldlightclient.CallOpts)
 }
 
 // PACKAGEVERIFYCONTRACT is a free data retrieval call binding the contract method 0x86a780c5.
@@ -800,12 +932,12 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) TOKENHUB() (co
 	return _Greenfieldlightclient.Contract.TOKENHUB(&_Greenfieldlightclient.CallOpts)
 }
 
-// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0x70fd5bad.
+// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0xcc12eabc.
 //
-// Solidity: function TRANSFER_IN_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_IN_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) TRANSFERINCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "TRANSFER_IN_CHANNELID")
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "TRANSFER_IN_CHANNEL_ID")
 
 	if err != nil {
 		return *new(uint8), err
@@ -817,26 +949,26 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) TRANSFERINCHANNELID(o
 
 }
 
-// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0x70fd5bad.
+// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0xcc12eabc.
 //
-// Solidity: function TRANSFER_IN_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_IN_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientSession) TRANSFERINCHANNELID() (uint8, error) {
 	return _Greenfieldlightclient.Contract.TRANSFERINCHANNELID(&_Greenfieldlightclient.CallOpts)
 }
 
-// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0x70fd5bad.
+// TRANSFERINCHANNELID is a free data retrieval call binding the contract method 0xcc12eabc.
 //
-// Solidity: function TRANSFER_IN_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_IN_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) TRANSFERINCHANNELID() (uint8, error) {
 	return _Greenfieldlightclient.Contract.TRANSFERINCHANNELID(&_Greenfieldlightclient.CallOpts)
 }
 
-// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0xfc3e5908.
+// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0x618d569c.
 //
-// Solidity: function TRANSFER_OUT_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_OUT_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientCaller) TRANSFEROUTCHANNELID(opts *bind.CallOpts) (uint8, error) {
 	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "TRANSFER_OUT_CHANNELID")
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "TRANSFER_OUT_CHANNEL_ID")
 
 	if err != nil {
 		return *new(uint8), err
@@ -848,16 +980,16 @@ func (_Greenfieldlightclient *GreenfieldlightclientCaller) TRANSFEROUTCHANNELID(
 
 }
 
-// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0xfc3e5908.
+// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0x618d569c.
 //
-// Solidity: function TRANSFER_OUT_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_OUT_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientSession) TRANSFEROUTCHANNELID() (uint8, error) {
 	return _Greenfieldlightclient.Contract.TRANSFEROUTCHANNELID(&_Greenfieldlightclient.CallOpts)
 }
 
-// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0xfc3e5908.
+// TRANSFEROUTCHANNELID is a free data retrieval call binding the contract method 0x618d569c.
 //
-// Solidity: function TRANSFER_OUT_CHANNELID() view returns(uint8)
+// Solidity: function TRANSFER_OUT_CHANNEL_ID() view returns(uint8)
 func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) TRANSFEROUTCHANNELID() (uint8, error) {
 	return _Greenfieldlightclient.Contract.TRANSFEROUTCHANNELID(&_Greenfieldlightclient.CallOpts)
 }
@@ -1079,6 +1211,99 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) ConsensusState
 	return _Greenfieldlightclient.Contract.ConsensusStateBytes(&_Greenfieldlightclient.CallOpts)
 }
 
+// GetInturnRelayer is a free data retrieval call binding the contract method 0x3baa2219.
+//
+// Solidity: function getInturnRelayer() view returns((address,bytes,uint256,uint256) relayer)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) GetInturnRelayer(opts *bind.CallOpts) (ILightClientInturnRelayer, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "getInturnRelayer")
+
+	if err != nil {
+		return *new(ILightClientInturnRelayer), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(ILightClientInturnRelayer)).(*ILightClientInturnRelayer)
+
+	return out0, err
+
+}
+
+// GetInturnRelayer is a free data retrieval call binding the contract method 0x3baa2219.
+//
+// Solidity: function getInturnRelayer() view returns((address,bytes,uint256,uint256) relayer)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) GetInturnRelayer() (ILightClientInturnRelayer, error) {
+	return _Greenfieldlightclient.Contract.GetInturnRelayer(&_Greenfieldlightclient.CallOpts)
+}
+
+// GetInturnRelayer is a free data retrieval call binding the contract method 0x3baa2219.
+//
+// Solidity: function getInturnRelayer() view returns((address,bytes,uint256,uint256) relayer)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GetInturnRelayer() (ILightClientInturnRelayer, error) {
+	return _Greenfieldlightclient.Contract.GetInturnRelayer(&_Greenfieldlightclient.CallOpts)
+}
+
+// GetInturnRelayerAddress is a free data retrieval call binding the contract method 0xd5b0f519.
+//
+// Solidity: function getInturnRelayerAddress() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) GetInturnRelayerAddress(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "getInturnRelayerAddress")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GetInturnRelayerAddress is a free data retrieval call binding the contract method 0xd5b0f519.
+//
+// Solidity: function getInturnRelayerAddress() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) GetInturnRelayerAddress() (common.Address, error) {
+	return _Greenfieldlightclient.Contract.GetInturnRelayerAddress(&_Greenfieldlightclient.CallOpts)
+}
+
+// GetInturnRelayerAddress is a free data retrieval call binding the contract method 0xd5b0f519.
+//
+// Solidity: function getInturnRelayerAddress() view returns(address)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GetInturnRelayerAddress() (common.Address, error) {
+	return _Greenfieldlightclient.Contract.GetInturnRelayerAddress(&_Greenfieldlightclient.CallOpts)
+}
+
+// GetInturnRelayerBlsPubKey is a free data retrieval call binding the contract method 0x56bbb6e7.
+//
+// Solidity: function getInturnRelayerBlsPubKey() view returns(bytes)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) GetInturnRelayerBlsPubKey(opts *bind.CallOpts) ([]byte, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "getInturnRelayerBlsPubKey")
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
+}
+
+// GetInturnRelayerBlsPubKey is a free data retrieval call binding the contract method 0x56bbb6e7.
+//
+// Solidity: function getInturnRelayerBlsPubKey() view returns(bytes)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) GetInturnRelayerBlsPubKey() ([]byte, error) {
+	return _Greenfieldlightclient.Contract.GetInturnRelayerBlsPubKey(&_Greenfieldlightclient.CallOpts)
+}
+
+// GetInturnRelayerBlsPubKey is a free data retrieval call binding the contract method 0x56bbb6e7.
+//
+// Solidity: function getInturnRelayerBlsPubKey() view returns(bytes)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GetInturnRelayerBlsPubKey() ([]byte, error) {
+	return _Greenfieldlightclient.Contract.GetInturnRelayerBlsPubKey(&_Greenfieldlightclient.CallOpts)
+}
+
 // GetRelayers is a free data retrieval call binding the contract method 0x179ff4b2.
 //
 // Solidity: function getRelayers() view returns(address[])
@@ -1141,35 +1366,35 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) GnfdHeight() (
 	return _Greenfieldlightclient.Contract.GnfdHeight(&_Greenfieldlightclient.CallOpts)
 }
 
-// InitialGnfdHeight is a free data retrieval call binding the contract method 0x57dbf45d.
+// InTurnRelayerRelayInterval is a free data retrieval call binding the contract method 0x3f8e2a84.
 //
-// Solidity: function initialGnfdHeight() view returns(uint64)
-func (_Greenfieldlightclient *GreenfieldlightclientCaller) InitialGnfdHeight(opts *bind.CallOpts) (uint64, error) {
+// Solidity: function inTurnRelayerRelayInterval() view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) InTurnRelayerRelayInterval(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
-	err := _Greenfieldlightclient.contract.Call(opts, &out, "initialGnfdHeight")
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "inTurnRelayerRelayInterval")
 
 	if err != nil {
-		return *new(uint64), err
+		return *new(*big.Int), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
 
 	return out0, err
 
 }
 
-// InitialGnfdHeight is a free data retrieval call binding the contract method 0x57dbf45d.
+// InTurnRelayerRelayInterval is a free data retrieval call binding the contract method 0x3f8e2a84.
 //
-// Solidity: function initialGnfdHeight() view returns(uint64)
-func (_Greenfieldlightclient *GreenfieldlightclientSession) InitialGnfdHeight() (uint64, error) {
-	return _Greenfieldlightclient.Contract.InitialGnfdHeight(&_Greenfieldlightclient.CallOpts)
+// Solidity: function inTurnRelayerRelayInterval() view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) InTurnRelayerRelayInterval() (*big.Int, error) {
+	return _Greenfieldlightclient.Contract.InTurnRelayerRelayInterval(&_Greenfieldlightclient.CallOpts)
 }
 
-// InitialGnfdHeight is a free data retrieval call binding the contract method 0x57dbf45d.
+// InTurnRelayerRelayInterval is a free data retrieval call binding the contract method 0x3f8e2a84.
 //
-// Solidity: function initialGnfdHeight() view returns(uint64)
-func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) InitialGnfdHeight() (uint64, error) {
-	return _Greenfieldlightclient.Contract.InitialGnfdHeight(&_Greenfieldlightclient.CallOpts)
+// Solidity: function inTurnRelayerRelayInterval() view returns(uint256)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) InTurnRelayerRelayInterval() (*big.Int, error) {
+	return _Greenfieldlightclient.Contract.InTurnRelayerRelayInterval(&_Greenfieldlightclient.CallOpts)
 }
 
 // NextValidatorSetHash is a free data retrieval call binding the contract method 0x752d3b89.
@@ -1320,6 +1545,56 @@ func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) VerifyPackage(
 	return _Greenfieldlightclient.Contract.VerifyPackage(&_Greenfieldlightclient.CallOpts, _payload, _blsSignature, _validatorSetBitMap)
 }
 
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Greenfieldlightclient *GreenfieldlightclientCaller) VersionInfo(opts *bind.CallOpts) (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	var out []interface{}
+	err := _Greenfieldlightclient.contract.Call(opts, &out, "versionInfo")
+
+	outstruct := new(struct {
+		Version     *big.Int
+		Name        string
+		Description string
+	})
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.Version = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.Name = *abi.ConvertType(out[1], new(string)).(*string)
+	outstruct.Description = *abi.ConvertType(out[2], new(string)).(*string)
+
+	return *outstruct, err
+
+}
+
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Greenfieldlightclient *GreenfieldlightclientSession) VersionInfo() (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	return _Greenfieldlightclient.Contract.VersionInfo(&_Greenfieldlightclient.CallOpts)
+}
+
+// VersionInfo is a free data retrieval call binding the contract method 0xa21d1354.
+//
+// Solidity: function versionInfo() pure returns(uint256 version, string name, string description)
+func (_Greenfieldlightclient *GreenfieldlightclientCallerSession) VersionInfo() (struct {
+	Version     *big.Int
+	Name        string
+	Description string
+}, error) {
+	return _Greenfieldlightclient.Contract.VersionInfo(&_Greenfieldlightclient.CallOpts)
+}
+
 // Initialize is a paid mutator transaction binding the contract method 0x439fab91.
 //
 // Solidity: function initialize(bytes _initConsensusStateBytes) returns()
@@ -1360,6 +1635,161 @@ func (_Greenfieldlightclient *GreenfieldlightclientSession) SyncLightBlock(_ligh
 // Solidity: function syncLightBlock(bytes _lightBlock, uint64 _height) returns(bool)
 func (_Greenfieldlightclient *GreenfieldlightclientTransactorSession) SyncLightBlock(_lightBlock []byte, _height uint64) (*types.Transaction, error) {
 	return _Greenfieldlightclient.Contract.SyncLightBlock(&_Greenfieldlightclient.TransactOpts, _lightBlock, _height)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Greenfieldlightclient *GreenfieldlightclientTransactor) UpdateParam(opts *bind.TransactOpts, key string, value []byte) (*types.Transaction, error) {
+	return _Greenfieldlightclient.contract.Transact(opts, "updateParam", key, value)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Greenfieldlightclient *GreenfieldlightclientSession) UpdateParam(key string, value []byte) (*types.Transaction, error) {
+	return _Greenfieldlightclient.Contract.UpdateParam(&_Greenfieldlightclient.TransactOpts, key, value)
+}
+
+// UpdateParam is a paid mutator transaction binding the contract method 0xac431751.
+//
+// Solidity: function updateParam(string key, bytes value) returns()
+func (_Greenfieldlightclient *GreenfieldlightclientTransactorSession) UpdateParam(key string, value []byte) (*types.Transaction, error) {
+	return _Greenfieldlightclient.Contract.UpdateParam(&_Greenfieldlightclient.TransactOpts, key, value)
+}
+
+// GreenfieldlightclientInitConsensusStateIterator is returned from FilterInitConsensusState and is used to iterate over the raw logs and unpacked data for InitConsensusState events raised by the Greenfieldlightclient contract.
+type GreenfieldlightclientInitConsensusStateIterator struct {
+	Event *GreenfieldlightclientInitConsensusState // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *GreenfieldlightclientInitConsensusStateIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(GreenfieldlightclientInitConsensusState)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(GreenfieldlightclientInitConsensusState)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *GreenfieldlightclientInitConsensusStateIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *GreenfieldlightclientInitConsensusStateIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// GreenfieldlightclientInitConsensusState represents a InitConsensusState event raised by the Greenfieldlightclient contract.
+type GreenfieldlightclientInitConsensusState struct {
+	Height uint64
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// FilterInitConsensusState is a free log retrieval operation binding the contract event 0x4742d6829e4cda17f0acee2327b4c31e69243f15f2e5493e784b7e584c89fbf0.
+//
+// Solidity: event InitConsensusState(uint64 height)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) FilterInitConsensusState(opts *bind.FilterOpts) (*GreenfieldlightclientInitConsensusStateIterator, error) {
+
+	logs, sub, err := _Greenfieldlightclient.contract.FilterLogs(opts, "InitConsensusState")
+	if err != nil {
+		return nil, err
+	}
+	return &GreenfieldlightclientInitConsensusStateIterator{contract: _Greenfieldlightclient.contract, event: "InitConsensusState", logs: logs, sub: sub}, nil
+}
+
+// WatchInitConsensusState is a free log subscription operation binding the contract event 0x4742d6829e4cda17f0acee2327b4c31e69243f15f2e5493e784b7e584c89fbf0.
+//
+// Solidity: event InitConsensusState(uint64 height)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchInitConsensusState(opts *bind.WatchOpts, sink chan<- *GreenfieldlightclientInitConsensusState) (event.Subscription, error) {
+
+	logs, sub, err := _Greenfieldlightclient.contract.WatchLogs(opts, "InitConsensusState")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(GreenfieldlightclientInitConsensusState)
+				if err := _Greenfieldlightclient.contract.UnpackLog(event, "InitConsensusState", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseInitConsensusState is a log parse operation binding the contract event 0x4742d6829e4cda17f0acee2327b4c31e69243f15f2e5493e784b7e584c89fbf0.
+//
+// Solidity: event InitConsensusState(uint64 height)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) ParseInitConsensusState(log types.Log) (*GreenfieldlightclientInitConsensusState, error) {
+	event := new(GreenfieldlightclientInitConsensusState)
+	if err := _Greenfieldlightclient.contract.UnpackLog(event, "InitConsensusState", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }
 
 // GreenfieldlightclientInitializedIterator is returned from FilterInitialized and is used to iterate over the raw logs and unpacked data for Initialized events raised by the Greenfieldlightclient contract.
@@ -1496,9 +1926,9 @@ func (_Greenfieldlightclient *GreenfieldlightclientFilterer) ParseInitialized(lo
 	return event, nil
 }
 
-// GreenfieldlightclientInitConsensusStateIterator is returned from FilterInitConsensusState and is used to iterate over the raw logs and unpacked data for InitConsensusState events raised by the Greenfieldlightclient contract.
-type GreenfieldlightclientInitConsensusStateIterator struct {
-	Event *GreenfieldlightclientInitConsensusState // Event containing the contract specifics and raw log
+// GreenfieldlightclientParamChangeIterator is returned from FilterParamChange and is used to iterate over the raw logs and unpacked data for ParamChange events raised by the Greenfieldlightclient contract.
+type GreenfieldlightclientParamChangeIterator struct {
+	Event *GreenfieldlightclientParamChange // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1512,7 +1942,7 @@ type GreenfieldlightclientInitConsensusStateIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *GreenfieldlightclientInitConsensusStateIterator) Next() bool {
+func (it *GreenfieldlightclientParamChangeIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1521,7 +1951,7 @@ func (it *GreenfieldlightclientInitConsensusStateIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(GreenfieldlightclientInitConsensusState)
+			it.Event = new(GreenfieldlightclientParamChange)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1536,7 +1966,7 @@ func (it *GreenfieldlightclientInitConsensusStateIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(GreenfieldlightclientInitConsensusState)
+		it.Event = new(GreenfieldlightclientParamChange)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1552,41 +1982,42 @@ func (it *GreenfieldlightclientInitConsensusStateIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *GreenfieldlightclientInitConsensusStateIterator) Error() error {
+func (it *GreenfieldlightclientParamChangeIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *GreenfieldlightclientInitConsensusStateIterator) Close() error {
+func (it *GreenfieldlightclientParamChangeIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// GreenfieldlightclientInitConsensusState represents a InitConsensusState event raised by the Greenfieldlightclient contract.
-type GreenfieldlightclientInitConsensusState struct {
-	Height uint64
-	Raw    types.Log // Blockchain specific contextual infos
+// GreenfieldlightclientParamChange represents a ParamChange event raised by the Greenfieldlightclient contract.
+type GreenfieldlightclientParamChange struct {
+	Key   string
+	Value []byte
+	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// FilterInitConsensusState is a free log retrieval operation binding the contract event 0x37d76474dadef267cd6fb443be36fea42881c1f0b5163a6cc00fa67480e3aac4.
+// FilterParamChange is a free log retrieval operation binding the contract event 0xf1ce9b2cbf50eeb05769a29e2543fd350cab46894a7dd9978a12d534bb20e633.
 //
-// Solidity: event initConsensusState(uint64 height)
-func (_Greenfieldlightclient *GreenfieldlightclientFilterer) FilterInitConsensusState(opts *bind.FilterOpts) (*GreenfieldlightclientInitConsensusStateIterator, error) {
+// Solidity: event ParamChange(string key, bytes value)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) FilterParamChange(opts *bind.FilterOpts) (*GreenfieldlightclientParamChangeIterator, error) {
 
-	logs, sub, err := _Greenfieldlightclient.contract.FilterLogs(opts, "initConsensusState")
+	logs, sub, err := _Greenfieldlightclient.contract.FilterLogs(opts, "ParamChange")
 	if err != nil {
 		return nil, err
 	}
-	return &GreenfieldlightclientInitConsensusStateIterator{contract: _Greenfieldlightclient.contract, event: "initConsensusState", logs: logs, sub: sub}, nil
+	return &GreenfieldlightclientParamChangeIterator{contract: _Greenfieldlightclient.contract, event: "ParamChange", logs: logs, sub: sub}, nil
 }
 
-// WatchInitConsensusState is a free log subscription operation binding the contract event 0x37d76474dadef267cd6fb443be36fea42881c1f0b5163a6cc00fa67480e3aac4.
+// WatchParamChange is a free log subscription operation binding the contract event 0xf1ce9b2cbf50eeb05769a29e2543fd350cab46894a7dd9978a12d534bb20e633.
 //
-// Solidity: event initConsensusState(uint64 height)
-func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchInitConsensusState(opts *bind.WatchOpts, sink chan<- *GreenfieldlightclientInitConsensusState) (event.Subscription, error) {
+// Solidity: event ParamChange(string key, bytes value)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchParamChange(opts *bind.WatchOpts, sink chan<- *GreenfieldlightclientParamChange) (event.Subscription, error) {
 
-	logs, sub, err := _Greenfieldlightclient.contract.WatchLogs(opts, "initConsensusState")
+	logs, sub, err := _Greenfieldlightclient.contract.WatchLogs(opts, "ParamChange")
 	if err != nil {
 		return nil, err
 	}
@@ -1596,8 +2027,8 @@ func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchInitConsensusS
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(GreenfieldlightclientInitConsensusState)
-				if err := _Greenfieldlightclient.contract.UnpackLog(event, "initConsensusState", log); err != nil {
+				event := new(GreenfieldlightclientParamChange)
+				if err := _Greenfieldlightclient.contract.UnpackLog(event, "ParamChange", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1618,21 +2049,21 @@ func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchInitConsensusS
 	}), nil
 }
 
-// ParseInitConsensusState is a log parse operation binding the contract event 0x37d76474dadef267cd6fb443be36fea42881c1f0b5163a6cc00fa67480e3aac4.
+// ParseParamChange is a log parse operation binding the contract event 0xf1ce9b2cbf50eeb05769a29e2543fd350cab46894a7dd9978a12d534bb20e633.
 //
-// Solidity: event initConsensusState(uint64 height)
-func (_Greenfieldlightclient *GreenfieldlightclientFilterer) ParseInitConsensusState(log types.Log) (*GreenfieldlightclientInitConsensusState, error) {
-	event := new(GreenfieldlightclientInitConsensusState)
-	if err := _Greenfieldlightclient.contract.UnpackLog(event, "initConsensusState", log); err != nil {
+// Solidity: event ParamChange(string key, bytes value)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) ParseParamChange(log types.Log) (*GreenfieldlightclientParamChange, error) {
+	event := new(GreenfieldlightclientParamChange)
+	if err := _Greenfieldlightclient.contract.UnpackLog(event, "ParamChange", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// GreenfieldlightclientUpdateConsensusStateIterator is returned from FilterUpdateConsensusState and is used to iterate over the raw logs and unpacked data for UpdateConsensusState events raised by the Greenfieldlightclient contract.
-type GreenfieldlightclientUpdateConsensusStateIterator struct {
-	Event *GreenfieldlightclientUpdateConsensusState // Event containing the contract specifics and raw log
+// GreenfieldlightclientUpdatedConsensusStateIterator is returned from FilterUpdatedConsensusState and is used to iterate over the raw logs and unpacked data for UpdatedConsensusState events raised by the Greenfieldlightclient contract.
+type GreenfieldlightclientUpdatedConsensusStateIterator struct {
+	Event *GreenfieldlightclientUpdatedConsensusState // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1646,7 +2077,7 @@ type GreenfieldlightclientUpdateConsensusStateIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *GreenfieldlightclientUpdateConsensusStateIterator) Next() bool {
+func (it *GreenfieldlightclientUpdatedConsensusStateIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1655,7 +2086,7 @@ func (it *GreenfieldlightclientUpdateConsensusStateIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(GreenfieldlightclientUpdateConsensusState)
+			it.Event = new(GreenfieldlightclientUpdatedConsensusState)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1670,7 +2101,7 @@ func (it *GreenfieldlightclientUpdateConsensusStateIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(GreenfieldlightclientUpdateConsensusState)
+		it.Event = new(GreenfieldlightclientUpdatedConsensusState)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1686,42 +2117,42 @@ func (it *GreenfieldlightclientUpdateConsensusStateIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *GreenfieldlightclientUpdateConsensusStateIterator) Error() error {
+func (it *GreenfieldlightclientUpdatedConsensusStateIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *GreenfieldlightclientUpdateConsensusStateIterator) Close() error {
+func (it *GreenfieldlightclientUpdatedConsensusStateIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// GreenfieldlightclientUpdateConsensusState represents a UpdateConsensusState event raised by the Greenfieldlightclient contract.
-type GreenfieldlightclientUpdateConsensusState struct {
+// GreenfieldlightclientUpdatedConsensusState represents a UpdatedConsensusState event raised by the Greenfieldlightclient contract.
+type GreenfieldlightclientUpdatedConsensusState struct {
 	Height              uint64
 	ValidatorSetChanged bool
 	Raw                 types.Log // Blockchain specific contextual infos
 }
 
-// FilterUpdateConsensusState is a free log retrieval operation binding the contract event 0x691118119129ba12b1904302d5fe91091cdcbd2be353a35219a4bcadabe4dcfd.
+// FilterUpdatedConsensusState is a free log retrieval operation binding the contract event 0xa44b844260c407b2179345e959e21dad09b1630c624779683c7cbbdd8b6ecd7b.
 //
-// Solidity: event updateConsensusState(uint64 height, bool validatorSetChanged)
-func (_Greenfieldlightclient *GreenfieldlightclientFilterer) FilterUpdateConsensusState(opts *bind.FilterOpts) (*GreenfieldlightclientUpdateConsensusStateIterator, error) {
+// Solidity: event UpdatedConsensusState(uint64 height, bool validatorSetChanged)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) FilterUpdatedConsensusState(opts *bind.FilterOpts) (*GreenfieldlightclientUpdatedConsensusStateIterator, error) {
 
-	logs, sub, err := _Greenfieldlightclient.contract.FilterLogs(opts, "updateConsensusState")
+	logs, sub, err := _Greenfieldlightclient.contract.FilterLogs(opts, "UpdatedConsensusState")
 	if err != nil {
 		return nil, err
 	}
-	return &GreenfieldlightclientUpdateConsensusStateIterator{contract: _Greenfieldlightclient.contract, event: "updateConsensusState", logs: logs, sub: sub}, nil
+	return &GreenfieldlightclientUpdatedConsensusStateIterator{contract: _Greenfieldlightclient.contract, event: "UpdatedConsensusState", logs: logs, sub: sub}, nil
 }
 
-// WatchUpdateConsensusState is a free log subscription operation binding the contract event 0x691118119129ba12b1904302d5fe91091cdcbd2be353a35219a4bcadabe4dcfd.
+// WatchUpdatedConsensusState is a free log subscription operation binding the contract event 0xa44b844260c407b2179345e959e21dad09b1630c624779683c7cbbdd8b6ecd7b.
 //
-// Solidity: event updateConsensusState(uint64 height, bool validatorSetChanged)
-func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchUpdateConsensusState(opts *bind.WatchOpts, sink chan<- *GreenfieldlightclientUpdateConsensusState) (event.Subscription, error) {
+// Solidity: event UpdatedConsensusState(uint64 height, bool validatorSetChanged)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchUpdatedConsensusState(opts *bind.WatchOpts, sink chan<- *GreenfieldlightclientUpdatedConsensusState) (event.Subscription, error) {
 
-	logs, sub, err := _Greenfieldlightclient.contract.WatchLogs(opts, "updateConsensusState")
+	logs, sub, err := _Greenfieldlightclient.contract.WatchLogs(opts, "UpdatedConsensusState")
 	if err != nil {
 		return nil, err
 	}
@@ -1731,8 +2162,8 @@ func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchUpdateConsensu
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(GreenfieldlightclientUpdateConsensusState)
-				if err := _Greenfieldlightclient.contract.UnpackLog(event, "updateConsensusState", log); err != nil {
+				event := new(GreenfieldlightclientUpdatedConsensusState)
+				if err := _Greenfieldlightclient.contract.UnpackLog(event, "UpdatedConsensusState", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1753,12 +2184,12 @@ func (_Greenfieldlightclient *GreenfieldlightclientFilterer) WatchUpdateConsensu
 	}), nil
 }
 
-// ParseUpdateConsensusState is a log parse operation binding the contract event 0x691118119129ba12b1904302d5fe91091cdcbd2be353a35219a4bcadabe4dcfd.
+// ParseUpdatedConsensusState is a log parse operation binding the contract event 0xa44b844260c407b2179345e959e21dad09b1630c624779683c7cbbdd8b6ecd7b.
 //
-// Solidity: event updateConsensusState(uint64 height, bool validatorSetChanged)
-func (_Greenfieldlightclient *GreenfieldlightclientFilterer) ParseUpdateConsensusState(log types.Log) (*GreenfieldlightclientUpdateConsensusState, error) {
-	event := new(GreenfieldlightclientUpdateConsensusState)
-	if err := _Greenfieldlightclient.contract.UnpackLog(event, "updateConsensusState", log); err != nil {
+// Solidity: event UpdatedConsensusState(uint64 height, bool validatorSetChanged)
+func (_Greenfieldlightclient *GreenfieldlightclientFilterer) ParseUpdatedConsensusState(log types.Log) (*GreenfieldlightclientUpdatedConsensusState, error) {
+	event := new(GreenfieldlightclientUpdatedConsensusState)
+	if err := _Greenfieldlightclient.contract.UnpackLog(event, "UpdatedConsensusState", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

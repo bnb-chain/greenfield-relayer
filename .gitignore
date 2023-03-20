@@ -2,3 +2,5 @@
 .idea/*
 build/*
 .local
+config/local/*
+integrationtest/config/*

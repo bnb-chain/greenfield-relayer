@@ -4,6 +4,19 @@
       "inputs": [
         {
           "indexed": false,
+          "internalType": "uint64",
+          "name": "height",
+          "type": "uint64"
+        }
+      ],
+      "name": "InitConsensusState",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
           "internalType": "uint8",
           "name": "version",
           "type": "uint8"
@@ -17,12 +30,18 @@
       "inputs": [
         {
           "indexed": false,
-          "internalType": "uint64",
-          "name": "height",
-          "type": "uint64"
+          "internalType": "string",
+          "name": "key",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "value",
+          "type": "bytes"
         }
       ],
-      "name": "initConsensusState",
+      "name": "ParamChange",
       "type": "event"
     },
     {
@@ -41,21 +60,8 @@
           "type": "bool"
         }
       ],
-      "name": "updateConsensusState",
+      "name": "UpdatedConsensusState",
       "type": "event"
-    },
-    {
-      "inputs": [],
-      "name": "APP_CHANNELID",
-      "outputs": [
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
     },
     {
       "inputs": [],
@@ -72,12 +78,12 @@
     },
     {
       "inputs": [],
-      "name": "CHAIN_ID_LENGTH",
+      "name": "BUCKET_CHANNEL_ID",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "",
-          "type": "uint256"
+          "type": "uint8"
         }
       ],
       "stateMutability": "view",
@@ -85,12 +91,25 @@
     },
     {
       "inputs": [],
-      "name": "CODE_OK",
+      "name": "BUCKET_HUB",
       "outputs": [
         {
-          "internalType": "uint32",
+          "internalType": "address",
           "name": "",
-          "type": "uint32"
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "CHAIN_ID_LENGTH",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -136,13 +155,19 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "ERROR_FAIL_DECODE",
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "ConfigSlots",
       "outputs": [
         {
-          "internalType": "uint32",
+          "internalType": "uint256",
           "name": "",
-          "type": "uint32"
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -150,7 +175,7 @@
     },
     {
       "inputs": [],
-      "name": "GOV_CHANNELID",
+      "name": "GOV_CHANNEL_ID",
       "outputs": [
         {
           "internalType": "uint8",
@@ -164,6 +189,32 @@
     {
       "inputs": [],
       "name": "GOV_HUB",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "GROUP_CHANNEL_ID",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "GROUP_HUB",
       "outputs": [
         {
           "internalType": "address",
@@ -221,6 +272,32 @@
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "OBJECT_CHANNEL_ID",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "OBJECT_HUB",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -306,7 +383,7 @@
     },
     {
       "inputs": [],
-      "name": "TRANSFER_IN_CHANNELID",
+      "name": "TRANSFER_IN_CHANNEL_ID",
       "outputs": [
         {
           "internalType": "uint8",
@@ -319,7 +396,7 @@
     },
     {
       "inputs": [],
-      "name": "TRANSFER_OUT_CHANNELID",
+      "name": "TRANSFER_OUT_CHANNEL_ID",
       "outputs": [
         {
           "internalType": "uint8",
@@ -423,6 +500,67 @@
     },
     {
       "inputs": [],
+      "name": "getInturnRelayer",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "addr",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "blsKey",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "start",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "end",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct ILightClient.InturnRelayer",
+          "name": "relayer",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getInturnRelayerAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getInturnRelayerBlsPubKey",
+      "outputs": [
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "getRelayers",
       "outputs": [
         {
@@ -449,12 +587,12 @@
     },
     {
       "inputs": [],
-      "name": "initialGnfdHeight",
+      "name": "inTurnRelayerRelayInterval",
       "outputs": [
         {
-          "internalType": "uint64",
+          "internalType": "uint256",
           "name": "",
-          "type": "uint64"
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -532,6 +670,24 @@
     {
       "inputs": [
         {
+          "internalType": "string",
+          "name": "key",
+          "type": "string"
+        },
+        {
+          "internalType": "bytes",
+          "name": "value",
+          "type": "bytes"
+        }
+      ],
+      "name": "updateParam",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
@@ -590,6 +746,29 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "versionInfo",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "version",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
       "type": "function"
     }
   ]
