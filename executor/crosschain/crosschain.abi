@@ -459,19 +459,6 @@
     },
     {
       "inputs": [],
-      "name": "IN_TURN_RELAYER_VALIDITY_PERIOD",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "LIGHT_CLIENT",
       "outputs": [
         {
@@ -504,19 +491,6 @@
           "internalType": "address",
           "name": "",
           "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "OUT_TURN_RELAYER_BACKOFF_PERIOD",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -853,6 +827,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "inTurnRelayerValidityPeriod",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint16",
@@ -1069,4 +1056,4 @@
       "stateMutability": "pure",
       "type": "function"
     }
-]
+  ]

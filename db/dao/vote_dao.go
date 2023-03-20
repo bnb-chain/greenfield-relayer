@@ -25,6 +25,15 @@ func (d *VoteDao) GetVotesByChannelIdAndSequence(channelId uint8, sequence uint6
 	return votes, nil
 }
 
+func (d *VoteDao) GetVotesCountByChannelIdAndSequence(channelId uint8, sequence uint64) (int64, error) {
+	var count int64
+	err := d.DB.Model(model.Vote{}).Where("channel_id = ? and sequence = ?", channelId, sequence).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (d *VoteDao) GetVoteByChannelIdAndSequenceAndPubKey(channelId uint8, sequence uint64, pubKey string) (*model.Vote, error) {
 	vote := model.Vote{}
 	err := d.DB.Model(model.Vote{}).Where("channel_id = ? and sequence = ? and pub_key = ?", channelId, sequence, pubKey).Take(&vote).Error

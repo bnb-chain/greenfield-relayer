@@ -9,10 +9,17 @@ type (
 	ChainId   uint16
 )
 
-// Validator queried  from BSC light-client
+// Validator queried from BSC light-client
 type Validator struct {
 	RelayerAddress common.Address
 	BlsPublicKey   []byte
+}
+
+// InturnRelayer queired from BSC for the cur inturn relayer and interval
+type InturnRelayer struct {
+	BlsPublicKey string
+	Start        uint64
+	End          uint64
 }
 
 type CrossChainPackageEvent struct {

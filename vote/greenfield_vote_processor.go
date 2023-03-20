@@ -216,6 +216,14 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 		return err
 	}
 
+	count, err := p.daoManager.VoteDao.GetVotesCountByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
+	if err != nil {
+		return err
+	}
+	if count > int64(len(validators))*2/3 {
+		return nil
+	}
+
 	if err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id); err != nil {
 		return err
 	}
@@ -369,7 +377,7 @@ func (p *GreenfieldVoteProcessor) txFeeToBytes(txFee string) ([]byte, error) {
 }
 
 func (p *GreenfieldVoteProcessor) isTxSequenceFilled(tx *model.GreenfieldRelayTransaction) (bool, error) {
-	nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannel(types.ChannelId(tx.ChannelId))
+	nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(types.ChannelId(tx.ChannelId))
 	if err != nil {
 		return false, err
 	}

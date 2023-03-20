@@ -234,7 +234,19 @@ func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, erro
 	return header, nil
 }
 
-func (e *BSCExecutor) GetNextReceiveSequenceForChannel(channelID rtypes.ChannelId) (uint64, error) {
+func (e *BSCExecutor) GetNextReceiveSequenceForChannelWithRetry(channelID rtypes.ChannelId) (sequence uint64, err error) {
+	return sequence, retry.Do(func() error {
+		sequence, err = e.getNextReceiveSequenceForChannel(channelID)
+		return err
+	}, relayercommon.RtyAttem,
+		relayercommon.RtyDelay,
+		relayercommon.RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			logging.Logger.Infof("failed to query sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
+		}))
+}
+
+func (e *BSCExecutor) getNextReceiveSequenceForChannel(channelID rtypes.ChannelId) (sequence uint64, err error) {
 	callOpts := &bind.CallOpts{
 		Pending: true,
 		Context: context.Background(),
@@ -242,7 +254,19 @@ func (e *BSCExecutor) GetNextReceiveSequenceForChannel(channelID rtypes.ChannelI
 	return e.getCrossChainClient().ChannelReceiveSequenceMap(callOpts, uint8(channelID))
 }
 
-func (e *BSCExecutor) GetNextDeliveryOracleSequence() (uint64, error) {
+func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry() (sequence uint64, err error) {
+	return sequence, retry.Do(func() error {
+		sequence, err = e.getNextDeliveryOracleSequence()
+		return err
+	}, relayercommon.RtyAttem,
+		relayercommon.RtyDelay,
+		relayercommon.RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			logging.Logger.Infof("failed to query oracle sequence, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+		}))
+}
+
+func (e *BSCExecutor) getNextDeliveryOracleSequence() (uint64, error) {
 	sequence, err := e.GreenfieldExecutor.GetNextReceiveOracleSequence()
 	if err != nil {
 		return 0, err
@@ -316,11 +340,11 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte,
 		}))
 }
 
-func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte) (common.Hash, error) {
-	nonce, err := e.GetRpcClient().PendingNonceAt(context.Background(), e.txSender)
-	if err != nil {
-		return common.Hash{}, err
-	}
+func (e *BSCExecutor) GetNonce() (uint64, error) {
+	return e.GetRpcClient().PendingNonceAt(context.Background(), e.txSender)
+}
+
+func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte, nonce uint64) (common.Hash, error) {
 	txOpts, err := e.getTransactor(nonce)
 	if err != nil {
 		return common.Hash{}, err
@@ -403,4 +427,21 @@ func (e *BSCExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 		keys = append(keys, hex.EncodeToString(v.BlsPublicKey[:]))
 	}
 	return keys, nil
+}
+
+func (e *BSCExecutor) GetInturnRelayer() (*rtypes.InturnRelayer, error) {
+	callOpts := &bind.CallOpts{
+		Pending: true,
+		Context: context.Background(),
+	}
+	r, err := e.getGreenfieldLightClient().GetInturnRelayer(callOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rtypes.InturnRelayer{
+		BlsPublicKey: hex.EncodeToString(r.BlsKey),
+		Start:        r.Start.Uint64(),
+		End:          r.End.Uint64(),
+	}, nil
 }

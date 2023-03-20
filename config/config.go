@@ -57,15 +57,15 @@ type BSCConfig struct {
 }
 
 type RelayConfig struct {
-	BSCToGreenfieldRelayingDelayTime  int64  `json:"bsc_to_greenfield_relaying_delay_time"` // in second
-	GreenfieldToBSCRelayingDelayTime  int64  `json:"greenfield_to_bsc_relaying_delay_time"` // in second
-	FirstInTurnRelayerRelayingWindow  int64  `json:"first_in_turn_relayer_relaying_window"` // in second
-	InTurnRelayerRelayingWindow       int64  `json:"in_turn_relayer_relaying_window"`       // in second
-	GreenfieldEventTypeCrossChain     string `json:"greenfield_event_type_cross_chain"`
-	BSCCrossChainPackageEventName     string `json:"bsc_cross_chain_package_event_name"`
-	CrossChainPackageEventHex         string `json:"cross_chain_package_event_hex"`
-	CrossChainContractAddr            string `json:"cross_chain_contract_addr"`
-	GreenfieldLightClientContractAddr string `json:"greenfield_light_client_contract_addr"`
+	BSCToGreenfieldInturnRelayerTimeout int64  `json:"bsc_to_greenfield_inturn_relayer_timeout"` // in second
+	GreenfieldToBSCInturnRelayerTimeout int64  `json:"greenfield_to_bsc_inturn_relayer_timeout"` // in second
+	GreenfieldSequenceUpdateLatency     int64  `json:"greenfield_sequence_update_latency"`       // in second
+	BSCSequenceUpdateLatency            int64  `json:"bsc_sequence_update_latency"`              // in second
+	GreenfieldEventTypeCrossChain       string `json:"greenfield_event_type_cross_chain"`
+	BSCCrossChainPackageEventName       string `json:"bsc_cross_chain_package_event_name"`
+	CrossChainPackageEventHex           string `json:"cross_chain_package_event_hex"`
+	CrossChainContractAddr              string `json:"cross_chain_contract_addr"`
+	GreenfieldLightClientContractAddr   string `json:"greenfield_light_client_contract_addr"`
 }
 
 func (cfg *BSCConfig) Validate() {
