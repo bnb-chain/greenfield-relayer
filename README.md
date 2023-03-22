@@ -167,6 +167,17 @@ Run docker:
 $ docker run -it -v /your/data/path:/greenfield-relayer -e CONFIG_TYPE="local" -e CONFIG_FILE_PATH=/your/config/file/path/in/container -d greenfield-relayer
 ```
 
+### Quick setup for running multiple relayers in local 
+Fill in config files under `./config/local` by following above instruction, you might want to fill in same number of greenfield validators you bootstrap in local,
+```bash
+// start n instance of relayer 
+bash ./deployment/localup/localup.sh start ${SIZE}
+
+// stop relayer
+bash ./deployment/localup/localup.sh stop
+```
+
+
 
 ## Contribute
 Thank you for considering to help out with the source code! We welcome contributions
