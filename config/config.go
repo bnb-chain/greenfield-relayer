@@ -36,7 +36,7 @@ type GreenfieldConfig struct {
 	PrivateKey                string   `json:"private_key"`
 	BlsPrivateKey             string   `json:"bls_private_key"`
 	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
-	ChainId                   uint16   `json:"chain_id"`
+	ChainId                   uint64   `json:"chain_id"`
 	StartHeight               uint64   `json:"start_height"`
 	MonitorChannelList        []uint8  `json:"monitor_channel_list"`
 	GasLimit                  uint64   `json:"gas_limit"`
@@ -53,7 +53,7 @@ type BSCConfig struct {
 	GasPrice                  uint64   `json:"gas_price"`
 	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
 	StartHeight               uint64   `json:"start_height"`
-	ChainId                   uint16   `json:"chain_id"`
+	ChainId                   uint64   `json:"chain_id"`
 }
 
 type RelayConfig struct {
