@@ -2,6 +2,7 @@ package listener
 
 import (
 	"bytes"
+	"encoding/hex"
 	"strconv"
 	"sync"
 	"time"
@@ -145,7 +146,16 @@ func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, errChan cha
 		return
 	}
 
-	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
+	latestSyncedLightBlockTx, err := l.DaoManager.GreenfieldDao.GetLatestSyncedTransaction()
+	latestValidatorsHashFromDB, err := hex.DecodeString(latestSyncedLightBlockTx.ValidatorsHash)
+	if err != nil {
+		errChan <- err
+		return
+	}
+
+	if bytes.Equal(block.ValidatorsHash[:], latestValidatorsHashFromDB) {
+		return
+	}
 	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
 	if err != nil {
 		errChan <- err
@@ -168,7 +178,7 @@ func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, errChan cha
 		curVal := curValidators[idx]
 
 		if !bytes.Equal(nextVal.Address.Bytes(), curVal.Address.Bytes()) ||
-			!bytes.Equal(nextVal.RelayerBlsKey, curVal.RelayerBlsKey) ||
+			!bytes.Equal(nextVal.BlsKey, curVal.BlsKey) ||
 			!bytes.Equal(nextVal.RelayerAddress, curVal.RelayerAddress) {
 
 			if err := l.sync(nextHeight, block.ValidatorsHash.String()); err != nil {

@@ -3,13 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-
 	"github.com/bnb-chain/greenfield-relayer/app"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 const (

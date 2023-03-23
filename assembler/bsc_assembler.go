@@ -1,6 +1,7 @@
 package assembler
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -18,11 +19,12 @@ import (
 )
 
 type BSCAssembler struct {
-	config             *config.Config
-	greenfieldExecutor *executor.GreenfieldExecutor
-	bscExecutor        *executor.BSCExecutor
-	daoManager         *dao.DaoManager
-	blsPubKey          string
+	config               *config.Config
+	greenfieldExecutor   *executor.GreenfieldExecutor
+	bscExecutor          *executor.BSCExecutor
+	daoManager           *dao.DaoManager
+	blsPubKey            []byte
+	hasRetrievedSequence bool
 }
 
 func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
@@ -31,7 +33,7 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 		bscExecutor:        executor,
 		daoManager:         dao,
 		greenfieldExecutor: greenfieldExecutor,
-		blsPubKey:          hex.EncodeToString(util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey)),
+		blsPubKey:          util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
 	}
 }
 
@@ -54,8 +56,13 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if err != nil {
 		return err
 	}
-	isInturnRelyer := inturnRelayer.BlsPubKey == a.blsPubKey
+	inturnRelayerPubkey, err := hex.DecodeString(inturnRelayer.BlsPubKey)
+	if err != nil {
+		return err
+	}
+	isInturnRelyer := bytes.Equal(a.blsPubKey, inturnRelayerPubkey)
 	var startSequence uint64
+
 	if isInturnRelyer {
 		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
 		if err != nil {
@@ -63,13 +70,16 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		}
 		startSequence = uint64(seq.Sequence)
 
-		// in-turn relayer get the start sequence from chain first time, it starts to relay after the sequence gets updated
-		now := time.Now().Unix()
-		timeDiff := now - int64(inturnRelayer.RelayInterval.Start)
+		if !a.hasRetrievedSequence {
+			// in-turn relayer get the start sequence from chain first time, it starts to relay after the sequence gets updated
+			now := time.Now().Unix()
+			timeDiff := now - int64(inturnRelayer.RelayInterval.Start)
 
-		if timeDiff < a.config.RelayConfig.GreenfieldSequenceUpdateLatency {
-			if timeDiff < 0 {
-				return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.RelayInterval.Start)
+			if timeDiff < a.config.RelayConfig.GreenfieldSequenceUpdateLatency {
+				if timeDiff < 0 {
+					return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.RelayInterval.Start)
+				}
+				return nil
 			}
 			time.Sleep(time.Duration(timeDiff) * time.Second)
 			startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
@@ -80,15 +90,14 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 				return err
 			}
 		}
-		logging.Logger.Debug("bsc relay as in-turn relayer")
 	} else {
+		a.hasRetrievedSequence = false
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
 		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)
 		startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 		if err != nil {
 			return err
 		}
-		logging.Logger.Debug("bsc relay as out-turn relayer")
 		if err := a.daoManager.BSCDao.UpdateBatchPackagesStatusToDelivered(startSequence); err != nil {
 			return err
 		}

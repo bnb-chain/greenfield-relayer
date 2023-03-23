@@ -129,3 +129,12 @@ func (d *GreenfieldDao) SaveSyncLightBlockTransaction(t *model.SyncLightBlockTra
 		return dbTx.Create(t).Error
 	})
 }
+
+func (d *GreenfieldDao) GetLatestSyncedTransaction() (*model.SyncLightBlockTransaction, error) {
+	tx := model.SyncLightBlockTransaction{}
+	err := d.DB.Model(model.SyncLightBlockTransaction{}).Order("height desc").Take(&tx).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	return &tx, nil
+}
