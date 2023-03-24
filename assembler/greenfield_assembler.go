@@ -14,6 +14,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/bnb-chain/greenfield-relayer/util"
 	"github.com/bnb-chain/greenfield-relayer/vote"
@@ -27,9 +28,11 @@ type GreenfieldAssembler struct {
 	daoManager                       *dao.DaoManager
 	blsPubKey                        []byte
 	hasRetrievedSequenceByChannelMap map[types.ChannelId]bool // flag for in-turn relayer that if it has requested the sequence from chain during its interval
+	metricService                    *metric.MetricService
 }
 
-func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor) *GreenfieldAssembler {
+func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor,
+	ms *metric.MetricService) *GreenfieldAssembler {
 	channels := cfg.GreenfieldConfig.MonitorChannelList
 	retrievedSequenceByChannelMap := make(map[types.ChannelId]bool)
 	for _, c := range channels {
@@ -42,6 +45,7 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 		bscExecutor:                      bscExecutor,
 		blsPubKey:                        util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
 		hasRetrievedSequenceByChannelMap: retrievedSequenceByChannelMap,
+		metricService:                    ms,
 	}
 }
 
@@ -79,6 +83,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		return err
 	}
 	isInturnRelyer := bytes.Equal(a.blsPubKey, inturnRelayerPubkey)
+	a.metricService.SetBSCInturnRelayerMetrics(isInturnRelyer, inturnRelayer.Start, inturnRelayer.End)
 	if isInturnRelyer {
 		// get next delivered sequence from DB
 		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
@@ -106,8 +111,13 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 			a.mutex.Lock()
 			a.hasRetrievedSequenceByChannelMap[channelId] = true
 			a.mutex.Unlock()
-
 		}
+		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSequence)
+		seqFromChain, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
+		if err != nil {
+			return err
+		}
+		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
 		a.mutex.Lock()
 		a.hasRetrievedSequenceByChannelMap[channelId] = false
@@ -181,6 +191,7 @@ func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, no
 		return err
 	}
 	logging.Logger.Infof("relayed transaction with channel id %d and sequence %d, get txHash %s", tx.ChannelId, tx.Sequence, txHash)
+	a.metricService.SetGnfdProcessedBlockHeight(tx.Height)
 
 	// update next delivery sequence in DB for inturn relayer, for non-inturn relayer, there is enough time for
 	// sequence update, so they can track next start seq from chain
@@ -197,7 +208,6 @@ func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, no
 	if err = a.daoManager.SequenceDao.Upsert(tx.ChannelId, tx.Sequence+1); err != nil {
 		return err
 	}
-
 	return nil
 }
 

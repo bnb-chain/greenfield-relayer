@@ -54,7 +54,7 @@
     "compress": false
   },
   "admin_config": {
-    "listen_addr": "0.0.0.0:8080"
+    "port": 8080
   },
   "db_config": {
     "dialect": "mysql",

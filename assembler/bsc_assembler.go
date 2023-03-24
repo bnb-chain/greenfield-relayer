@@ -13,6 +13,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/bnb-chain/greenfield-relayer/util"
 	"github.com/bnb-chain/greenfield-relayer/vote"
@@ -25,15 +26,17 @@ type BSCAssembler struct {
 	daoManager           *dao.DaoManager
 	blsPubKey            []byte
 	hasRetrievedSequence bool
+	metricService        *metric.MetricService
 }
 
-func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
+func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor, ms *metric.MetricService) *BSCAssembler {
 	return &BSCAssembler{
 		config:             cfg,
 		bscExecutor:        executor,
 		daoManager:         dao,
 		greenfieldExecutor: greenfieldExecutor,
 		blsPubKey:          util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		metricService:      ms,
 	}
 }
 
@@ -61,6 +64,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		return err
 	}
 	isInturnRelyer := bytes.Equal(a.blsPubKey, inturnRelayerPubkey)
+	a.metricService.SetGnfdInturnRelayerMetrics(isInturnRelyer, inturnRelayer.RelayInterval.Start, inturnRelayer.RelayInterval.End)
 	var startSequence uint64
 
 	if isInturnRelyer {
@@ -89,6 +93,12 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 				return err
 			}
 		}
+		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSequence)
+		seqFromChain, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+		if err != nil {
+			return err
+		}
+		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
 		a.hasRetrievedSequence = false
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
@@ -170,6 +180,7 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
 	}
+	a.metricService.SetBSCProcessedBlockHeight(pkgs[0].Height)
 	if !isInturnRelyer {
 		if err = a.daoManager.BSCDao.UpdateBatchPackagesClaimedTxHash(pkgIds, txHash); err != nil {
 			return err
@@ -184,6 +195,5 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 	if err = a.daoManager.SequenceDao.Upsert(channelId, sequence+1); err != nil {
 		return err
 	}
-
 	return nil
 }
