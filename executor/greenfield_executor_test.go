@@ -59,7 +59,7 @@ func TestGetConsensusStatus(t *testing.T) {
 		t.Logf("validator pubkey %s", hexutil.Encode(validator.PubKey.Bytes()))
 		t.Logf("validator votingpower %d", validator.VotingPower)
 		t.Logf("relayeraddress %s", hex.EncodeToString(validator.RelayerAddress))
-		t.Logf("relayer bls pub key %s", hex.EncodeToString(validator.RelayerBlsKey))
+		t.Logf("relayer bls pub key %s", hex.EncodeToString(validator.BlsKey))
 	}
 }
 
@@ -73,6 +73,6 @@ func TestGetLatestValidators(t *testing.T) {
 		t.Logf("validator pubkey %s", hexutil.Encode(validator.PubKey.Bytes()))
 		t.Logf("validator votingpower %d", validator.VotingPower)
 		t.Logf("relayeraddress %s", hex.EncodeToString(validator.RelayerAddress))
-		t.Logf("relayer bls pub key %s", hex.EncodeToString(validator.RelayerBlsKey))
+		t.Logf("relayer bls pub key %s", hex.EncodeToString(validator.BlsKey))
 	}
 }

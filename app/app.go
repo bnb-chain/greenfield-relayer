@@ -13,13 +13,15 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/listener"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/relayer"
 	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
 type App struct {
-	BSCRelayer  *relayer.BSCRelayer
-	GnfdRelayer *relayer.GreenfieldRelayer
+	BSCRelayer    *relayer.BSCRelayer
+	GnfdRelayer   *relayer.GreenfieldRelayer
+	metricService *metric.MetricService
 }
 
 func NewApp(cfg *config.Config) *App {
@@ -44,9 +46,11 @@ func NewApp(cfg *config.Config) *App {
 	greenfieldExecutor.SetBSCExecutor(bscExecutor)
 	bscExecutor.SetGreenfieldExecutor(greenfieldExecutor)
 
+	metricService := metric.NewMetricService(cfg)
+
 	// listeners
-	greenfieldListener := listener.NewGreenfieldListener(cfg, greenfieldExecutor, bscExecutor, daoManager)
-	bscListener := listener.NewBSCListener(cfg, bscExecutor, greenfieldExecutor, daoManager)
+	greenfieldListener := listener.NewGreenfieldListener(cfg, greenfieldExecutor, bscExecutor, daoManager, metricService)
+	bscListener := listener.NewBSCListener(cfg, bscExecutor, greenfieldExecutor, daoManager, metricService)
 
 	// vote signer
 	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.GreenfieldConfig.BlsPrivateKey))
@@ -56,20 +60,22 @@ func NewApp(cfg *config.Config) *App {
 	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor)
 
 	// assemblers
-	greenfieldAssembler := assembler.NewGreenfieldAssembler(cfg, greenfieldExecutor, daoManager, bscExecutor)
-	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, greenfieldExecutor)
+	greenfieldAssembler := assembler.NewGreenfieldAssembler(cfg, greenfieldExecutor, daoManager, bscExecutor, metricService)
+	bscAssembler := assembler.NewBSCAssembler(cfg, bscExecutor, daoManager, greenfieldExecutor, metricService)
 
 	// relayers
 	gnfdRelayer := relayer.NewGreenfieldRelayer(greenfieldListener, greenfieldExecutor, bscExecutor, greenfieldVoteProcessor, greenfieldAssembler)
 	bscRelayer := relayer.NewBSCRelayer(bscListener, greenfieldExecutor, bscExecutor, bscVoteProcessor, bscAssembler)
 
 	return &App{
-		BSCRelayer:  bscRelayer,
-		GnfdRelayer: gnfdRelayer,
+		BSCRelayer:    bscRelayer,
+		GnfdRelayer:   gnfdRelayer,
+		metricService: metricService,
 	}
 }
 
 func (a *App) Start() {
 	a.GnfdRelayer.Start()
 	a.BSCRelayer.Start()
+	a.metricService.Start()
 }

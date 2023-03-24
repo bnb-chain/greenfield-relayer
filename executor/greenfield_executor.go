@@ -227,7 +227,7 @@ func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 	}
 	var keys []string
 	for _, v := range validators {
-		keys = append(keys, hex.EncodeToString(v.RelayerBlsKey))
+		keys = append(keys, hex.EncodeToString(v.BlsKey))
 	}
 	return keys, nil
 }
