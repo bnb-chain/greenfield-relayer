@@ -46,7 +46,7 @@ func NewApp(cfg *config.Config) *App {
 	greenfieldExecutor.SetBSCExecutor(bscExecutor)
 	bscExecutor.SetGreenfieldExecutor(greenfieldExecutor)
 
-	metricService := metric.NewMonitorService(cfg)
+	metricService := metric.NewMetricService(cfg)
 
 	// listeners
 	greenfieldListener := listener.NewGreenfieldListener(cfg, greenfieldExecutor, bscExecutor, daoManager, metricService)

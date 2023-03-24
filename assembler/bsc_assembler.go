@@ -85,12 +85,12 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 			}
 		}
 		logging.Logger.Debug("bsc relay as in-turn relayer")
-		a.metricService.MonitorNextSequenceForChannelFromDB(uint8(channelId), startSequence)
+		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSequence)
 		seqFromChain, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 		if err != nil {
 			return err
 		}
-		a.metricService.MonitorNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
+		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
 		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)
@@ -172,7 +172,7 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
 	}
-	a.metricService.MonitorBSCProcessedBlockHeight(pkgs[0].Height)
+	a.metricService.SetBSCProcessedBlockHeight(pkgs[0].Height)
 	if !isInturnRelyer {
 		if err = a.daoManager.BSCDao.UpdateBatchPackagesClaimedTxHash(pkgIds, txHash); err != nil {
 			return err

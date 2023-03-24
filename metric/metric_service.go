@@ -14,14 +14,14 @@ const (
 	MetricNameGnfdSavedBlock       = "Greenfield_saved_block_height"
 	MetricNameGnfdProcessedBlock   = "Greenfield_processed_block_height"
 	MetricNameIsGnfdInturnRelayer  = "is_Greenfield_inturn_relayer"
-	MetricNameGnfdRelayerStartTime = "Greenfield_relayer_start_time" // inturn relayer start time or out-turn relayer previous start time
-	MetricNameGnfdRelayerEndTime   = "Greenfield_relayer_end_time"   // inturn relayer end time or out-turn relayer previous end time
+	MetricNameGnfdRelayerStartTime = "Greenfield_relayer_start_time" // inturn relayer start time
+	MetricNameGnfdRelayerEndTime   = "Greenfield_relayer_end_time"   // inturn relayer end time
 
 	MetricNameBSCSavedBlock       = "BSC_saved_block_height"
 	MetricNameBSCProcessedBlock   = "BSC_processed_block_height"
 	MetricNameIsBSCInturnRelayer  = "is_BSC_inturn_relayer"
-	MetricNameBSCRelayerStartTime = "BSC_relayer_start_time" // inturn relayer start time or out-turn relayer previous start time
-	MetricNameBSCRelayerEndTime   = "BSC_relayer_end_time"   // inturn relayer end time or out-turn relayer previous end time
+	MetricNameBSCRelayerStartTime = "BSC_relayer_start_time" // inturn relayer start time
+	MetricNameBSCRelayerEndTime   = "BSC_relayer_end_time"   // inturn relayer end time
 
 	MetricNameNextSequenceForChannelFromDB    = "next_seq_from_DB_for_channel"
 	MetricNameNextSequenceForChannelFromChain = "next_seq_from_chain_for_channel"
@@ -32,7 +32,7 @@ type MetricService struct {
 	cfg        *config.Config
 }
 
-func NewMonitorService(config *config.Config) *MetricService {
+func NewMetricService(config *config.Config) *MetricService {
 	ms := make(map[string]prometheus.Metric, 0)
 
 	// Greenfield
@@ -155,19 +155,19 @@ func (m *MetricService) Start() {
 	}
 }
 
-func (m *MetricService) MonitorGnfdSavedBlockHeight(height uint64) {
+func (m *MetricService) SetGnfdSavedBlockHeight(height uint64) {
 	m.MetricsMap[MetricNameGnfdSavedBlock].(prometheus.Gauge).Set(float64(height))
 }
 
-func (m *MetricService) MonitorGnfdProcessedBlockHeight(height uint64) {
+func (m *MetricService) SetGnfdProcessedBlockHeight(height uint64) {
 	m.MetricsMap[MetricNameGnfdProcessedBlock].(prometheus.Gauge).Set(float64(height))
 }
 
-func (m *MetricService) MonitorBSCSavedBlockHeight(height uint64) {
+func (m *MetricService) SetBSCSavedBlockHeight(height uint64) {
 	m.MetricsMap[MetricNameBSCSavedBlock].(prometheus.Gauge).Set(float64(height))
 }
 
-func (m *MetricService) MonitorBSCProcessedBlockHeight(height uint64) {
+func (m *MetricService) SetBSCProcessedBlockHeight(height uint64) {
 	m.MetricsMap[MetricNameBSCProcessedBlock].(prometheus.Gauge).Set(float64(height))
 }
 
@@ -215,10 +215,10 @@ func (m *MetricService) setGnfdInturnRelayerEndTime(end uint64) {
 	m.MetricsMap[MetricNameGnfdRelayerEndTime].(prometheus.Gauge).Set(float64(end))
 }
 
-func (m *MetricService) MonitorNextSequenceForChannelFromDB(channel uint8, seq uint64) {
+func (m *MetricService) SetNextSequenceForChannelFromDB(channel uint8, seq uint64) {
 	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromDB, channel)].(prometheus.Gauge).Set(float64(seq))
 }
 
-func (m *MetricService) MonitorNextSequenceForChannelFromChain(channel uint8, seq uint64) {
+func (m *MetricService) SetNextSequenceForChannelFromChain(channel uint8, seq uint64) {
 	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromChain, channel)].(prometheus.Gauge).Set(float64(seq))
 }

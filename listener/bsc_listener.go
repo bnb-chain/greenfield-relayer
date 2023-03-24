@@ -142,7 +142,7 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		}, relayPkgs); err != nil {
 		return err
 	}
-	l.monitorService.MonitorBSCSavedBlockHeight(nextHeight)
+	l.monitorService.SetBSCSavedBlockHeight(nextHeight)
 	return nil
 }
 

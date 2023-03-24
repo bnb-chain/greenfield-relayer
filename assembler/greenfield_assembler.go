@@ -90,12 +90,12 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 				return err
 			}
 		}
-		a.metricService.MonitorNextSequenceForChannelFromDB(uint8(channelId), startSequence)
+		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSequence)
 		seqFromChain, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 		if err != nil {
 			return err
 		}
-		a.metricService.MonitorNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
+		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
 		time.Sleep(time.Duration(a.config.RelayConfig.BSCSequenceUpdateLatency) * time.Second)
 		startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
@@ -168,7 +168,7 @@ func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, no
 		return err
 	}
 	logging.Logger.Infof("relayed transaction with channel id %d and sequence %d, get txHash %s", tx.ChannelId, tx.Sequence, txHash)
-	a.metricService.MonitorGnfdProcessedBlockHeight(tx.Height)
+	a.metricService.SetGnfdProcessedBlockHeight(tx.Height)
 
 	// update next delivery sequence in DB for inturn relayer, for non-inturn relayer, there is enough time for
 	// sequence update, so they can track next start seq from chain

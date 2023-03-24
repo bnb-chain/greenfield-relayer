@@ -90,7 +90,7 @@ func (l *GreenfieldListener) poll() error {
 			if err := l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs); err != nil {
 				return err
 			}
-			l.metricService.MonitorGnfdSavedBlockHeight(uint64(block.Height))
+			l.metricService.SetGnfdSavedBlockHeight(uint64(block.Height))
 			return nil
 		}
 	}
