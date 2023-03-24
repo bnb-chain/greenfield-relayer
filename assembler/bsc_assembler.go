@@ -87,6 +87,9 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		logging.Logger.Debug("bsc relay as in-turn relayer")
 		a.metricService.MonitorNextSequenceForChannelFromDB(uint8(channelId), startSequence)
 		seqFromChain, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+		if err != nil {
+			return err
+		}
 		a.metricService.MonitorNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
 		// non-inturn relayer retries every 10 second, gets the sequence from chain

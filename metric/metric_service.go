@@ -2,10 +2,12 @@ package metric
 
 import (
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/config"
+	"net/http"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net/http"
+
+	"github.com/bnb-chain/greenfield-relayer/config"
 )
 
 const (
@@ -147,7 +149,10 @@ func NewMonitorService(config *config.Config) *MetricService {
 
 func (m *MetricService) Start() {
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(fmt.Sprintf(":%d", m.cfg.AdminConfig.Port), nil)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", m.cfg.AdminConfig.Port), nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (m *MetricService) MonitorGnfdSavedBlockHeight(height uint64) {
@@ -211,7 +216,6 @@ func (m *MetricService) setGnfdInturnRelayerEndTime(end uint64) {
 }
 
 func (m *MetricService) MonitorNextSequenceForChannelFromDB(channel uint8, seq uint64) {
-	fmt.Println(fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromDB, channel))
 	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromDB, channel)].(prometheus.Gauge).Set(float64(seq))
 }
 

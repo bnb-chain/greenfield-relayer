@@ -2,7 +2,6 @@ package listener
 
 import (
 	"bytes"
-	"github.com/bnb-chain/greenfield-relayer/metric"
 	"strconv"
 	"sync"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/util"
 )
 

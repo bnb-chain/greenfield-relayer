@@ -2,6 +2,11 @@ package app
 
 import (
 	"fmt"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
 	"github.com/bnb-chain/greenfield-relayer/assembler"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
@@ -11,9 +16,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/relayer"
 	"github.com/bnb-chain/greenfield-relayer/vote"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 type App struct {

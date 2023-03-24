@@ -3,7 +3,6 @@ package listener
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/metric"
 	"strings"
 	"time"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/executor/crosschain"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 

@@ -3,7 +3,6 @@ package assembler
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/metric"
 	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
@@ -13,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/bnb-chain/greenfield-relayer/util"
 	"github.com/bnb-chain/greenfield-relayer/vote"
