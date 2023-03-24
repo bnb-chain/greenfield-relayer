@@ -81,7 +81,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 				}
 				return nil
 			}
-			time.Sleep(time.Duration(timeDiff) * time.Second)
 			startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 			if err != nil {
 				return err

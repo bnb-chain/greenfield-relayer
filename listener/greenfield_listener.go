@@ -135,44 +135,50 @@ func (l *GreenfieldListener) monitorEndBlockEvents(height uint64, endBlockEvents
 
 func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, errChan chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
+	if err := l.monitorValidatorsHelper(block); err != nil {
+		errChan <- err
+	}
+}
+
+func (l *GreenfieldListener) monitorValidatorsHelper(block *tmtypes.Block) error {
+
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
-		errChan <- err
-		return
+		return err
 	}
 	nextHeight := uint64(block.Height)
 	// happen when re-process block
 	if nextHeight <= lightClientLatestHeight {
-		return
+		return nil
 	}
 
 	latestSyncedLightBlockTx, err := l.DaoManager.GreenfieldDao.GetLatestSyncedTransaction()
+	if err != nil {
+		return err
+	}
 	latestValidatorsHashFromDB, err := hex.DecodeString(latestSyncedLightBlockTx.ValidatorsHash)
 	if err != nil {
-		errChan <- err
-		return
+		return err
 	}
 
 	if bytes.Equal(block.ValidatorsHash[:], latestValidatorsHashFromDB) {
-		return
+		return nil
 	}
 	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
 	if err != nil {
-		errChan <- err
-		return
+		return err
 	}
 
 	curValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight - 1)
 	if err != nil {
-		errChan <- err
-		return
+		return err
 	}
 
 	if len(nextValidators) != len(curValidators) {
 		if err := l.sync(nextHeight, block.ValidatorsHash.String()); err != nil {
-			errChan <- err
+			return err
 		}
-		return
+		return nil
 	}
 	for idx, nextVal := range nextValidators {
 		curVal := curValidators[idx]
@@ -182,11 +188,12 @@ func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, errChan cha
 			!bytes.Equal(nextVal.RelayerAddress, curVal.RelayerAddress) {
 
 			if err := l.sync(nextHeight, block.ValidatorsHash.String()); err != nil {
-				errChan <- err
+				return err
 			}
 			break
 		}
 	}
+	return nil
 }
 
 func (l *GreenfieldListener) calNextHeight() (uint64, error) {

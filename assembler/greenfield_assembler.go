@@ -20,6 +20,7 @@ import (
 )
 
 type GreenfieldAssembler struct {
+	mutex                            sync.RWMutex
 	config                           *config.Config
 	bscExecutor                      *executor.BSCExecutor
 	greenfieldExecutor               *executor.GreenfieldExecutor
@@ -102,10 +103,15 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 			if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), startSequence); err != nil {
 				return err
 			}
+			a.mutex.Lock()
 			a.hasRetrievedSequenceByChannelMap[channelId] = true
+			a.mutex.Unlock()
+
 		}
 	} else {
+		a.mutex.Lock()
 		a.hasRetrievedSequenceByChannelMap[channelId] = false
+		a.mutex.Unlock()
 
 		time.Sleep(time.Duration(a.config.RelayConfig.BSCSequenceUpdateLatency) * time.Second)
 		startSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
