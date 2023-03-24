@@ -18,12 +18,12 @@ type Config struct {
 }
 
 type AdminConfig struct {
-	ListenAddr string `json:"listen_addr"`
+	Port uint16 `json:"port"`
 }
 
 func (cfg *AdminConfig) Validate() {
-	if cfg.ListenAddr == "" {
-		panic("listen address should not be empty")
+	if cfg.Port <= 0 || cfg.Port > 65535 {
+		panic("port should be within (0, 65535]")
 	}
 }
 

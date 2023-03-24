@@ -2,6 +2,7 @@ package listener
 
 import (
 	"bytes"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"strconv"
 	"sync"
 	"time"
@@ -25,14 +26,17 @@ type GreenfieldListener struct {
 	greenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
 	DaoManager         *dao.DaoManager
+	metricService      *metric.MetricService
 }
 
-func NewGreenfieldListener(cfg *config.Config, gnfdExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor, dao *dao.DaoManager) *GreenfieldListener {
+func NewGreenfieldListener(cfg *config.Config, gnfdExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor,
+	dao *dao.DaoManager, ms *metric.MetricService) *GreenfieldListener {
 	return &GreenfieldListener{
 		config:             cfg,
 		greenfieldExecutor: gnfdExecutor,
 		bscExecutor:        bscExecutor,
 		DaoManager:         dao,
+		metricService:      ms,
 	}
 }
 
@@ -83,7 +87,11 @@ func (l *GreenfieldListener) poll() error {
 				Height:    uint64(block.Height),
 				BlockTime: block.Time.Unix(),
 			}
-			return l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs)
+			if err := l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs); err != nil {
+				return err
+			}
+			l.metricService.MonitorGnfdSavedBlockHeight(uint64(block.Height))
+			return nil
 		}
 	}
 }

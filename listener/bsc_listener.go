@@ -3,6 +3,7 @@ package listener
 import (
 	"context"
 	"fmt"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"strings"
 	"time"
 
@@ -27,9 +28,10 @@ type BSCListener struct {
 	greenfieldExecutor *executor.GreenfieldExecutor
 	DaoManager         *dao.DaoManager
 	crossChainAbi      abi.ABI
+	monitorService     *metric.MetricService
 }
 
-func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, gnfdExecutor *executor.GreenfieldExecutor, dao *dao.DaoManager) *BSCListener {
+func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, gnfdExecutor *executor.GreenfieldExecutor, dao *dao.DaoManager, ms *metric.MetricService) *BSCListener {
 	crossChainAbi, err := abi.JSON(strings.NewReader(crosschain.CrosschainMetaData.ABI))
 	if err != nil {
 		panic("marshal abi error")
@@ -40,6 +42,7 @@ func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, gnfdE
 		greenfieldExecutor: gnfdExecutor,
 		DaoManager:         dao,
 		crossChainAbi:      crossChainAbi,
+		monitorService:     ms,
 	}
 }
 
@@ -130,14 +133,17 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		relayPkgs = append(relayPkgs, relayPkg)
 	}
 
-	return l.DaoManager.BSCDao.SaveBlockAndBatchPackages(
+	if err := l.DaoManager.BSCDao.SaveBlockAndBatchPackages(
 		&model.BscBlock{
 			BlockHash:  nextHeightBlockHeader.Hash().String(),
 			ParentHash: nextHeightBlockHeader.ParentHash.String(),
 			Height:     nextHeight,
 			BlockTime:  int64(nextHeightBlockHeader.Time),
-		},
-		relayPkgs)
+		}, relayPkgs); err != nil {
+		return err
+	}
+	l.monitorService.MonitorBSCSavedBlockHeight(nextHeight)
+	return nil
 }
 
 func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log, error) {

@@ -3,6 +3,7 @@ package assembler
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
@@ -23,15 +24,17 @@ type BSCAssembler struct {
 	bscExecutor        *executor.BSCExecutor
 	daoManager         *dao.DaoManager
 	blsPubKey          string
+	metricService      *metric.MetricService
 }
 
-func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor) *BSCAssembler {
+func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor, ms *metric.MetricService) *BSCAssembler {
 	return &BSCAssembler{
 		config:             cfg,
 		bscExecutor:        executor,
 		daoManager:         dao,
 		greenfieldExecutor: greenfieldExecutor,
 		blsPubKey:          hex.EncodeToString(util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey)),
+		metricService:      ms,
 	}
 }
 
@@ -55,6 +58,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		return err
 	}
 	isInturnRelyer := inturnRelayer.BlsPubKey == a.blsPubKey
+	a.metricService.SetGnfdInturnRelayerMetrics(isInturnRelyer, inturnRelayer.RelayInterval.Start, inturnRelayer.RelayInterval.End)
 	var startSequence uint64
 	if isInturnRelyer {
 		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
@@ -81,6 +85,9 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 			}
 		}
 		logging.Logger.Debug("bsc relay as in-turn relayer")
+		a.metricService.MonitorNextSequenceForChannelFromDB(uint8(channelId), startSequence)
+		seqFromChain, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+		a.metricService.MonitorNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
 		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)
@@ -162,6 +169,7 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
 	}
+	a.metricService.MonitorBSCProcessedBlockHeight(pkgs[0].Height)
 	if !isInturnRelyer {
 		if err = a.daoManager.BSCDao.UpdateBatchPackagesClaimedTxHash(pkgIds, txHash); err != nil {
 			return err
@@ -176,6 +184,5 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 	if err = a.daoManager.SequenceDao.Upsert(channelId, sequence+1); err != nil {
 		return err
 	}
-
 	return nil
 }
