@@ -48,7 +48,7 @@ func AggregateSignatureAndValidatorBitSet(votes []*model.Vote, validators interf
 		}
 	} else {
 		for idx, valInfo := range validators.([]*tmtypes.Validator) {
-			if _, ok := voteAddrSet[hex.EncodeToString(valInfo.RelayerBlsKey[:])]; ok {
+			if _, ok := voteAddrSet[hex.EncodeToString(valInfo.BlsKey[:])]; ok {
 				valBitSet.Set(uint(idx))
 			}
 		}

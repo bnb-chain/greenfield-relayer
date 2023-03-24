@@ -1,8 +1,10 @@
 package assembler
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
@@ -19,51 +21,69 @@ import (
 )
 
 type GreenfieldAssembler struct {
-	config             *config.Config
-	bscExecutor        *executor.BSCExecutor
-	greenfieldExecutor *executor.GreenfieldExecutor
-	daoManager         *dao.DaoManager
-	blsPubKey          string
-	metricService      *metric.MetricService
+	mutex                            sync.RWMutex
+	config                           *config.Config
+	bscExecutor                      *executor.BSCExecutor
+	greenfieldExecutor               *executor.GreenfieldExecutor
+	daoManager                       *dao.DaoManager
+	blsPubKey                        []byte
+	hasRetrievedSequenceByChannelMap map[types.ChannelId]bool // flag for in-turn relayer that if it has requested the sequence from chain during its interval
+	metricService                    *metric.MetricService
 }
 
 func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor,
 	ms *metric.MetricService) *GreenfieldAssembler {
+	channels := cfg.GreenfieldConfig.MonitorChannelList
+	retrievedSequenceByChannelMap := make(map[types.ChannelId]bool)
+	for _, c := range channels {
+		retrievedSequenceByChannelMap[types.ChannelId(c)] = false
+	}
 	return &GreenfieldAssembler{
-		config:             cfg,
-		greenfieldExecutor: executor,
-		daoManager:         dao,
-		bscExecutor:        bscExecutor,
-		blsPubKey:          hex.EncodeToString(util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey)),
-		metricService:      ms,
+		config:                           cfg,
+		greenfieldExecutor:               executor,
+		daoManager:                       dao,
+		bscExecutor:                      bscExecutor,
+		blsPubKey:                        util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		hasRetrievedSequenceByChannelMap: retrievedSequenceByChannelMap,
+		metricService:                    ms,
 	}
 }
 
 // AssembleTransactionsLoop assemble a tx by gathering votes signature and then call the build-in smart-contract
 func (a *GreenfieldAssembler) AssembleTransactionsLoop() {
-	for _, c := range a.getMonitorChannels() {
-		go a.assembleTransactionAndSendForChannel(types.ChannelId(c))
-	}
-}
-
-func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId types.ChannelId) {
 	ticker := time.NewTicker(common.RetryInterval)
 	for range ticker.C {
-		if err := a.process(channelId); err != nil {
-			logging.Logger.Errorf("encounter error when relaying tx, err=%s ", err.Error())
+		inturnRelayer, err := a.bscExecutor.GetInturnRelayer()
+		if err != nil {
+			logging.Logger.Errorf("encounter error when retrieving in-turn relayer from chain, err=%s ", err.Error())
+			continue
 		}
+		wg := new(sync.WaitGroup)
+		errChan := make(chan error)
+		for _, c := range a.getMonitorChannels() {
+			wg.Add(1)
+			go a.assembleTransactionAndSendForChannel(types.ChannelId(c), inturnRelayer, errChan, wg)
+		}
+		wg.Wait()
 	}
 }
 
-func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
-	logging.Logger.Infof("current time is %d", time.Now().Unix())
-	inturnRelayer, err := a.bscExecutor.GetInturnRelayer()
+func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId types.ChannelId, inturnRelayer *types.InturnRelayer, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+	err := a.process(channelId, inturnRelayer)
+	if err != nil {
+		errChan <- err
+	}
+}
+
+func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *types.InturnRelayer) error {
+	var startSequence uint64
+	inturnRelayerPubkey, err := hex.DecodeString(inturnRelayer.BlsPublicKey)
 	if err != nil {
 		return err
 	}
-	isInturnRelyer := inturnRelayer.BlsPublicKey == a.blsPubKey
+	isInturnRelyer := bytes.Equal(a.blsPubKey, inturnRelayerPubkey)
 	a.metricService.SetBSCInturnRelayerMetrics(isInturnRelyer, inturnRelayer.Start, inturnRelayer.End)
-	var startSequence uint64
 	if isInturnRelyer {
 		// get next delivered sequence from DB
 		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
@@ -71,17 +91,16 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 			return err
 		}
 		startSequence = uint64(seq.Sequence)
-
-		// in-turn relayer get the start sequence from chain first time, it starts to relay after the  sequence
-		// get updated
-		now := time.Now().Unix()
-		timeDiff := now - int64(inturnRelayer.Start)
-
-		if timeDiff < a.config.RelayConfig.BSCSequenceUpdateLatency {
-			if timeDiff < 0 {
-				return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.Start)
+		// in-turn relayer get the start sequence from chain once during its interval
+		if !a.hasRetrievedSequenceByChannelMap[channelId] {
+			now := time.Now().Unix()
+			timeDiff := now - int64(inturnRelayer.Start)
+			if timeDiff < a.config.RelayConfig.BSCSequenceUpdateLatency {
+				if timeDiff < 0 {
+					return fmt.Errorf("blockchain time and relayer time is not consistent, now %d should be after %d", now, inturnRelayer.Start)
+				}
+				return nil
 			}
-			time.Sleep(time.Duration(timeDiff) * time.Second)
 			startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 			if err != nil {
 				return err
@@ -89,6 +108,9 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 			if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), startSequence); err != nil {
 				return err
 			}
+			a.mutex.Lock()
+			a.hasRetrievedSequenceByChannelMap[channelId] = true
+			a.mutex.Unlock()
 		}
 		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSequence)
 		seqFromChain, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
@@ -97,12 +119,15 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 		}
 		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
+		a.mutex.Lock()
+		a.hasRetrievedSequenceByChannelMap[channelId] = false
+		a.mutex.Unlock()
+
 		time.Sleep(time.Duration(a.config.RelayConfig.BSCSequenceUpdateLatency) * time.Second)
-		startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
+		startSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 		if err != nil {
 			return err
 		}
-		logging.Logger.Debug("gnfd relay as out-turn relayer")
 		if err := a.daoManager.GreenfieldDao.UpdateBatchTransactionStatusToDelivered(startSequence); err != nil {
 			return err
 		}
@@ -115,7 +140,6 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 	if endSequence == -1 {
 		return nil
 	}
-	logging.Logger.Debugf("channel %d start seq is %d, end seq is %d ", channelId, startSequence, endSequence)
 	nonce, err := a.bscExecutor.GetNonce()
 	if err != nil {
 		return err
@@ -141,7 +165,6 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId) error {
 			return err
 		}
 		logging.Logger.Infof("relayed tx with channel id %d and sequence %d ", tx.ChannelId, tx.Sequence)
-
 		nonce++
 	}
 	return nil

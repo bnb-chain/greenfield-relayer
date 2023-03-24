@@ -2,6 +2,7 @@ package listener
 
 import (
 	"bytes"
+	"encoding/hex"
 	"strconv"
 	"sync"
 	"time"
@@ -142,49 +143,65 @@ func (l *GreenfieldListener) monitorEndBlockEvents(height uint64, endBlockEvents
 
 func (l *GreenfieldListener) monitorValidators(block *tmtypes.Block, errChan chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
+	if err := l.monitorValidatorsHelper(block); err != nil {
+		errChan <- err
+	}
+}
+
+func (l *GreenfieldListener) monitorValidatorsHelper(block *tmtypes.Block) error {
+
 	lightClientLatestHeight, err := l.bscExecutor.GetLightClientLatestHeight()
 	if err != nil {
-		errChan <- err
-		return
+		return err
 	}
 	nextHeight := uint64(block.Height)
 	// happen when re-process block
 	if nextHeight <= lightClientLatestHeight {
-		return
+		return nil
 	}
 
-	logging.Logger.Infof("monitoring validator at height %d", nextHeight)
+	latestSyncedLightBlockTx, err := l.DaoManager.GreenfieldDao.GetLatestSyncedTransaction()
+	if err != nil {
+		return err
+	}
+	latestValidatorsHashFromDB, err := hex.DecodeString(latestSyncedLightBlockTx.ValidatorsHash)
+	if err != nil {
+		return err
+	}
+
+	if bytes.Equal(block.ValidatorsHash[:], latestValidatorsHashFromDB) {
+		return nil
+	}
 	nextValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight)
 	if err != nil {
-		errChan <- err
-		return
+		return err
 	}
 
 	curValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight - 1)
 	if err != nil {
-		errChan <- err
-		return
+		return err
 	}
 
 	if len(nextValidators) != len(curValidators) {
 		if err := l.sync(nextHeight, block.ValidatorsHash.String()); err != nil {
-			errChan <- err
+			return err
 		}
-		return
+		return nil
 	}
 	for idx, nextVal := range nextValidators {
 		curVal := curValidators[idx]
 
 		if !bytes.Equal(nextVal.Address.Bytes(), curVal.Address.Bytes()) ||
-			!bytes.Equal(nextVal.RelayerBlsKey, curVal.RelayerBlsKey) ||
+			!bytes.Equal(nextVal.BlsKey, curVal.BlsKey) ||
 			!bytes.Equal(nextVal.RelayerAddress, curVal.RelayerAddress) {
 
 			if err := l.sync(nextHeight, block.ValidatorsHash.String()); err != nil {
-				errChan <- err
+				return err
 			}
 			break
 		}
 	}
+	return nil
 }
 
 func (l *GreenfieldListener) calNextHeight() (uint64, error) {

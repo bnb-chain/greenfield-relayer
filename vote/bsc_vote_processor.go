@@ -358,7 +358,7 @@ func (p *BSCVoteProcessor) constructSignedVote(eventHash []byte) *votepool.Vote 
 
 func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmtypes.Validator) bool {
 	for _, validator := range validators {
-		if bytes.Equal(v.PubKey[:], validator.RelayerBlsKey[:]) {
+		if bytes.Equal(v.PubKey[:], validator.BlsKey[:]) {
 			return true
 		}
 	}

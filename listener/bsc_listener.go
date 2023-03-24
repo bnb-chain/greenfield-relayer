@@ -79,8 +79,7 @@ func (l *BSCListener) poll() error {
 			return nil
 		}
 	}
-	err = l.monitorCrossChainPkgAt(nextHeight, latestPolledBlock)
-	if err != nil {
+	if err = l.monitorCrossChainPkgAt(nextHeight, latestPolledBlock); err != nil {
 		logging.Logger.Errorf("encounter error when monitor cross-chain packages at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
