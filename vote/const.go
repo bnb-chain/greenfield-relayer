@@ -10,5 +10,5 @@ const (
 
 	QueryVotepoolMaxRetryTimes = 5
 
-	VotePoolQueryRetryInterval = 5 * time.Second // retry every 5 second, total queries 6 times. Approximately equal to a vote expiration time
+	VotePoolQueryRetryInterval = 2 * time.Second
 )

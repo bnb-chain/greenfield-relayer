@@ -13,7 +13,7 @@ var (
 	RtyAttem      = retry.Attempts(RtyAttNum)
 	RtyDelay      = retry.Delay(time.Millisecond * 500)
 	RtyErr        = retry.LastErrorOnly(true)
-	RetryInterval = 2 * time.Second
+	RetryInterval = 1 * time.Second
 )
 
 const (
