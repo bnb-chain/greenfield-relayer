@@ -146,6 +146,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 	}
 
 	for i := startSequence; i <= uint64(endSequence); i++ {
+		a.metricService.SetTxPickForAssembleTimeT5(uint64(time.Now().Unix()))
 		tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequence(channelId, i)
 		if err != nil {
 			return err
@@ -164,6 +165,8 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		if err := a.processTx(tx, nonce, isInturnRelyer); err != nil {
 			return err
 		}
+		a.metricService.SetTxOnDestTimeT6(uint64(time.Now().Unix()))
+
 		logging.Logger.Infof("relayed tx with channel id %d and sequence %d ", tx.ChannelId, tx.Sequence)
 		nonce++
 	}

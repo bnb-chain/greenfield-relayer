@@ -81,12 +81,18 @@ func (l *GreenfieldListener) poll() error {
 			logging.Logger.Errorf("encounter error when monitoring block at Height=%d, err=%s", nextHeight, err.Error())
 			return err
 		case tx := <-relayTxCh:
+			// Todo will be removed
+			l.metricService.SetTxOnSrcChainTimeT1(uint64(tx.TxTime))
 			txs = append(txs, tx)
 		case <-waitCh:
 			b := &model.GreenfieldBlock{
 				Chain:     block.ChainID,
 				Height:    uint64(block.Height),
 				BlockTime: block.Time.Unix(),
+			}
+			// Todo will be removed
+			if len(txs) > 0 {
+				l.metricService.SetTxSavedToDBTimeT2(uint64(time.Now().Unix()))
 			}
 			if err := l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs); err != nil {
 				return err

@@ -24,6 +24,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/bnb-chain/greenfield-relayer/util"
 )
@@ -34,16 +35,18 @@ type GreenfieldVoteProcessor struct {
 	signer             *VoteSigner
 	greenfieldExecutor *executor.GreenfieldExecutor
 	blsPublicKey       []byte
+	metricService      *metric.MetricService
 }
 
 func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
-	greenfieldExecutor *executor.GreenfieldExecutor) *GreenfieldVoteProcessor {
+	greenfieldExecutor *executor.GreenfieldExecutor, ms *metric.MetricService) *GreenfieldVoteProcessor {
 	return &GreenfieldVoteProcessor{
 		config:             cfg,
 		daoManager:         dao,
 		signer:             signer,
 		greenfieldExecutor: greenfieldExecutor,
 		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		metricService:      ms,
 	}
 }
 
@@ -108,6 +111,9 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 		// broadcast v
 		if err = retry.Do(func() error {
+			// todo will be removed
+			p.metricService.SetxBroadcastTimeT3(uint64(time.Now().Unix()))
+
 			err = p.greenfieldExecutor.BroadcastVote(v)
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
@@ -198,6 +204,7 @@ func (p *GreenfieldVoteProcessor) collectVoteForTx(tx *model.GreenfieldRelayTran
 		errChan <- err
 		return
 	}
+	p.metricService.SetTxFinishCollectVoteTimeT4(uint64(time.Now().Unix()))
 	if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.AllVoted); err != nil {
 		errChan <- err
 		return

@@ -2,12 +2,11 @@ package metric
 
 import (
 	"fmt"
-	"net/http"
-
+	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"github.com/bnb-chain/greenfield-relayer/config"
+	"net/http"
+	"strconv"
 )
 
 const (
@@ -25,15 +24,23 @@ const (
 
 	MetricNameNextSequenceForChannelFromDB    = "next_seq_from_DB_for_channel"
 	MetricNameNextSequenceForChannelFromChain = "next_seq_from_chain_for_channel"
+
+	//for tracking perf
+	MetricNameTxOnSrcChainTime        = "tx_on_src_chain_time_t1"
+	MetricNameTxSavedToDBTime         = "tx_saved_to_db_time_t2"
+	MetricNameTxBroadcastTime         = "tx_broadcast_time_t3"
+	MetricNameTxFinishCollectVoteTime = "tx_finish_collect_vote_time_t4"
+	MetricNameTxPickForAssembleTime   = "tx_picked_for_assemble_time_t5"
+	MetricNameTxOnDestTime            = "tx_on_dest_chain_time_t6"
 )
 
 type MetricService struct {
-	MetricsMap map[string]prometheus.Metric
+	MetricsMap map[string]prometheus.Collector
 	cfg        *config.Config
 }
 
 func NewMetricService(config *config.Config) *MetricService {
-	ms := make(map[string]prometheus.Metric, 0)
+	ms := make(map[string]prometheus.Collector, 0)
 
 	// Greenfield
 	gnfdSavedBlockMetric := prometheus.NewGauge(prometheus.GaugeOpts{
@@ -141,6 +148,49 @@ func NewMetricService(config *config.Config) *MetricService {
 		prometheus.MustRegister(nextSeqFromChain)
 	}
 
+	// tracking perf
+	TxOnSrcChainTime := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameTxOnSrcChainTime,
+		Help: MetricNameTxOnSrcChainTime,
+	})
+	ms[MetricNameTxOnSrcChainTime] = TxOnSrcChainTime
+	prometheus.MustRegister(TxOnSrcChainTime)
+
+	TxSavedToDBTime := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameTxSavedToDBTime,
+		Help: MetricNameTxSavedToDBTime,
+	})
+	ms[MetricNameTxSavedToDBTime] = TxSavedToDBTime
+	prometheus.MustRegister(TxSavedToDBTime)
+
+	TxBroadcastTime := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameTxBroadcastTime,
+		Help: MetricNameTxBroadcastTime,
+	})
+	ms[MetricNameTxBroadcastTime] = TxBroadcastTime
+	prometheus.MustRegister(TxBroadcastTime)
+
+	TxFinishCollectVoteTime := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameTxFinishCollectVoteTime,
+		Help: MetricNameTxFinishCollectVoteTime,
+	})
+	ms[MetricNameTxFinishCollectVoteTime] = TxFinishCollectVoteTime
+	prometheus.MustRegister(TxFinishCollectVoteTime)
+
+	TxPickForAssembleTime := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameTxPickForAssembleTime,
+		Help: MetricNameTxPickForAssembleTime,
+	})
+	ms[MetricNameTxPickForAssembleTime] = TxPickForAssembleTime
+	prometheus.MustRegister(TxPickForAssembleTime)
+
+	TxOnDestTime := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameTxOnDestTime,
+		Help: MetricNameTxOnDestTime,
+	})
+	ms[MetricNameTxOnDestTime] = TxOnDestTime
+	prometheus.MustRegister(TxOnDestTime)
+
 	return &MetricService{
 		MetricsMap: ms,
 		cfg:        config,
@@ -221,4 +271,23 @@ func (m *MetricService) SetNextSequenceForChannelFromDB(channel uint8, seq uint6
 
 func (m *MetricService) SetNextSequenceForChannelFromChain(channel uint8, seq uint64) {
 	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromChain, channel)].(prometheus.Gauge).Set(float64(seq))
+}
+
+func (m *MetricService) SetTxOnSrcChainTimeT1(ts uint64) {
+	m.MetricsMap[MetricNameTxOnSrcChainTime].(*prometheus.GaugeVec).With(prometheus.Labels{"timestamp": strconv.FormatInt(int64(ts), 10)}).Set(0)
+}
+func (m *MetricService) SetTxSavedToDBTimeT2(ts uint64) {
+	m.MetricsMap[MetricNameTxSavedToDBTime].(*prometheus.GaugeVec).With(prometheus.Labels{"timestamp": strconv.FormatInt(int64(ts), 10)}).Set(0)
+}
+func (m *MetricService) SetxBroadcastTimeT3(ts uint64) {
+	m.MetricsMap[MetricNameTxBroadcastTime].(*prometheus.GaugeVec).With(prometheus.Labels{"timestamp": strconv.FormatInt(int64(ts), 10)}).Set(0)
+}
+func (m *MetricService) SetTxFinishCollectVoteTimeT4(ts uint64) {
+	m.MetricsMap[MetricNameTxFinishCollectVoteTime].(*prometheus.GaugeVec).With(prometheus.Labels{"timestamp": strconv.FormatInt(int64(ts), 10)}).Set(0)
+}
+func (m *MetricService) SetTxPickForAssembleTimeT5(ts uint64) {
+	m.MetricsMap[MetricNameTxPickForAssembleTime].(*prometheus.GaugeVec).With(prometheus.Labels{"timestamp": strconv.FormatInt(int64(ts), 10)}).Set(0)
+}
+func (m *MetricService) SetTxOnDestTimeT6(ts uint64) {
+	m.MetricsMap[MetricNameTxOnDestTime].(*prometheus.GaugeVec).With(prometheus.Labels{"timestamp": strconv.FormatInt(int64(ts), 10)}).Set(0)
 }

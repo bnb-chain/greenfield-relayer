@@ -56,7 +56,7 @@ func NewApp(cfg *config.Config) *App {
 	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.GreenfieldConfig.BlsPrivateKey))
 
 	// voteProcessors
-	greenfieldVoteProcessor := vote.NewGreenfieldVoteProcessor(cfg, daoManager, signer, greenfieldExecutor)
+	greenfieldVoteProcessor := vote.NewGreenfieldVoteProcessor(cfg, daoManager, signer, greenfieldExecutor, metricService)
 	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor)
 
 	// assemblers
