@@ -124,7 +124,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		a.mutex.Unlock()
 
 		time.Sleep(time.Duration(a.config.RelayConfig.BSCSequenceUpdateLatency) * time.Second)
-		startSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
+		startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 		if err != nil {
 			return err
 		}
