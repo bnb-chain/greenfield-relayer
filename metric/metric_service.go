@@ -2,11 +2,13 @@ package metric
 
 import (
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/config"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/bnb-chain/greenfield-relayer/config"
 )
 
 const (
@@ -149,45 +151,45 @@ func NewMetricService(config *config.Config) *MetricService {
 	}
 
 	// tracking perf
-	TxOnSrcChainTime := prometheus.NewGauge(prometheus.GaugeOpts{
+	TxOnSrcChainTime := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: MetricNameTxOnSrcChainTime,
 		Help: MetricNameTxOnSrcChainTime,
-	})
+	}, []string{"timestamp"})
 	ms[MetricNameTxOnSrcChainTime] = TxOnSrcChainTime
 	prometheus.MustRegister(TxOnSrcChainTime)
 
-	TxSavedToDBTime := prometheus.NewGauge(prometheus.GaugeOpts{
+	TxSavedToDBTime := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: MetricNameTxSavedToDBTime,
 		Help: MetricNameTxSavedToDBTime,
-	})
+	}, []string{"timestamp"})
 	ms[MetricNameTxSavedToDBTime] = TxSavedToDBTime
 	prometheus.MustRegister(TxSavedToDBTime)
 
-	TxBroadcastTime := prometheus.NewGauge(prometheus.GaugeOpts{
+	TxBroadcastTime := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: MetricNameTxBroadcastTime,
 		Help: MetricNameTxBroadcastTime,
-	})
+	}, []string{"timestamp"})
 	ms[MetricNameTxBroadcastTime] = TxBroadcastTime
 	prometheus.MustRegister(TxBroadcastTime)
 
-	TxFinishCollectVoteTime := prometheus.NewGauge(prometheus.GaugeOpts{
+	TxFinishCollectVoteTime := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: MetricNameTxFinishCollectVoteTime,
 		Help: MetricNameTxFinishCollectVoteTime,
-	})
+	}, []string{"timestamp"})
 	ms[MetricNameTxFinishCollectVoteTime] = TxFinishCollectVoteTime
 	prometheus.MustRegister(TxFinishCollectVoteTime)
 
-	TxPickForAssembleTime := prometheus.NewGauge(prometheus.GaugeOpts{
+	TxPickForAssembleTime := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: MetricNameTxPickForAssembleTime,
 		Help: MetricNameTxPickForAssembleTime,
-	})
+	}, []string{"timestamp"})
 	ms[MetricNameTxPickForAssembleTime] = TxPickForAssembleTime
 	prometheus.MustRegister(TxPickForAssembleTime)
 
-	TxOnDestTime := prometheus.NewGauge(prometheus.GaugeOpts{
+	TxOnDestTime := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: MetricNameTxOnDestTime,
 		Help: MetricNameTxOnDestTime,
-	})
+	}, []string{"timestamp"})
 	ms[MetricNameTxOnDestTime] = TxOnDestTime
 	prometheus.MustRegister(TxOnDestTime)
 
