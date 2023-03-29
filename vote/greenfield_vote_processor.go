@@ -47,15 +47,55 @@ func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer 
 	}
 }
 
-// SignAndBroadcastLoop signs tx using the relayer's bls private key, then broadcasts the vote to Greenfield votepool
-func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
-	for {
-		err := p.signAndBroadcast()
-		if err != nil {
-			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(rcommon.ErrorRetryInterval)
-		}
+func (p *GreenfieldVoteProcessor) SignAndBroadcastV1(tx *model.GreenfieldRelayTransaction) error {
+	isFilled, err := p.isTxSequenceFilled(tx)
+	if err != nil {
+		return err
 	}
+	if isFilled {
+		if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
+			return err
+		}
+		logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
+		return nil
+	}
+
+	aggregatedPayload, err := p.aggregatePayloadForTx(tx)
+	if err != nil {
+		return err
+	}
+	v := p.constructVoteAndSign(aggregatedPayload)
+
+	// broadcast v
+	if err = retry.Do(func() error {
+		err = p.greenfieldExecutor.BroadcastVote(v)
+		if err != nil {
+			return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
+		}
+		return nil
+	}, retry.Context(context.Background()), rcommon.RtyAttem, rcommon.RtyDelay, rcommon.RtyErr); err != nil {
+		return err
+	}
+
+	// After vote submitted to vote pool, persist vote Data and update the status of tx to 'SELF_VOTED'.
+	err = p.daoManager.GreenfieldDao.DB.Transaction(func(dbTx *gorm.DB) error {
+		err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.SelfVoted)
+		if err != nil {
+			return err
+		}
+		exist, err := p.daoManager.VoteDao.IsVoteExist(tx.ChannelId, tx.Sequence, hex.EncodeToString(v.PubKey[:]))
+		if err != nil {
+			return err
+		}
+		if !exist {
+			err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, tx.ChannelId, tx.Sequence, aggregatedPayload))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
 }
 
 func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
@@ -85,56 +125,9 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 	// for every tx, we are going to sign it and broadcast vote of it.
 	for _, tx := range txs {
-
 		// in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
 		// transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
-		isFilled, err := p.isTxSequenceFilled(tx)
-		if err != nil {
-			return err
-		}
-		if isFilled {
-			if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
-				return err
-			}
-			logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
-			continue
-		}
-
-		aggregatedPayload, err := p.aggregatePayloadForTx(tx)
-		if err != nil {
-			return err
-		}
-		v := p.constructVoteAndSign(aggregatedPayload)
-
-		// broadcast v
-		if err = retry.Do(func() error {
-			err = p.greenfieldExecutor.BroadcastVote(v)
-			if err != nil {
-				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
-			}
-			return nil
-		}, retry.Context(context.Background()), rcommon.RtyAttem, rcommon.RtyDelay, rcommon.RtyErr); err != nil {
-			return err
-		}
-
-		// After vote submitted to vote pool, persist vote Data and update the status of tx to 'SELF_VOTED'.
-		err = p.daoManager.GreenfieldDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.SelfVoted)
-			if err != nil {
-				return err
-			}
-			exist, err := p.daoManager.VoteDao.IsVoteExist(tx.ChannelId, tx.Sequence, hex.EncodeToString(v.PubKey[:]))
-			if err != nil {
-				return err
-			}
-			if !exist {
-				err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, tx.ChannelId, tx.Sequence, aggregatedPayload))
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		})
+		err := p.SignAndBroadcastV1(tx)
 		if err != nil {
 			return err
 		}

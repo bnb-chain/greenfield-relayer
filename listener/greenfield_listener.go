@@ -3,6 +3,8 @@ package listener
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/bnb-chain/greenfield-relayer/types"
+	"github.com/bnb-chain/greenfield-relayer/vote"
 	"strconv"
 	"sync"
 	"time"
@@ -26,16 +28,18 @@ type GreenfieldListener struct {
 	config             *config.Config
 	greenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
+	voteProcessor      *vote.GreenfieldVoteProcessor
 	DaoManager         *dao.DaoManager
 	metricService      *metric.MetricService
 }
 
 func NewGreenfieldListener(cfg *config.Config, gnfdExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor,
-	dao *dao.DaoManager, ms *metric.MetricService) *GreenfieldListener {
+	voteProcessor *vote.GreenfieldVoteProcessor, dao *dao.DaoManager, ms *metric.MetricService) *GreenfieldListener {
 	return &GreenfieldListener{
 		config:             cfg,
 		greenfieldExecutor: gnfdExecutor,
 		bscExecutor:        bscExecutor,
+		voteProcessor:      voteProcessor,
 		DaoManager:         dao,
 		metricService:      ms,
 	}
@@ -116,12 +120,12 @@ func (l *GreenfieldListener) monitorTxEvents(height uint64, txRes []*abci.Respon
 	for _, tx := range txRes {
 		for _, event := range tx.Events {
 			if event.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
-				relayTx, err := constructRelayTx(event, height)
+				relayTx, err := l.constructRelayTxAndBroadcast(event, height)
 				if err != nil {
 					errChan <- err
 					return
 				}
-				txChan <- &relayTx
+				txChan <- relayTx
 			}
 		}
 	}
@@ -131,12 +135,12 @@ func (l *GreenfieldListener) monitorEndBlockEvents(height uint64, endBlockEvents
 	defer wg.Done()
 	for _, e := range endBlockEvents {
 		if e.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
-			relayTx, err := constructRelayTx(e, height)
+			relayTx, err := l.constructRelayTxAndBroadcast(e, height)
 			if err != nil {
 				errChan <- err
 				return
 			}
-			txChan <- &relayTx
+			txChan <- relayTx
 		}
 	}
 }
@@ -249,62 +253,86 @@ func (l *GreenfieldListener) sync(nextHeight uint64, validatorsHash string) erro
 	return nil
 }
 
-func constructRelayTx(event abci.Event, height uint64) (model.GreenfieldRelayTransaction, error) {
+func (l *GreenfieldListener) broadCastTx(tx *model.GreenfieldRelayTransaction) error {
+	return l.voteProcessor.SignAndBroadcastV1(tx)
+}
+
+func (l *GreenfieldListener) constructRelayTxAndBroadcast(event abci.Event, height uint64) (*model.GreenfieldRelayTransaction, error) {
+	relayTx, err := constructRelayTx(event, height)
+	if err != nil {
+		return nil, err
+	}
+	filled, err := l.isTxSequenceFilled(relayTx)
+	if err != nil {
+		return nil, err
+	}
+	if filled {
+		relayTx.Status = db.Delivered
+		return relayTx, nil
+	}
+	if err = l.broadCastTx(relayTx); err != nil {
+		return nil, err
+	}
+	relayTx.Status = db.SelfVoted
+	return relayTx, nil
+}
+
+func constructRelayTx(event abci.Event, height uint64) (*model.GreenfieldRelayTransaction, error) {
 	relayTx := model.GreenfieldRelayTransaction{}
 	for _, attr := range event.Attributes {
 		switch string(attr.Key) {
 		case "channel_id":
 			chanelId, err := strconv.ParseInt(string(attr.Value), 10, 8)
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.ChannelId = uint8(chanelId)
 		case "src_chain_id":
 			srcChainId, err := strconv.ParseInt(string(attr.Value), 10, 32)
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.SrcChainId = uint32(srcChainId)
 		case "dest_chain_id":
 			destChainId, err := strconv.ParseInt(string(attr.Value), 10, 32)
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.DestChainId = uint32(destChainId)
 		case "package_load":
 			payloadStr, err := strconv.Unquote(string(attr.Value))
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.PayLoad = payloadStr
 		case "sequence":
 			seq, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.Sequence = seq
 		case "package_type":
 			packType, err := strconv.ParseInt(string(attr.Value), 10, 32)
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.PackageType = uint32(packType)
 		case "timestamp":
 			ts, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.TxTime = int64(ts)
 		case "relayer_fee":
 			feeStr, err := strconv.Unquote(string(attr.Value))
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.RelayerFee = feeStr
 		case "ack_relayer_fee":
 			feeStr, err := strconv.Unquote(string(attr.Value))
 			if err != nil {
-				return relayTx, err
+				return nil, err
 			}
 			relayTx.AckRelayerFee = feeStr
 		default:
@@ -314,5 +342,13 @@ func constructRelayTx(event abci.Event, height uint64) (model.GreenfieldRelayTra
 	relayTx.Status = db.Saved
 	relayTx.Height = height
 	relayTx.UpdatedTime = time.Now().Unix()
-	return relayTx, nil
+	return &relayTx, nil
+}
+
+func (l *GreenfieldListener) isTxSequenceFilled(tx *model.GreenfieldRelayTransaction) (bool, error) {
+	nextDeliverySequence, err := l.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(types.ChannelId(tx.ChannelId))
+	if err != nil {
+		return false, err
+	}
+	return tx.Sequence < nextDeliverySequence, nil
 }
