@@ -51,7 +51,7 @@ func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 	for {
 		if err := p.signAndBroadcast(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(RetryInterval)
+			time.Sleep(common.ErrorRetryInterval)
 		}
 	}
 }
@@ -179,7 +179,7 @@ func (p *BSCVoteProcessor) CollectVotesLoop() {
 	for {
 		if err := p.collectVotes(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(RetryInterval)
+			time.Sleep(common.ErrorRetryInterval)
 		}
 	}
 }

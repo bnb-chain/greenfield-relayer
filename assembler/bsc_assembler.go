@@ -46,7 +46,7 @@ func (a *BSCAssembler) AssemblePackagesAndClaimLoop() {
 }
 
 func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.ChannelId) {
-	ticker := time.NewTicker(common.RetryInterval)
+	ticker := time.NewTicker(common.AssembleInterval)
 	for range ticker.C {
 		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())

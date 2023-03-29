@@ -45,7 +45,7 @@ func (l *GreenfieldListener) StartLoop() {
 	for {
 		err := l.poll()
 		if err != nil {
-			time.Sleep(common.RetryInterval)
+			time.Sleep(common.ErrorRetryInterval)
 			continue
 		}
 	}
@@ -224,7 +224,7 @@ func (l *GreenfieldListener) calNextHeight() (uint64, error) {
 	}
 	// pauses relayer for a bit since it already caught the newest block
 	if int64(nextHeight) == int64(latestBlockHeight) {
-		time.Sleep(common.RetryInterval)
+		time.Sleep(common.ListenerPauseTime)
 		return nextHeight, nil
 	}
 	return nextHeight, nil

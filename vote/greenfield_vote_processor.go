@@ -17,7 +17,7 @@ import (
 	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
 
-	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
+	rcommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
@@ -53,7 +53,7 @@ func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
 		err := p.signAndBroadcast()
 		if err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(RetryInterval)
+			time.Sleep(rcommon.ErrorRetryInterval)
 		}
 	}
 }
@@ -113,7 +113,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 			}
 			return nil
-		}, retry.Context(context.Background()), relayercommon.RtyAttem, relayercommon.RtyDelay, relayercommon.RtyErr); err != nil {
+		}, retry.Context(context.Background()), rcommon.RtyAttem, rcommon.RtyDelay, rcommon.RtyErr); err != nil {
 			return err
 		}
 
@@ -146,7 +146,7 @@ func (p *GreenfieldVoteProcessor) CollectVotesLoop() {
 	for {
 		if err := p.collectVotes(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(RetryInterval)
+			time.Sleep(rcommon.ErrorRetryInterval)
 		}
 	}
 }
