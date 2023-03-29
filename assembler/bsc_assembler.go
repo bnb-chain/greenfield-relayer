@@ -107,9 +107,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		if err != nil {
 			return err
 		}
-		if err := a.daoManager.BSCDao.UpdateBatchPackagesStatusToDelivered(startSequence); err != nil {
-			return err
-		}
 	}
 	endSequence, err := a.daoManager.BSCDao.GetLatestOracleSequenceByStatus(db.AllVoted)
 	if err != nil {
