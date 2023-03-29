@@ -128,9 +128,6 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		if err != nil {
 			return err
 		}
-		if err := a.daoManager.GreenfieldDao.UpdateBatchTransactionStatusToDelivered(startSequence); err != nil {
-			return err
-		}
 	}
 
 	endSequence, err := a.daoManager.GreenfieldDao.GetLatestSequenceByChannelIdAndStatus(channelId, db.AllVoted)
