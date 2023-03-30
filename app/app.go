@@ -48,16 +48,16 @@ func NewApp(cfg *config.Config) *App {
 
 	metricService := metric.NewMetricService(cfg)
 
-	// listeners
-	greenfieldListener := listener.NewGreenfieldListener(cfg, greenfieldExecutor, bscExecutor, daoManager, metricService)
-	bscListener := listener.NewBSCListener(cfg, bscExecutor, greenfieldExecutor, daoManager, metricService)
-
 	// vote signer
 	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.GreenfieldConfig.BlsPrivateKey))
 
 	// voteProcessors
 	greenfieldVoteProcessor := vote.NewGreenfieldVoteProcessor(cfg, daoManager, signer, greenfieldExecutor)
 	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor)
+
+	// listeners
+	greenfieldListener := listener.NewGreenfieldListener(cfg, greenfieldExecutor, bscExecutor, greenfieldVoteProcessor, daoManager, metricService)
+	bscListener := listener.NewBSCListener(cfg, bscExecutor, greenfieldExecutor, daoManager, metricService)
 
 	// assemblers
 	greenfieldAssembler := assembler.NewGreenfieldAssembler(cfg, greenfieldExecutor, daoManager, bscExecutor, metricService)
