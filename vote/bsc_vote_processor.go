@@ -48,10 +48,10 @@ func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSi
 }
 
 func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
-	for {
+	ticker := time.NewTicker(common.BroadcastInterval)
+	for range ticker.C {
 		if err := p.signAndBroadcast(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(common.ErrorRetryInterval)
 		}
 	}
 }
@@ -176,10 +176,10 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 }
 
 func (p *BSCVoteProcessor) CollectVotesLoop() {
-	for {
+	ticker := time.NewTicker(common.CollectVoteInterval)
+	for range ticker.C {
 		if err := p.collectVotes(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(common.ErrorRetryInterval)
 		}
 	}
 }

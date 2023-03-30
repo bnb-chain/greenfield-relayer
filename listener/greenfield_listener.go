@@ -254,7 +254,7 @@ func (l *GreenfieldListener) sync(nextHeight uint64, validatorsHash string) erro
 }
 
 func (l *GreenfieldListener) broadCastTx(tx *model.GreenfieldRelayTransaction) error {
-	return l.voteProcessor.SignAndBroadcastV1(tx)
+	return l.voteProcessor.SignAndBroadcast(tx)
 }
 
 func (l *GreenfieldListener) constructRelayTxAndBroadcast(event abci.Event, height uint64) (*model.GreenfieldRelayTransaction, error) {

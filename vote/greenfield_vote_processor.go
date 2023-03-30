@@ -47,7 +47,7 @@ func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer 
 	}
 }
 
-func (p *GreenfieldVoteProcessor) SignAndBroadcastV1(tx *model.GreenfieldRelayTransaction) error {
+func (p *GreenfieldVoteProcessor) SignAndBroadcast(tx *model.GreenfieldRelayTransaction) error {
 	isFilled, err := p.isTxSequenceFilled(tx)
 	if err != nil {
 		return err
@@ -98,48 +98,11 @@ func (p *GreenfieldVoteProcessor) SignAndBroadcastV1(tx *model.GreenfieldRelayTr
 	return err
 }
 
-func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
-	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeight()
-	if err != nil {
-		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-		return err
-	}
-
-	leastSavedTxHeight, err := p.daoManager.GreenfieldDao.GetLeastSavedTransactionHeight()
-	if err != nil {
-		logging.Logger.Errorf("failed to get least saved tx height, error: %s", err.Error())
-		return err
-	}
-	if leastSavedTxHeight+p.config.GreenfieldConfig.NumberOfBlocksForFinality > latestHeight {
-		return nil
-	}
-	txs, err := p.daoManager.GreenfieldDao.GetTransactionsByStatusAndHeight(db.Saved, leastSavedTxHeight)
-	if err != nil {
-		logging.Logger.Errorf("failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
-		return err
-	}
-
-	if len(txs) == 0 {
-		return nil
-	}
-
-	// for every tx, we are going to sign it and broadcast vote of it.
-	for _, tx := range txs {
-		// in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
-		// transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
-		err := p.SignAndBroadcastV1(tx)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (p *GreenfieldVoteProcessor) CollectVotesLoop() {
-	for {
+	ticker := time.NewTicker(rcommon.CollectVoteInterval)
+	for range ticker.C {
 		if err := p.collectVotes(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(rcommon.ErrorRetryInterval)
 		}
 	}
 }
