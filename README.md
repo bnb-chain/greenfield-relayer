@@ -50,7 +50,6 @@ Go version above 1.19
     ],
     "private_key": "your_private_key",
     "bls_private_key": "your_private_key",
-    "number_of_blocks_for_finality": 1,
     "chain_id": 1,     // greenfield oracle module defines this
     "start_height": 1,
     "monitor_channel_list": [1,2,3],
