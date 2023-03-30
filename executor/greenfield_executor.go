@@ -77,7 +77,6 @@ func (e *GreenfieldExecutor) SetBSCExecutor(be *BSCExecutor) {
 }
 
 func getGreenfieldPrivateKey(cfg *config.GreenfieldConfig) string {
-	var privateKey string
 	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
 		result, err := config.GetSecret(cfg.AWSSecretName, cfg.AWSRegion)
 		if err != nil {
@@ -91,15 +90,12 @@ func getGreenfieldPrivateKey(cfg *config.GreenfieldConfig) string {
 		if err != nil {
 			panic(err)
 		}
-		privateKey = awsPrivateKey.PrivateKey
-	} else {
-		privateKey = cfg.PrivateKey
+		return awsPrivateKey.PrivateKey
 	}
-	return privateKey
+	return cfg.PrivateKey
 }
 
 func getGreenfieldBlsPrivateKey(cfg *config.GreenfieldConfig) string {
-	var blsPrivateKey string
 	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
 		result, err := config.GetSecret(cfg.AWSBlsSecretName, cfg.AWSRegion)
 		if err != nil {
@@ -113,11 +109,9 @@ func getGreenfieldBlsPrivateKey(cfg *config.GreenfieldConfig) string {
 		if err != nil {
 			panic(err)
 		}
-		blsPrivateKey = awsBlsPrivateKey.PrivateKey
-	} else {
-		blsPrivateKey = cfg.BlsPrivateKey
+		return awsBlsPrivateKey.PrivateKey
 	}
-	return blsPrivateKey
+	return cfg.BlsPrivateKey
 }
 
 func (e *GreenfieldExecutor) getRpcClient() client.Client {

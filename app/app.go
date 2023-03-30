@@ -91,7 +91,6 @@ func (a *App) Start() {
 }
 
 func getDBPass(cfg *config.DBConfig) string {
-	var dbPass string
 	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
 		result, err := config.GetSecret(cfg.AWSSecretName, cfg.AWSRegion)
 		if err != nil {
@@ -105,9 +104,7 @@ func getDBPass(cfg *config.DBConfig) string {
 		if err != nil {
 			panic(err)
 		}
-		dbPass = dbPassword.DbPass
-	} else {
-		dbPass = cfg.Password
+		return dbPassword.DbPass
 	}
-	return dbPass
+	return cfg.Password
 }
