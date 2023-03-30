@@ -57,4 +57,4 @@ USER ${USER_UID}:${USER_GID}
 VOLUME [ $GREENFIELD_RELAYER_HOME ]
 
 # Run the app
-CMD /app/greenfield-relayer --config-type $CONFIG_TYPE --config-path $CONFIG_FILE_PATH --private-key $PRIVATE_KEY --bls-private-key $BLS_PRIVATE_KEY -db-pass $DB_PASS --aws-region $AWS_REGION --aws-secret-key $AWS_SECRET_KEY
+CMD /app/greenfield-relayer --config-type $CONFIG_TYPE --config-path $CONFIG_FILE_PATH --private-key $PRIVATE_KEY --bls-private-key $BLS_PRIVATE_KEY --db-pass $DB_PASS --aws-region $AWS_REGION --aws-secret-key $AWS_SECRET_KEY
