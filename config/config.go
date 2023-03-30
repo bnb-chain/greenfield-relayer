@@ -28,19 +28,18 @@ func (cfg *AdminConfig) Validate() {
 }
 
 type GreenfieldConfig struct {
-	KeyType                   string   `json:"key_type"`
-	AWSRegion                 string   `json:"aws_region"`
-	AWSSecretName             string   `json:"aws_secret_name"`
-	RPCAddrs                  []string `json:"rpc_addrs"`
-	GRPCAddrs                 []string `json:"grpc_addrs"`
-	PrivateKey                string   `json:"private_key"`
-	BlsPrivateKey             string   `json:"bls_private_key"`
-	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
-	ChainId                   uint64   `json:"chain_id"`
-	StartHeight               uint64   `json:"start_height"`
-	MonitorChannelList        []uint8  `json:"monitor_channel_list"`
-	GasLimit                  uint64   `json:"gas_limit"`
-	ChainIdString             string   `json:"chain_id_string"`
+	KeyType            string   `json:"key_type"`
+	AWSRegion          string   `json:"aws_region"`
+	AWSSecretName      string   `json:"aws_secret_name"`
+	RPCAddrs           []string `json:"rpc_addrs"`
+	GRPCAddrs          []string `json:"grpc_addrs"`
+	PrivateKey         string   `json:"private_key"`
+	BlsPrivateKey      string   `json:"bls_private_key"`
+	ChainId            uint64   `json:"chain_id"`
+	StartHeight        uint64   `json:"start_height"`
+	MonitorChannelList []uint8  `json:"monitor_channel_list"`
+	GasLimit           uint64   `json:"gas_limit"`
+	ChainIdString      string   `json:"chain_id_string"`
 }
 
 type BSCConfig struct {
