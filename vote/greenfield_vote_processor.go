@@ -43,7 +43,7 @@ func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer 
 		daoManager:         dao,
 		signer:             signer,
 		greenfieldExecutor: greenfieldExecutor,
-		blsPublicKey:       util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		blsPublicKey:       greenfieldExecutor.BlsPrivateKey,
 	}
 }
 

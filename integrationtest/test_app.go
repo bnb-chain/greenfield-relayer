@@ -3,6 +3,7 @@ package integrationtest
 import (
 	"fmt"
 
+	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -13,7 +14,11 @@ import (
 
 func InitTestApp() app.App {
 	cfg := GetTestConfig()
-	db, err := gorm.Open(mysql.Open(cfg.DBConfig.DBPath), &gorm.Config{})
+	username := cfg.DBConfig.Username
+	password := viper.GetString(config.FlagConfigDbPass)
+	url := cfg.DBConfig.Url
+	dbPath := fmt.Sprintf("%s:%s@%s", username, password, url)
+	db, err := gorm.Open(mysql.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		panic(fmt.Sprintf("open db error, err=%s", err.Error()))
 	}

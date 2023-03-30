@@ -15,7 +15,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/types"
-	"github.com/bnb-chain/greenfield-relayer/util"
 	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
@@ -35,7 +34,7 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 		bscExecutor:        executor,
 		daoManager:         dao,
 		greenfieldExecutor: greenfieldExecutor,
-		blsPubKey:          util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		blsPubKey:          greenfieldExecutor.BlsPrivateKey,
 		metricService:      ms,
 	}
 }

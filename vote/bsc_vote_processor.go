@@ -26,7 +26,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/types"
-	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
 type BSCVoteProcessor struct {
@@ -43,7 +42,7 @@ func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSi
 		daoManager:   dao,
 		signer:       signer,
 		bscExecutor:  bscExecutor,
-		blsPublicKey: util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		blsPublicKey: bscExecutor.GreenfieldExecutor.BlsPrivateKey,
 	}
 }
 

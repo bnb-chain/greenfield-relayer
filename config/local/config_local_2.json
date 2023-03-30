@@ -3,14 +3,15 @@
     "key_type": "local_private_key",
     "aws_region": "",
     "aws_secret_name": "",
+    "aws_bls_secret_name": "",
     "rpc_addrs": [
       "http://127.0.0.1:26750"
     ],
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "you_private_key",
-    "bls_private_key": "you_private_key",
+    "private_key": "your_private_key",
+    "bls_private_key": "your_private_key",
     "chain_id": 18,
     "start_height": 1,
     "monitor_channel_list": [1,2,3],
@@ -33,7 +34,7 @@
   },
   "relay_config": {
     "bsc_to_greenfield_inturn_relayer_timeout": 90,
-    "greenfield_to_bsc_inturn_relayer_timeout": 30,
+    "greenfield_to_bsc_inturn_relayer_timeout": 45,
     "greenfield_sequence_update_latency": 8,
     "bsc_sequence_update_latency": 12,
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
@@ -57,7 +58,12 @@
   },
   "db_config": {
     "dialect": "mysql",
-    "db_path": "root:pass@/local-greenfield-relayer2?charset=utf8&parseTime=True&loc=Local"
+    "key_type": "local_private_key",
+    "aws_region": "",
+    "aws_secret_name": "",
+    "password": "pass",
+    "username": "root",
+    "url": "/local-greenfield-relayer2?charset=utf8&parseTime=True&loc=Local"
   },
   "alert_config": {
     "enable_alert": true,
