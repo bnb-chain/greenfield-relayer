@@ -3,8 +3,6 @@ package listener
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/bnb-chain/greenfield-relayer/types"
-	"github.com/bnb-chain/greenfield-relayer/vote"
 	"strconv"
 	"sync"
 	"time"
@@ -21,7 +19,9 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/metric"
+	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/bnb-chain/greenfield-relayer/util"
+	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
 type GreenfieldListener struct {
