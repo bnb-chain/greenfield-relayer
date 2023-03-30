@@ -166,7 +166,7 @@ func (cfg *DBConfig) Validate() {
 	if cfg.Dialect != DBDialectMysql {
 		panic(fmt.Sprintf("only %s supported", DBDialectMysql))
 	}
-	if cfg.Username == "" || cfg.Password == "" || cfg.Url == "" {
+	if cfg.Username == "" || cfg.Url == "" {
 		panic("db config is not correct")
 	}
 }

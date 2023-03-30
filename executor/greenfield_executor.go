@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -41,10 +42,18 @@ type GreenfieldExecutor struct {
 }
 
 func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
-	privKey := getGreenfieldPrivateKey(&cfg.GreenfieldConfig)
+	privKey := viper.GetString(config.FlagConfigPrivateKey)
+	if privKey == "" {
+		privKey = getGreenfieldPrivateKey(&cfg.GreenfieldConfig)
+	}
 	km, err := sdkkeys.NewPrivateKeyManager(privKey)
 	if err != nil {
 		panic(err)
+	}
+
+	blsPrivKey := viper.GetString(config.FlagConfigBlsPrivateKey)
+	if blsPrivKey == "" {
+		blsPrivKey = getGreenfieldBlsPrivateKey(&cfg.GreenfieldConfig)
 	}
 
 	clients := sdkclient.NewGnfdCompositClients(
@@ -59,7 +68,7 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		address:       km.GetAddr().String(),
 		config:        cfg,
 		cdc:           Cdc(),
-		BlsPrivateKey: ethcommon.Hex2Bytes(getGreenfieldBlsPrivateKey(&cfg.GreenfieldConfig)),
+		BlsPrivateKey: ethcommon.Hex2Bytes(blsPrivKey),
 	}
 }
 

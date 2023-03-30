@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -26,7 +27,11 @@ type App struct {
 
 func NewApp(cfg *config.Config) *App {
 	username := cfg.DBConfig.Username
-	password := getDBPass(&cfg.DBConfig)
+	password := viper.GetString(config.FlagConfigDbPass)
+	if password == "" {
+		password = getDBPass(&cfg.DBConfig)
+	}
+
 	url := cfg.DBConfig.Url
 	dbPath := fmt.Sprintf("%s:%s@%s", username, password, url)
 
