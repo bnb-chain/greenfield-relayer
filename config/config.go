@@ -31,6 +31,7 @@ type GreenfieldConfig struct {
 	KeyType            string   `json:"key_type"`
 	AWSRegion          string   `json:"aws_region"`
 	AWSSecretName      string   `json:"aws_secret_name"`
+	AWSBlsSecretName   string   `json:"aws_bls_secret_name"`
 	RPCAddrs           []string `json:"rpc_addrs"`
 	GRPCAddrs          []string `json:"grpc_addrs"`
 	PrivateKey         string   `json:"private_key"`
@@ -152,16 +153,21 @@ func (cfg *AlertConfig) Validate() {
 }
 
 type DBConfig struct {
-	Dialect string `json:"dialect"`
-	DBPath  string `json:"db_path"`
+	Dialect       string `json:"dialect"`
+	KeyType       string `json:"key_type"`
+	AWSRegion     string `json:"aws_region"`
+	AWSSecretName string `json:"aws_secret_name"`
+	Password      string `json:"password"`
+	Username      string `json:"username"`
+	Url           string `json:"url"`
 }
 
 func (cfg *DBConfig) Validate() {
 	if cfg.Dialect != DBDialectMysql {
 		panic(fmt.Sprintf("only %s supported", DBDialectMysql))
 	}
-	if cfg.DBPath == "" {
-		panic("db path should not be empty")
+	if cfg.Username == "" || cfg.Password == "" || cfg.Url == "" {
+		panic("db config is not correct")
 	}
 }
 

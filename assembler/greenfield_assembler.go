@@ -43,7 +43,7 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 		greenfieldExecutor:               executor,
 		daoManager:                       dao,
 		bscExecutor:                      bscExecutor,
-		blsPubKey:                        util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		blsPubKey:                        executor.BlsPrivateKey,
 		hasRetrievedSequenceByChannelMap: retrievedSequenceByChannelMap,
 		metricService:                    ms,
 	}

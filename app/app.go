@@ -1,9 +1,9 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -25,7 +25,12 @@ type App struct {
 }
 
 func NewApp(cfg *config.Config) *App {
-	db, err := gorm.Open(mysql.Open(cfg.DBConfig.DBPath), &gorm.Config{})
+	username := cfg.DBConfig.Username
+	password := getDBPass(&cfg.DBConfig)
+	url := cfg.DBConfig.Url
+	dbPath := fmt.Sprintf("%s:%s@%s", username, password, url)
+
+	db, err := gorm.Open(mysql.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		panic(fmt.Sprintf("open db error, err=%s", err.Error()))
 	}
@@ -49,7 +54,7 @@ func NewApp(cfg *config.Config) *App {
 	metricService := metric.NewMetricService(cfg)
 
 	// vote signer
-	signer := vote.NewVoteSigner(ethcommon.Hex2Bytes(cfg.GreenfieldConfig.BlsPrivateKey))
+	signer := vote.NewVoteSigner(greenfieldExecutor.BlsPrivateKey)
 
 	// voteProcessors
 	greenfieldVoteProcessor := vote.NewGreenfieldVoteProcessor(cfg, daoManager, signer, greenfieldExecutor)
@@ -78,4 +83,26 @@ func (a *App) Start() {
 	a.GnfdRelayer.Start()
 	a.BSCRelayer.Start()
 	a.metricService.Start()
+}
+
+func getDBPass(cfg *config.DBConfig) string {
+	var dbPass string
+	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
+		result, err := config.GetSecret(cfg.AWSSecretName, cfg.AWSRegion)
+		if err != nil {
+			panic(err)
+		}
+		type DBPass struct {
+			DbPass string `json:"db_pass"`
+		}
+		var dbPassword DBPass
+		err = json.Unmarshal([]byte(result), &dbPassword)
+		if err != nil {
+			panic(err)
+		}
+		dbPass = dbPassword.DbPass
+	} else {
+		dbPass = cfg.Password
+	}
+	return dbPass
 }

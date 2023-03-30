@@ -41,6 +41,7 @@ func printUsage() {
 func main() {
 	initFlags()
 	configType := viper.GetString(flagConfigType)
+	configType = "local"
 	if configType != config.AWSConfig && configType != config.LocalConfig {
 		printUsage()
 		return
@@ -68,6 +69,7 @@ func main() {
 		cfg = config.ParseConfigFromJson(configContent)
 	} else {
 		configFilePath := viper.GetString(flagConfigPath)
+		configFilePath = "config/config.json"
 		if configFilePath == "" {
 			printUsage()
 			return
@@ -80,10 +82,6 @@ func main() {
 	}
 
 	logging.InitLogger(&cfg.LogConfig)
-
-	if cfg.DBConfig.DBPath == "" {
-		panic("DB config is not present in config file, please follow instruction to specify it")
-	}
 
 	app.NewApp(cfg).Start()
 	select {}

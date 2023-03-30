@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -30,17 +31,17 @@ import (
 )
 
 type GreenfieldExecutor struct {
-	BscExecutor *BSCExecutor
-	gnfdClients *sdkclient.GnfdCompositeClients
-	config      *config.Config
-	address     string
-	validators  []*tmtypes.Validator // used to cache validators
-	cdc         *codec.ProtoCodec
+	BscExecutor   *BSCExecutor
+	gnfdClients   *sdkclient.GnfdCompositeClients
+	config        *config.Config
+	address       string
+	validators    []*tmtypes.Validator // used to cache validators
+	cdc           *codec.ProtoCodec
+	BlsPrivateKey []byte
 }
 
 func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 	privKey := getGreenfieldPrivateKey(&cfg.GreenfieldConfig)
-
 	km, err := sdkkeys.NewPrivateKeyManager(privKey)
 	if err != nil {
 		panic(err)
@@ -54,10 +55,11 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		sdkclient.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
 	)
 	return &GreenfieldExecutor{
-		gnfdClients: clients,
-		address:     km.GetAddr().String(),
-		config:      cfg,
-		cdc:         Cdc(),
+		gnfdClients:   clients,
+		address:       km.GetAddr().String(),
+		config:        cfg,
+		cdc:           Cdc(),
+		BlsPrivateKey: ethcommon.Hex2Bytes(getGreenfieldBlsPrivateKey(&cfg.GreenfieldConfig)),
 	}
 }
 
@@ -85,6 +87,28 @@ func getGreenfieldPrivateKey(cfg *config.GreenfieldConfig) string {
 		privateKey = cfg.PrivateKey
 	}
 	return privateKey
+}
+
+func getGreenfieldBlsPrivateKey(cfg *config.GreenfieldConfig) string {
+	var blsPrivateKey string
+	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
+		result, err := config.GetSecret(cfg.AWSBlsSecretName, cfg.AWSRegion)
+		if err != nil {
+			panic(err)
+		}
+		type AwsPrivateKey struct {
+			PrivateKey string `json:"bls_private_key"`
+		}
+		var awsBlsPrivateKey AwsPrivateKey
+		err = json.Unmarshal([]byte(result), &awsBlsPrivateKey)
+		if err != nil {
+			panic(err)
+		}
+		blsPrivateKey = awsBlsPrivateKey.PrivateKey
+	} else {
+		blsPrivateKey = cfg.BlsPrivateKey
+	}
+	return blsPrivateKey
 }
 
 func (e *GreenfieldExecutor) getRpcClient() client.Client {
