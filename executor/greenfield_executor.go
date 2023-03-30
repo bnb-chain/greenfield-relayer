@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -15,6 +14,7 @@ import (
 	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"

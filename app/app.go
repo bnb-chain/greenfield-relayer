@@ -3,8 +3,8 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
 
+	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
