@@ -34,7 +34,7 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 		bscExecutor:        executor,
 		daoManager:         dao,
 		greenfieldExecutor: greenfieldExecutor,
-		blsPubKey:          greenfieldExecutor.BlsPrivateKey,
+		blsPubKey:          greenfieldExecutor.BlsPubKey,
 		metricService:      ms,
 	}
 }
