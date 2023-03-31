@@ -15,7 +15,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/types"
-	"github.com/bnb-chain/greenfield-relayer/util"
 	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
@@ -35,7 +34,7 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 		bscExecutor:        executor,
 		daoManager:         dao,
 		greenfieldExecutor: greenfieldExecutor,
-		blsPubKey:          util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		blsPubKey:          greenfieldExecutor.BlsPrivateKey,
 		metricService:      ms,
 	}
 }
@@ -46,7 +45,7 @@ func (a *BSCAssembler) AssemblePackagesAndClaimLoop() {
 }
 
 func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.ChannelId) {
-	ticker := time.NewTicker(common.RetryInterval)
+	ticker := time.NewTicker(common.AssembleInterval)
 	for range ticker.C {
 		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
@@ -105,9 +104,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)
 		startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 		if err != nil {
-			return err
-		}
-		if err := a.daoManager.BSCDao.UpdateBatchPackagesStatusToDelivered(startSequence); err != nil {
 			return err
 		}
 	}

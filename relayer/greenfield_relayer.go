@@ -28,7 +28,6 @@ func NewGreenfieldRelayer(listener *listener.GreenfieldListener, greenfieldExecu
 
 func (r *GreenfieldRelayer) Start() {
 	go r.MonitorEventsLoop()
-	go r.SignAndBroadcastLoop()
 	go r.CollectVotesLoop()
 	go r.AssembleTransactionsLoop()
 	go r.UpdateCachedLatestValidatorsLoop()
@@ -37,10 +36,6 @@ func (r *GreenfieldRelayer) Start() {
 // MonitorEventsLoop will monitor cross chain events for every block and persist into DB
 func (r *GreenfieldRelayer) MonitorEventsLoop() {
 	r.Listener.StartLoop()
-}
-
-func (r *GreenfieldRelayer) SignAndBroadcastLoop() {
-	r.voteProcessor.SignAndBroadcastLoop()
 }
 
 func (r *GreenfieldRelayer) CollectVotesLoop() {

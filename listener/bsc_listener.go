@@ -50,7 +50,7 @@ func (l *BSCListener) StartLoop() {
 	for {
 		err := l.poll()
 		if err != nil {
-			time.Sleep(common.RetryInterval)
+			time.Sleep(common.ErrorRetryInterval)
 			continue
 		}
 	}
@@ -75,7 +75,7 @@ func (l *BSCListener) poll() error {
 			return err
 		}
 		if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
-			time.Sleep(common.RetryInterval)
+			time.Sleep(common.ListenerPauseTime)
 			return nil
 		}
 	}

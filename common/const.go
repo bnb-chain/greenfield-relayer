@@ -9,14 +9,19 @@ import (
 )
 
 var (
-	RtyAttNum     = uint(5)
-	RtyAttem      = retry.Attempts(RtyAttNum)
-	RtyDelay      = retry.Delay(time.Millisecond * 500)
-	RtyErr        = retry.LastErrorOnly(true)
-	RetryInterval = 2 * time.Second
+	RtyAttNum = uint(5)
+	RtyAttem  = retry.Attempts(RtyAttNum)
+	RtyDelay  = retry.Delay(time.Millisecond * 500)
+	RtyErr    = retry.LastErrorOnly(true)
 )
 
 const (
 	OracleChannelId              types.ChannelId = 0
 	SleepTimeAfterSyncLightBlock                 = 15 * time.Second
+
+	ListenerPauseTime   = 2 * time.Second
+	ErrorRetryInterval  = 1 * time.Second
+	BroadcastInterval   = 500 * time.Millisecond
+	CollectVoteInterval = 500 * time.Millisecond
+	AssembleInterval    = 500 * time.Millisecond
 )

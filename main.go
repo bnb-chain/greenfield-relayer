@@ -12,18 +12,14 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/logging"
 )
 
-const (
-	flagConfigPath         = "config-path"
-	flagConfigType         = "config-type"
-	flagConfigAwsRegion    = "aws-region"
-	flagConfigAwsSecretKey = "aws-secret-key"
-)
-
 func initFlags() {
-	flag.String(flagConfigPath, "", "config file path")
-	flag.String(flagConfigType, "local_private_key", "config type, local_private_key or aws_private_key")
-	flag.String(flagConfigAwsRegion, "", "aws region")
-	flag.String(flagConfigAwsSecretKey, "", "aws secret key")
+	flag.String(config.FlagConfigPath, "", "config file path")
+	flag.String(config.FlagConfigType, "local_private_key", "config type, local_private_key or aws_private_key")
+	flag.String(config.FlagConfigAwsRegion, "", "aws region")
+	flag.String(config.FlagConfigAwsSecretKey, "", "aws secret key")
+	flag.String(config.FlagConfigPrivateKey, "", "relayer private key")
+	flag.String(config.FlagConfigBlsPrivateKey, "", "relayer bls private key")
+	flag.String(config.FlagConfigDbPass, "", "relayer db password")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
@@ -40,7 +36,7 @@ func printUsage() {
 
 func main() {
 	initFlags()
-	configType := viper.GetString(flagConfigType)
+	configType := viper.GetString(config.FlagConfigType)
 	if configType != config.AWSConfig && configType != config.LocalConfig {
 		printUsage()
 		return
@@ -48,13 +44,13 @@ func main() {
 	var cfg *config.Config
 
 	if configType == config.AWSConfig {
-		awsSecretKey := viper.GetString(flagConfigAwsSecretKey)
+		awsSecretKey := viper.GetString(config.FlagConfigAwsSecretKey)
 		if awsSecretKey == "" {
 			printUsage()
 			return
 		}
 
-		awsRegion := viper.GetString(flagConfigAwsRegion)
+		awsRegion := viper.GetString(config.FlagConfigAwsRegion)
 		if awsRegion == "" {
 			printUsage()
 			return
@@ -67,7 +63,7 @@ func main() {
 		}
 		cfg = config.ParseConfigFromJson(configContent)
 	} else {
-		configFilePath := viper.GetString(flagConfigPath)
+		configFilePath := viper.GetString(config.FlagConfigPath)
 		if configFilePath == "" {
 			printUsage()
 			return
@@ -80,10 +76,6 @@ func main() {
 	}
 
 	logging.InitLogger(&cfg.LogConfig)
-
-	if cfg.DBConfig.DBPath == "" {
-		panic("DB config is not present in config file, please follow instruction to specify it")
-	}
 
 	app.NewApp(cfg).Start()
 	select {}

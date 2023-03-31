@@ -43,7 +43,7 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 		greenfieldExecutor:               executor,
 		daoManager:                       dao,
 		bscExecutor:                      bscExecutor,
-		blsPubKey:                        util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		blsPubKey:                        executor.BlsPrivateKey,
 		hasRetrievedSequenceByChannelMap: retrievedSequenceByChannelMap,
 		metricService:                    ms,
 	}
@@ -51,7 +51,7 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 
 // AssembleTransactionsLoop assemble a tx by gathering votes signature and then call the build-in smart-contract
 func (a *GreenfieldAssembler) AssembleTransactionsLoop() {
-	ticker := time.NewTicker(common.RetryInterval)
+	ticker := time.NewTicker(common.AssembleInterval)
 	for range ticker.C {
 		inturnRelayer, err := a.bscExecutor.GetInturnRelayer()
 		if err != nil {
@@ -124,11 +124,8 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		a.mutex.Unlock()
 
 		time.Sleep(time.Duration(a.config.RelayConfig.BSCSequenceUpdateLatency) * time.Second)
-		startSequence, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
+		startSequence, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 		if err != nil {
-			return err
-		}
-		if err := a.daoManager.GreenfieldDao.UpdateBatchTransactionStatusToDelivered(startSequence); err != nil {
 			return err
 		}
 	}

@@ -26,7 +26,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/types"
-	"github.com/bnb-chain/greenfield-relayer/util"
 )
 
 type BSCVoteProcessor struct {
@@ -43,15 +42,15 @@ func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSi
 		daoManager:   dao,
 		signer:       signer,
 		bscExecutor:  bscExecutor,
-		blsPublicKey: util.BlsPubKeyFromPrivKeyStr(cfg.GreenfieldConfig.BlsPrivateKey),
+		blsPublicKey: bscExecutor.GreenfieldExecutor.BlsPrivateKey,
 	}
 }
 
 func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
-	for {
+	ticker := time.NewTicker(common.BroadcastInterval)
+	for range ticker.C {
 		if err := p.signAndBroadcast(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(RetryInterval)
 		}
 	}
 }
@@ -176,10 +175,10 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 }
 
 func (p *BSCVoteProcessor) CollectVotesLoop() {
-	for {
+	ticker := time.NewTicker(common.CollectVoteInterval)
+	for range ticker.C {
 		if err := p.collectVotes(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
-			time.Sleep(RetryInterval)
 		}
 	}
 }

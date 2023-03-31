@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/spf13/viper"
 
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -78,7 +79,7 @@ func initBSCClients(config *config.Config) []*BSCClient {
 	return bscClients
 }
 
-func getBscPrivateKey(cfg *config.BSCConfig) *ecdsa.PrivateKey {
+func getBscPrivateKey(cfg *config.BSCConfig) string {
 	var privateKey string
 	if cfg.KeyType == config.KeyTypeAWSPrivateKey {
 		result, err := config.GetSecret(cfg.AWSSecretName, cfg.AWSRegion)
@@ -97,17 +98,20 @@ func getBscPrivateKey(cfg *config.BSCConfig) *ecdsa.PrivateKey {
 	} else {
 		privateKey = cfg.PrivateKey
 	}
-
-	privKey, err := crypto.HexToECDSA(privateKey)
-	if err != nil {
-		panic(err)
-	}
-	return privKey
+	return privateKey
 }
 
 func NewBSCExecutor(cfg *config.Config) *BSCExecutor {
-	privKey := getBscPrivateKey(&cfg.BSCConfig)
-	publicKey := privKey.Public()
+	privKey := viper.GetString(config.FlagConfigPrivateKey)
+	if privKey == "" {
+		privKey = getBscPrivateKey(&cfg.BSCConfig)
+	}
+
+	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
+	if err != nil {
+		panic(err)
+	}
+	publicKey := ecdsaPrivKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
 		panic("get public key error")
@@ -122,7 +126,7 @@ func NewBSCExecutor(cfg *config.Config) *BSCExecutor {
 	return &BSCExecutor{
 		clientIdx:  0,
 		bscClients: initBSCClients(cfg),
-		privateKey: privKey,
+		privateKey: ecdsaPrivKey,
 		txSender:   txSender,
 		config:     cfg,
 		gasPrice:   initGasPrice,
