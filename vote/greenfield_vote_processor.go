@@ -38,12 +38,13 @@ type GreenfieldVoteProcessor struct {
 
 func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
 	greenfieldExecutor *executor.GreenfieldExecutor) *GreenfieldVoteProcessor {
+
 	return &GreenfieldVoteProcessor{
 		config:             cfg,
 		daoManager:         dao,
 		signer:             signer,
 		greenfieldExecutor: greenfieldExecutor,
-		blsPublicKey:       greenfieldExecutor.BlsPrivateKey,
+		blsPublicKey:       greenfieldExecutor.BlsPubKey,
 	}
 }
 

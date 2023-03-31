@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -39,6 +40,7 @@ type GreenfieldExecutor struct {
 	validators    []*tmtypes.Validator // used to cache validators
 	cdc           *codec.ProtoCodec
 	BlsPrivateKey []byte
+	BlsPubKey     []byte
 }
 
 func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
@@ -51,11 +53,16 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		panic(err)
 	}
 
-	blsPrivKey := viper.GetString(config.FlagConfigBlsPrivateKey)
-	if blsPrivKey == "" {
-		blsPrivKey = getGreenfieldBlsPrivateKey(&cfg.GreenfieldConfig)
+	blsPrivKeyStr := viper.GetString(config.FlagConfigBlsPrivateKey)
+	if blsPrivKeyStr == "" {
+		blsPrivKeyStr = getGreenfieldBlsPrivateKey(&cfg.GreenfieldConfig)
 	}
+	blsPrivKeyBts := ethcommon.Hex2Bytes(blsPrivKeyStr)
 
+	blsPrivKey, err := blst.SecretKeyFromBytes(blsPrivKeyBts)
+	if err != nil {
+		panic(err)
+	}
 	clients := sdkclient.NewGnfdCompositClients(
 		cfg.GreenfieldConfig.GRPCAddrs,
 		cfg.GreenfieldConfig.RPCAddrs,
@@ -68,7 +75,8 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		address:       km.GetAddr().String(),
 		config:        cfg,
 		cdc:           Cdc(),
-		BlsPrivateKey: ethcommon.Hex2Bytes(blsPrivKey),
+		BlsPrivateKey: blsPrivKeyBts,
+		BlsPubKey:     blsPrivKey.PublicKey().Marshal(),
 	}
 }
 

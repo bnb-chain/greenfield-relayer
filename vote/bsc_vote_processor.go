@@ -42,7 +42,7 @@ func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSi
 		daoManager:   dao,
 		signer:       signer,
 		bscExecutor:  bscExecutor,
-		blsPublicKey: bscExecutor.GreenfieldExecutor.BlsPrivateKey,
+		blsPublicKey: bscExecutor.GreenfieldExecutor.BlsPubKey,
 	}
 }
 
