@@ -19,23 +19,25 @@ import (
 )
 
 type BSCAssembler struct {
-	config               *config.Config
-	greenfieldExecutor   *executor.GreenfieldExecutor
-	bscExecutor          *executor.BSCExecutor
-	daoManager           *dao.DaoManager
-	blsPubKey            []byte
-	hasRetrievedSequence bool
-	metricService        *metric.MetricService
+	config                      *config.Config
+	greenfieldExecutor          *executor.GreenfieldExecutor
+	bscExecutor                 *executor.BSCExecutor
+	daoManager                  *dao.DaoManager
+	blsPubKey                   []byte
+	inturnRelayerSequenceStatus *types.SequenceStatus
+	relayerNonce                uint64
+	metricService               *metric.MetricService
 }
 
 func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor, ms *metric.MetricService) *BSCAssembler {
 	return &BSCAssembler{
-		config:             cfg,
-		bscExecutor:        executor,
-		daoManager:         dao,
-		greenfieldExecutor: greenfieldExecutor,
-		blsPubKey:          greenfieldExecutor.BlsPubKey,
-		metricService:      ms,
+		config:                      cfg,
+		bscExecutor:                 executor,
+		daoManager:                  dao,
+		greenfieldExecutor:          greenfieldExecutor,
+		blsPubKey:                   greenfieldExecutor.BlsPubKey,
+		inturnRelayerSequenceStatus: &types.SequenceStatus{},
+		metricService:               ms,
 	}
 }
 
@@ -63,17 +65,13 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		return err
 	}
 	isInturnRelyer := bytes.Equal(a.blsPubKey, inturnRelayerPubkey)
+
 	a.metricService.SetGnfdInturnRelayerMetrics(isInturnRelyer, inturnRelayer.RelayInterval.Start, inturnRelayer.RelayInterval.End)
-	var startSequence uint64
+	var startSeq uint64
 
 	if isInturnRelyer {
-		seq, err := a.daoManager.SequenceDao.GetByChannelId(uint8(channelId))
-		if err != nil {
-			return err
-		}
-		startSequence = uint64(seq.Sequence)
-
-		if !a.hasRetrievedSequence {
+		logging.Logger.Debugf("bsc is in-turn relayer")
+		if !a.inturnRelayerSequenceStatus.HasRetrieved {
 			// in-turn relayer get the start sequence from chain first time, it starts to relay after the sequence gets updated
 			now := time.Now().Unix()
 			timeDiff := now - int64(inturnRelayer.RelayInterval.Start)
@@ -84,28 +82,39 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 				}
 				return nil
 			}
-			startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+			inTurnRelayerStartSeq, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 			if err != nil {
 				return err
 			}
-			if err = a.daoManager.SequenceDao.Upsert(uint8(channelId), startSequence); err != nil {
+			nonce, err := a.greenfieldExecutor.GetNonce()
+			if err != nil {
 				return err
 			}
+			a.relayerNonce = nonce
+			a.inturnRelayerSequenceStatus.HasRetrieved = true
+			a.inturnRelayerSequenceStatus.NextDeliverySeq = inTurnRelayerStartSeq
 		}
-		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSequence)
+		startSeq = a.inturnRelayerSequenceStatus.NextDeliverySeq
+		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSeq)
 		seqFromChain, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 		if err != nil {
 			return err
 		}
 		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
-		a.hasRetrievedSequence = false
+		logging.Logger.Debugf("bsc is out-turn relayer")
+		a.inturnRelayerSequenceStatus.HasRetrieved = false
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
 		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)
-		startSequence, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+		startSeq, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
 		if err != nil {
 			return err
 		}
+		startNonce, err := a.greenfieldExecutor.GetNonce()
+		if err != nil {
+			return err
+		}
+		a.relayerNonce = startNonce
 	}
 	endSequence, err := a.daoManager.BSCDao.GetLatestOracleSequenceByStatus(db.AllVoted)
 	if err != nil {
@@ -114,12 +123,9 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if endSequence == -1 {
 		return nil
 	}
-	nonce, err := a.greenfieldExecutor.GetNonce()
-	if err != nil {
-		return err
-	}
+	logging.Logger.Debugf("start seq and end enq are %d and %d", startSeq, endSequence)
 
-	for i := startSequence; i <= uint64(endSequence); i++ {
+	for i := startSeq; i <= uint64(endSequence); i++ {
 		pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(i)
 		if err != nil {
 			return err
@@ -138,24 +144,24 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		if !isInturnRelyer && time.Now().Unix() < pkgTime+a.config.RelayConfig.BSCToGreenfieldInturnRelayerTimeout {
 			return nil
 		}
-		if err := a.processPkgs(pkgs, uint8(channelId), i, nonce, isInturnRelyer); err != nil {
+		if err := a.processPkgs(pkgs, uint8(channelId), i, a.relayerNonce, isInturnRelyer); err != nil {
 			return err
 		}
-		logging.Logger.Infof("relayed packages with oracle sequence %d ", i)
 
-		nonce++
+		logging.Logger.Infof("relayed packages with oracle sequence %d ", i)
+		a.relayerNonce++
 	}
 	return nil
 }
 
 func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint8, sequence uint64, nonce uint64, isInturnRelyer bool) error {
 	// Get votes result for a packages, which are already validated and qualified to aggregate sig
+
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(channelId, sequence)
 	if err != nil {
 		logging.Logger.Errorf("failed to get votes result for packages for channel %d and sequence %d", channelId, sequence)
 		return err
 	}
-
 	validators, err := a.greenfieldExecutor.QueryCachedLatestValidators()
 	if err != nil {
 		return err
@@ -170,13 +176,14 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 	if err != nil {
 		return err
 	}
-	logging.Logger.Infof("claimed transaction with txHash %s", txHash)
 
+	logging.Logger.Infof("claimed transaction with txHash %s", txHash)
 	var pkgIds []int64
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
 	}
 	a.metricService.SetBSCProcessedBlockHeight(pkgs[0].Height)
+
 	if !isInturnRelyer {
 		if err = a.daoManager.BSCDao.UpdateBatchPackagesClaimedTxHash(pkgIds, txHash); err != nil {
 			return err
@@ -188,8 +195,6 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 		logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
 		return err
 	}
-	if err = a.daoManager.SequenceDao.Upsert(channelId, sequence+1); err != nil {
-		return err
-	}
+	a.inturnRelayerSequenceStatus.NextDeliverySeq = sequence + 1
 	return nil
 }

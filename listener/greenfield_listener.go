@@ -19,27 +19,23 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/metric"
-	"github.com/bnb-chain/greenfield-relayer/types"
 	"github.com/bnb-chain/greenfield-relayer/util"
-	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
 type GreenfieldListener struct {
 	config             *config.Config
 	greenfieldExecutor *executor.GreenfieldExecutor
 	bscExecutor        *executor.BSCExecutor
-	voteProcessor      *vote.GreenfieldVoteProcessor
 	DaoManager         *dao.DaoManager
 	metricService      *metric.MetricService
 }
 
 func NewGreenfieldListener(cfg *config.Config, gnfdExecutor *executor.GreenfieldExecutor, bscExecutor *executor.BSCExecutor,
-	voteProcessor *vote.GreenfieldVoteProcessor, dao *dao.DaoManager, ms *metric.MetricService) *GreenfieldListener {
+	dao *dao.DaoManager, ms *metric.MetricService) *GreenfieldListener {
 	return &GreenfieldListener{
 		config:             cfg,
 		greenfieldExecutor: gnfdExecutor,
 		bscExecutor:        bscExecutor,
-		voteProcessor:      voteProcessor,
 		DaoManager:         dao,
 		metricService:      ms,
 	}
@@ -120,7 +116,7 @@ func (l *GreenfieldListener) monitorTxEvents(height uint64, txRes []*abci.Respon
 	for _, tx := range txRes {
 		for _, event := range tx.Events {
 			if event.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
-				relayTx, err := l.constructRelayTxAndBroadcast(event, height)
+				relayTx, err := constructRelayTx(event, height)
 				if err != nil {
 					errChan <- err
 					return
@@ -135,7 +131,7 @@ func (l *GreenfieldListener) monitorEndBlockEvents(height uint64, endBlockEvents
 	defer wg.Done()
 	for _, e := range endBlockEvents {
 		if e.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
-			relayTx, err := l.constructRelayTxAndBroadcast(e, height)
+			relayTx, err := constructRelayTx(e, height)
 			if err != nil {
 				errChan <- err
 				return
@@ -253,30 +249,6 @@ func (l *GreenfieldListener) sync(nextHeight uint64, validatorsHash string) erro
 	return nil
 }
 
-func (l *GreenfieldListener) broadCastTx(tx *model.GreenfieldRelayTransaction) error {
-	return l.voteProcessor.SignAndBroadcast(tx)
-}
-
-func (l *GreenfieldListener) constructRelayTxAndBroadcast(event abci.Event, height uint64) (*model.GreenfieldRelayTransaction, error) {
-	relayTx, err := constructRelayTx(event, height)
-	if err != nil {
-		return nil, err
-	}
-	filled, err := l.isTxSequenceFilled(relayTx)
-	if err != nil {
-		return nil, err
-	}
-	if filled {
-		relayTx.Status = db.Delivered
-		return relayTx, nil
-	}
-	if err = l.broadCastTx(relayTx); err != nil {
-		return nil, err
-	}
-	relayTx.Status = db.SelfVoted
-	return relayTx, nil
-}
-
 func constructRelayTx(event abci.Event, height uint64) (*model.GreenfieldRelayTransaction, error) {
 	relayTx := model.GreenfieldRelayTransaction{}
 	for _, attr := range event.Attributes {
@@ -343,12 +315,4 @@ func constructRelayTx(event abci.Event, height uint64) (*model.GreenfieldRelayTr
 	relayTx.Height = height
 	relayTx.UpdatedTime = time.Now().Unix()
 	return &relayTx, nil
-}
-
-func (l *GreenfieldListener) isTxSequenceFilled(tx *model.GreenfieldRelayTransaction) (bool, error) {
-	nextDeliverySequence, err := l.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(types.ChannelId(tx.ChannelId))
-	if err != nil {
-		return false, err
-	}
-	return tx.Sequence < nextDeliverySequence, nil
 }

@@ -40,8 +40,11 @@ func (d *SequenceDao) Upsert(channelId uint8, sequence uint64) error {
 		ChannelId: channelId,
 		Sequence:  int64(sequence),
 	}
-	return d.DB.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "channel_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"sequence"}),
-	}).Create(&seq).Error
+
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		return dbTx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "channel_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"sequence"}),
+		}).Create(&seq).Error
+	})
 }

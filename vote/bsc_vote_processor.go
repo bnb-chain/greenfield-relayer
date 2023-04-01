@@ -47,7 +47,7 @@ func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSi
 }
 
 func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
-	ticker := time.NewTicker(common.BroadcastInterval)
+	ticker := time.NewTicker(time.Duration(p.config.VotePoolConfig.BroadcastIntervalInMillisecond) * time.Millisecond)
 	for range ticker.C {
 		if err := p.signAndBroadcast(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
@@ -72,7 +72,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 	if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
 		return nil
 	}
-	pkgs, err := p.daoManager.BSCDao.GetPackagesByStatusAndHeight(db.Saved, leastSavedPkgHeight)
+	pkgs, err := p.daoManager.BSCDao.GetPackagesByHeightAndStatus(db.Saved, leastSavedPkgHeight)
 	if err != nil {
 		logging.Logger.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
 		return err
@@ -151,18 +151,18 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 		}
 
 		err = p.daoManager.BSCDao.DB.Transaction(func(dbTx *gorm.DB) error {
-			err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.SelfVoted)
-			if err != nil {
-				return err
+			e := dao.UpdateBatchPackagesStatus(dbTx, pkgIds, db.SelfVoted)
+			if e != nil {
+				return e
 			}
-			exist, err := p.daoManager.VoteDao.IsVoteExist(uint8(channelId), seq, hex.EncodeToString(v.PubKey[:]))
-			if err != nil {
-				return err
+			exist, e := dao.IsVoteExist(dbTx, uint8(channelId), seq, hex.EncodeToString(v.PubKey[:]))
+			if e != nil {
+				return e
 			}
 			if !exist {
-				err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, uint8(channelId), seq, encodedPayload))
-				if err != nil {
-					return err
+				e = dao.SaveVote(dbTx, EntityToDto(v, uint8(channelId), seq, encodedPayload))
+				if e != nil {
+					return e
 				}
 			}
 			return nil
@@ -175,7 +175,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 }
 
 func (p *BSCVoteProcessor) CollectVotesLoop() {
-	ticker := time.NewTicker(common.CollectVoteInterval)
+	ticker := time.NewTicker(time.Duration(p.config.VotePoolConfig.QueryIntervalInMillisecond) * time.Millisecond)
 	for range ticker.C {
 		if err := p.collectVotes(); err != nil {
 			logging.Logger.Errorf("encounter error, err: %s", err.Error())
