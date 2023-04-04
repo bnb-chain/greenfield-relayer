@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"gorm.io/gorm/logger"
 	"log"
 	"os"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/bnb-chain/greenfield-relayer/assembler"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -52,12 +52,13 @@ func NewApp(cfg *config.Config) *App {
 	db, err := gorm.Open(mysql.Open(dbPath), &gorm.Config{
 		Logger: newLogger,
 	})
-	//db = db.Debug()
-
 	if err != nil {
 		panic(fmt.Sprintf("open db error, err=%s", err.Error()))
 	}
 	dbConfig, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
 
 	dbConfig.SetMaxIdleConns(cfg.DBConfig.MaxIdleConns)
 	dbConfig.SetMaxOpenConns(cfg.DBConfig.MaxOpenConns)

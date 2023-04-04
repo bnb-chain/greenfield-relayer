@@ -65,9 +65,6 @@ func (cfg *GreenfieldConfig) Validate() {
 	if cfg.KeyType != KeyTypeAWSPrivateKey && cfg.PrivateKey == "" {
 		panic("privateKey of Greenfield should not be empty")
 	}
-	if cfg.NumberOfBlocksForFinality < 0 {
-		panic("number of blocks for finality should not be negative")
-	}
 }
 
 type BSCConfig struct {
@@ -166,7 +163,7 @@ type DBConfig struct {
 	Username      string `json:"username"`
 	Url           string `json:"url"`
 	MaxIdleConns  int    `json:"max_idle_conns"`
-	MaxOpenConns  int    `json:"max_idle_conns"`
+	MaxOpenConns  int    `json:"max_open_conns"`
 }
 
 func (cfg *DBConfig) Validate() {
