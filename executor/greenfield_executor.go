@@ -282,13 +282,13 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 		voteAddressSet,
 		aggregatedSig,
 	)
-	feeAmt := sdk.NewCoins(sdk.NewCoin("BNB", sdk.NewInt(int64(e.config.GreenfieldConfig.FeeAmount))))
+
 	txRes, err := e.getGnfdClient().BroadcastTx(
 		[]sdk.Msg{msgClaim},
 		&sdktypes.TxOption{
 			NoSimulate: true,
 			GasLimit:   e.config.GreenfieldConfig.GasLimit,
-			FeeAmount:  feeAmt,
+			FeeAmount:  sdk.NewCoins(sdk.NewCoin(sdktypes.Denom, sdk.NewInt(int64(e.config.GreenfieldConfig.FeeAmount)))),
 			Nonce:      nonce,
 		},
 	)
