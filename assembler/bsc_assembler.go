@@ -175,7 +175,7 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 		return err
 	}
 
-	logging.Logger.Infof("claimed transaction with txHash %s", txHash)
+	logging.Logger.Infof("claimed transaction with oracle_sequence=%d, txHash=%s", sequence, txHash)
 	var pkgIds []int64
 	for _, p := range pkgs {
 		pkgIds = append(pkgIds, p.Id)
