@@ -42,8 +42,8 @@
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
     "bsc_cross_chain_package_event_name": "CrossChainPackage",
     "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",
-    "cross_chain_contract_addr": "0x3a282380958194D1131bC49056abb712Ab98b82B",
-    "greenfield_light_client_contract_addr": "0x60B1E6259944Ea8CEEfFAe2d50Df33EE3CCc593A"
+    "cross_chain_contract_addr": "0x1F82F1f3d7a10538920CA1856481f1b5aB782158",
+    "greenfield_light_client_contract_addr": "0x37aac91D8029DAA9a06AA24178CEd28Fcf378fBf"
   },
   "vote_pool_config": {
     "broadcast_interval_in_millisecond": 1000,
@@ -61,7 +61,7 @@
     "compress": false
   },
   "admin_config": {
-    "port": 8082
+    "port": 8080
   },
   "db_config": {
     "dialect": "mysql",
@@ -72,7 +72,7 @@
     "username": "root",
     "url": "/local-greenfield-relayer2?charset=utf8&parseTime=True&loc=Local",
     "max_idle_conns": 10,
-    "max_open_conns": 100
+    "max_open_conns": 50
   },
   "alert_config": {
     "identity": "your_service_name",

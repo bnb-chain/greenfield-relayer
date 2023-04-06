@@ -70,7 +70,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	var startSeq uint64
 
 	if isInturnRelyer {
-		logging.Logger.Debugf("bsc is in-turn relayer")
 		if !a.inturnRelayerSequenceStatus.HasRetrieved {
 			// in-turn relayer get the start sequence from chain first time, it starts to relay after the sequence gets updated
 			now := time.Now().Unix()
@@ -102,7 +101,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		}
 		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
-		logging.Logger.Debugf("bsc is out-turn relayer")
 		a.inturnRelayerSequenceStatus.HasRetrieved = false
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
 		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)

@@ -100,7 +100,6 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 	var startSeq uint64
 
 	if isInturnRelyer {
-		logging.Logger.Debugf("gnfd is in-turn relayer")
 		if !a.inturnRelayerSequenceStatusMap[channelId].HasRetrieved {
 			now := time.Now().Unix()
 			timeDiff := now - int64(inturnRelayer.Start)
@@ -128,8 +127,6 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		}
 		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
-		logging.Logger.Debugf("gnfd is out-turn relayer")
-
 		a.mutex.Lock()
 		a.inturnRelayerSequenceStatusMap[channelId].HasRetrieved = false
 		a.mutex.Unlock()
