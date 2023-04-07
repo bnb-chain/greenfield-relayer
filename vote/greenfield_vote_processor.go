@@ -240,10 +240,6 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
 		// and check if sequence is filled
 		if triedTimes > QueryVotepoolMaxRetryTimes {
-			if err := p.daoManager.GreenfieldDao.UpdateTransactionStatus(txId, db.Saved); err != nil {
-				logging.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
-				return err
-			}
 			return errors.New("exceed max retry")
 		}
 

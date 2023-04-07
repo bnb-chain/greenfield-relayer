@@ -280,10 +280,6 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	for range ticker.C {
 		triedTimes++
 		if triedTimes > QueryVotepoolMaxRetryTimes {
-			if err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Saved); err != nil {
-				logging.Logger.Errorf("failed to update packages status to 'Saved', packages' id=%v", pkgIds)
-				return err
-			}
 			return errors.New("exceed max retry")
 		}
 		queriedVotes, err := p.bscExecutor.GreenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)

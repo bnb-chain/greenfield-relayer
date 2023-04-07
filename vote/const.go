@@ -7,7 +7,7 @@ import (
 const (
 	ValidatorsCapacity = 256
 
-	QueryVotepoolMaxRetryTimes = 20
+	QueryVotepoolMaxRetryTimes = 5
 
 	VotePoolQueryRetryInterval = 500 * time.Millisecond
 )
