@@ -55,7 +55,7 @@ func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 	}
 }
 
-// SignAndBroadcastVoteLoop Will sign using the bls private key, and broadcast the vote to votepool
+// SignAndBroadcastVoteLoop signs using the bls private key, and broadcast the vote to votepool
 func (p *BSCVoteProcessor) signAndBroadcast() error {
 	latestHeight, err := p.bscExecutor.GetLatestBlockHeightWithRetry()
 	if err != nil {

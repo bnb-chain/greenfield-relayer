@@ -72,9 +72,9 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 	if leastSavedTxHeight+p.config.GreenfieldConfig.NumberOfBlocksForFinality > latestHeight {
 		return nil
 	}
-	txs, err := p.daoManager.GreenfieldDao.GetTransactionsByHeightAndStatusWithLimit(db.Saved, leastSavedTxHeight, p.config.VotePoolConfig.VotesBatchMaxSizePerInterval)
+	txs, err := p.daoManager.GreenfieldDao.GetTransactionsByStatusWithLimit(db.Saved, p.config.VotePoolConfig.VotesBatchMaxSizePerInterval)
 	if err != nil {
-		logging.Logger.Errorf("failed to get transactions at height %d from db, error: %s", leastSavedTxHeight, err.Error())
+		logging.Logger.Errorf("failed to get transactions from db, error: %s", err.Error())
 		return err
 	}
 	if len(txs) == 0 {

@@ -39,15 +39,6 @@ func (d *GreenfieldDao) GetTransactionsByStatusWithLimit(s db.TxStatus, limit in
 	return txs, nil
 }
 
-func (d *GreenfieldDao) GetTransactionsByHeightAndStatusWithLimit(status db.TxStatus, height uint64, limit int64) ([]*model.GreenfieldRelayTransaction, error) {
-	txs := make([]*model.GreenfieldRelayTransaction, 0)
-	err := d.DB.Where("status = ? and height = ?", status, height).Order("height asc").Limit(int(limit)).Find(&txs).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, err
-	}
-	return txs, nil
-}
-
 func (d *GreenfieldDao) GetLeastSavedTransactionHeight() (uint64, error) {
 	var result sql.NullInt64
 	res := d.DB.Table("greenfield_relay_transaction").Select("MIN(height)").Where("status = ?", db.Saved)
