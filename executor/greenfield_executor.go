@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -15,6 +14,7 @@ import (
 	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -282,10 +282,14 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 		voteAddressSet,
 		aggregatedSig,
 	)
+
 	txRes, err := e.getGnfdClient().BroadcastTx(
 		[]sdk.Msg{msgClaim},
 		&sdktypes.TxOption{
-			Nonce: nonce,
+			NoSimulate: true,
+			GasLimit:   e.config.GreenfieldConfig.GasLimit,
+			FeeAmount:  sdk.NewCoins(sdk.NewCoin(sdktypes.Denom, sdk.NewInt(int64(e.config.GreenfieldConfig.FeeAmount)))),
+			Nonce:      nonce,
 		},
 	)
 	if err != nil {

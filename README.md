@@ -38,6 +38,7 @@ Go version above 1.19
     "key_type": "local_private_key",
     "aws_region": "",
     "aws_secret_name": "",
+    "aws_bls_secret_name": "",
     "rpc_addrs": [
       "http://127.0.0.1:26750",
       "http://127.0.0.1:26751",
@@ -50,10 +51,12 @@ Go version above 1.19
     ],
     "private_key": "your_private_key",
     "bls_private_key": "your_private_key",
-    "chain_id": 1,     // greenfield oracle module defines this
+    "chain_id": 18,     // greenfield oracle module defines this
     "start_height": 1,
+    "number_of_blocks_for_finality": 0,
     "monitor_channel_list": [1,2,3],
-    "gas_limit": 210000,
+    "gas_limit": 30000,
+    "fee_amount": 150000000000000,
     "chain_id_string": "greenfield_9000-121"
   }, 
   "bsc_config": {
@@ -103,7 +106,14 @@ Go version above 1.19
 ```
 "db_config": {
   "dialect": "mysql",
-  "db_path": "root:pass@tcp(127.0.0.1:3306)/greenfield-relayer?charset=utf8&parseTime=True&loc=Local"
+    "key_type": "local_private_key",
+    "aws_region": "",
+    "aws_secret_name": "",
+    "password": "pass",
+    "username": "root",
+    "url": "/local-greenfield-relayer1?charset=utf8&parseTime=True&loc=Local",
+    "max_idle_conns": 10,
+    "max_open_conns": 100
 }
 ```
 
@@ -196,5 +206,5 @@ Please make sure your contributions adhere to our coding guidelines:
 
 ## License
 The repo is licensed under the
-[GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html),
-also included in our repository in the `COPYING.LESSER` file.
+[GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), also
+included in our repository in the `COPYING` file.

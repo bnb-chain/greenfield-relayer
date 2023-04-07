@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"os"
 )
 
@@ -11,6 +10,7 @@ type Config struct {
 	GreenfieldConfig GreenfieldConfig `json:"greenfield_config"`
 	BSCConfig        BSCConfig        `json:"bsc_config"`
 	RelayConfig      RelayConfig      `json:"relay_config"`
+	VotePoolConfig   VotePoolConfig   `json:"vote_pool_config"`
 	LogConfig        LogConfig        `json:"log_config"`
 	AdminConfig      AdminConfig      `json:"admin_config"`
 	AlertConfig      AlertConfig      `json:"alert_config"`
@@ -28,19 +28,43 @@ func (cfg *AdminConfig) Validate() {
 }
 
 type GreenfieldConfig struct {
-	KeyType            string   `json:"key_type"`
-	AWSRegion          string   `json:"aws_region"`
-	AWSSecretName      string   `json:"aws_secret_name"`
-	AWSBlsSecretName   string   `json:"aws_bls_secret_name"`
-	RPCAddrs           []string `json:"rpc_addrs"`
-	GRPCAddrs          []string `json:"grpc_addrs"`
-	PrivateKey         string   `json:"private_key"`
-	BlsPrivateKey      string   `json:"bls_private_key"`
-	ChainId            uint64   `json:"chain_id"`
-	StartHeight        uint64   `json:"start_height"`
-	MonitorChannelList []uint8  `json:"monitor_channel_list"`
-	GasLimit           uint64   `json:"gas_limit"`
-	ChainIdString      string   `json:"chain_id_string"`
+	KeyType                   string   `json:"key_type"`
+	AWSRegion                 string   `json:"aws_region"`
+	AWSSecretName             string   `json:"aws_secret_name"`
+	AWSBlsSecretName          string   `json:"aws_bls_secret_name"`
+	RPCAddrs                  []string `json:"rpc_addrs"`
+	GRPCAddrs                 []string `json:"grpc_addrs"`
+	PrivateKey                string   `json:"private_key"`
+	BlsPrivateKey             string   `json:"bls_private_key"`
+	ChainId                   uint64   `json:"chain_id"`
+	StartHeight               uint64   `json:"start_height"`
+	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
+	MonitorChannelList        []uint8  `json:"monitor_channel_list"`
+	GasLimit                  uint64   `json:"gas_limit"`
+	FeeAmount                 uint64   `json:"fee_amount"`
+	ChainIdString             string   `json:"chain_id_string"`
+}
+
+func (cfg *GreenfieldConfig) Validate() {
+	if len(cfg.RPCAddrs) == 0 {
+		panic("provider address of Greenfield should not be empty")
+	}
+
+	if cfg.KeyType == "" {
+		panic("key_type Greenfield should not be empty")
+	}
+	if cfg.KeyType != KeyTypeLocalPrivateKey && cfg.KeyType != KeyTypeAWSPrivateKey {
+		panic(fmt.Sprintf("key_type of Greenfield only supports %s and %s", KeyTypeLocalPrivateKey, KeyTypeAWSPrivateKey))
+	}
+	if cfg.KeyType == KeyTypeAWSPrivateKey && cfg.AWSRegion == "" {
+		panic("aws_region of Greenfield should not be empty")
+	}
+	if cfg.KeyType == KeyTypeAWSPrivateKey && cfg.AWSSecretName == "" {
+		panic("aws_secret_name of Greenfield should not be empty")
+	}
+	if cfg.KeyType != KeyTypeAWSPrivateKey && cfg.PrivateKey == "" {
+		panic("privateKey of Greenfield should not be empty")
+	}
 }
 
 type BSCConfig struct {
@@ -54,18 +78,6 @@ type BSCConfig struct {
 	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
 	StartHeight               uint64   `json:"start_height"`
 	ChainId                   uint64   `json:"chain_id"`
-}
-
-type RelayConfig struct {
-	BSCToGreenfieldInturnRelayerTimeout int64  `json:"bsc_to_greenfield_inturn_relayer_timeout"` // in second
-	GreenfieldToBSCInturnRelayerTimeout int64  `json:"greenfield_to_bsc_inturn_relayer_timeout"` // in second
-	GreenfieldSequenceUpdateLatency     int64  `json:"greenfield_sequence_update_latency"`       // in second
-	BSCSequenceUpdateLatency            int64  `json:"bsc_sequence_update_latency"`              // in second
-	GreenfieldEventTypeCrossChain       string `json:"greenfield_event_type_cross_chain"`
-	BSCCrossChainPackageEventName       string `json:"bsc_cross_chain_package_event_name"`
-	CrossChainPackageEventHex           string `json:"cross_chain_package_event_hex"`
-	CrossChainContractAddr              string `json:"cross_chain_contract_addr"`
-	GreenfieldLightClientContractAddr   string `json:"greenfield_light_client_contract_addr"`
 }
 
 func (cfg *BSCConfig) Validate() {
@@ -91,6 +103,24 @@ func (cfg *BSCConfig) Validate() {
 	if cfg.GasLimit == 0 {
 		panic("gas_limit of Binance Smart Chain should be larger than 0")
 	}
+}
+
+type RelayConfig struct {
+	BSCToGreenfieldInturnRelayerTimeout int64  `json:"bsc_to_greenfield_inturn_relayer_timeout"` // in second
+	GreenfieldToBSCInturnRelayerTimeout int64  `json:"greenfield_to_bsc_inturn_relayer_timeout"` // in second
+	GreenfieldSequenceUpdateLatency     int64  `json:"greenfield_sequence_update_latency"`       // in second
+	BSCSequenceUpdateLatency            int64  `json:"bsc_sequence_update_latency"`              // in second
+	GreenfieldEventTypeCrossChain       string `json:"greenfield_event_type_cross_chain"`
+	BSCCrossChainPackageEventName       string `json:"bsc_cross_chain_package_event_name"`
+	CrossChainPackageEventHex           string `json:"cross_chain_package_event_hex"`
+	CrossChainContractAddr              string `json:"cross_chain_contract_addr"`
+	GreenfieldLightClientContractAddr   string `json:"greenfield_light_client_contract_addr"`
+}
+
+type VotePoolConfig struct {
+	BroadcastIntervalInMillisecond int64 `json:"broadcast_interval_in_millisecond"`
+	VotesBatchMaxSizePerInterval   int64 `json:"votes_batch_max_size_per_interval"`
+	QueryIntervalInMillisecond     int64 `json:"query_interval_in_millisecond"`
 }
 
 type LogConfig struct {
@@ -119,37 +149,9 @@ func (cfg *LogConfig) Validate() {
 }
 
 type AlertConfig struct {
-	EnableAlert     bool  `json:"enable_alert"`
-	EnableHeartBeat bool  `json:"enable_heart_beat"`
-	Interval        int64 `json:"interval"`
-
 	Identity       string `json:"identity"`
 	TelegramBotId  string `json:"telegram_bot_id"`
 	TelegramChatId string `json:"telegram_chat_id"`
-
-	BalanceThreshold     string `json:"balance_threshold"`
-	SequenceGapThreshold uint64 `json:"sequence_gap_threshold"`
-}
-
-func (cfg *AlertConfig) Validate() {
-	if !cfg.EnableAlert {
-		return
-	}
-	if cfg.Interval <= 0 {
-		panic("alert interval should be positive")
-	}
-	balanceThreshold, ok := big.NewInt(1).SetString(cfg.BalanceThreshold, 10)
-	if !ok {
-		panic("unrecognized balance_threshold")
-	}
-
-	if balanceThreshold.Cmp(big.NewInt(0)) <= 0 {
-		panic("balance_threshold should be positive")
-	}
-
-	if cfg.SequenceGapThreshold <= 0 {
-		panic("sequence_gap_threshold should be positive")
-	}
 }
 
 type DBConfig struct {
@@ -160,6 +162,8 @@ type DBConfig struct {
 	Password      string `json:"password"`
 	Username      string `json:"username"`
 	Url           string `json:"url"`
+	MaxIdleConns  int    `json:"max_idle_conns"`
+	MaxOpenConns  int    `json:"max_open_conns"`
 }
 
 func (cfg *DBConfig) Validate() {
@@ -175,7 +179,6 @@ func (cfg *Config) Validate() {
 	cfg.AdminConfig.Validate()
 	cfg.LogConfig.Validate()
 	cfg.BSCConfig.Validate()
-	cfg.AlertConfig.Validate()
 	cfg.DBConfig.Validate()
 }
 

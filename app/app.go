@@ -3,10 +3,14 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"time"
 
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/bnb-chain/greenfield-relayer/assembler"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -35,20 +39,38 @@ func NewApp(cfg *config.Config) *App {
 	url := cfg.DBConfig.Url
 	dbPath := fmt.Sprintf("%s:%s@%s", username, password, url)
 
-	db, err := gorm.Open(mysql.Open(dbPath), &gorm.Config{})
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second,   // Slow SQL threshold
+			LogLevel:                  logger.Silent, // Log level
+			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
+			Colorful:                  true,          // Disable color
+		},
+	)
+
+	db, err := gorm.Open(mysql.Open(dbPath), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		panic(fmt.Sprintf("open db error, err=%s", err.Error()))
 	}
+	dbConfig, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+
+	dbConfig.SetMaxIdleConns(cfg.DBConfig.MaxIdleConns)
+	dbConfig.SetMaxOpenConns(cfg.DBConfig.MaxOpenConns)
+
 	model.InitBSCTables(db)
 	model.InitGreenfieldTables(db)
 	model.InitVoteTables(db)
-	model.InitSequenceTable(db)
 
 	greenfieldDao := dao.NewGreenfieldDao(db)
 	bscDao := dao.NewBSCDao(db)
 	voteDao := dao.NewVoteDao(db)
-	seqDao := dao.NewSequenceDao(db)
-	daoManager := dao.NewDaoManager(greenfieldDao, bscDao, voteDao, seqDao)
+	daoManager := dao.NewDaoManager(greenfieldDao, bscDao, voteDao)
 
 	greenfieldExecutor := executor.NewGreenfieldExecutor(cfg)
 	bscExecutor := executor.NewBSCExecutor(cfg)
@@ -66,7 +88,7 @@ func NewApp(cfg *config.Config) *App {
 	bscVoteProcessor := vote.NewBSCVoteProcessor(cfg, daoManager, signer, bscExecutor)
 
 	// listeners
-	greenfieldListener := listener.NewGreenfieldListener(cfg, greenfieldExecutor, bscExecutor, greenfieldVoteProcessor, daoManager, metricService)
+	greenfieldListener := listener.NewGreenfieldListener(cfg, greenfieldExecutor, bscExecutor, daoManager, metricService)
 	bscListener := listener.NewBSCListener(cfg, bscExecutor, greenfieldExecutor, daoManager, metricService)
 
 	// assemblers
