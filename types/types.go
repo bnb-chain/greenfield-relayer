@@ -30,3 +30,13 @@ type CrossChainPackageEvent struct {
 	ChannelId       uint8
 	Payload         []byte
 }
+
+type SequenceStatus struct {
+	HasRetrieved    bool
+	NextDeliverySeq uint64
+}
+
+type NonceStatus struct {
+	HasRetrieved bool
+	Nonce        uint64
+}

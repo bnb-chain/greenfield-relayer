@@ -38,9 +38,9 @@ func (d *BSCDao) GetPackagesByStatus(status db.TxStatus) ([]*model.BscRelayPacka
 	return votedTxs, nil
 }
 
-func (d *BSCDao) GetPackagesByStatusAndHeight(status db.TxStatus, height uint64) ([]*model.BscRelayPackage, error) {
+func (d *BSCDao) GetPackagesByHeightAndStatus(status db.TxStatus, height uint64) ([]*model.BscRelayPackage, error) {
 	unVotedTxs := make([]*model.BscRelayPackage, 0)
-	err := d.DB.Where("status = ? and height = ?", status, height).Find(&unVotedTxs).Order("tx_time asc").Error
+	err := d.DB.Where("status = ? and height = ?", status, height).Order("height asc").Find(&unVotedTxs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -81,6 +81,13 @@ func (d *BSCDao) GetPackagesByOracleSequence(sequence uint64) ([]*model.BscRelay
 
 func (d *BSCDao) UpdateBatchPackagesStatus(txIds []int64, status db.TxStatus) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
+			model.BscRelayPackage{Status: status, UpdatedTime: time.Now().Unix()}).Error
+	})
+}
+
+func UpdateBatchPackagesStatus(dbTx *gorm.DB, txIds []int64, status db.TxStatus) error {
+	return dbTx.Transaction(func(dbTx *gorm.DB) error {
 		return dbTx.Model(model.BscRelayPackage{}).Where("id IN (?)", txIds).Updates(
 			model.BscRelayPackage{Status: status, UpdatedTime: time.Now().Unix()}).Error
 	})

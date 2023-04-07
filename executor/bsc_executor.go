@@ -246,7 +246,7 @@ func (e *BSCExecutor) GetNextReceiveSequenceForChannelWithRetry(channelID rtypes
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			logging.Logger.Infof("failed to query sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
+			logging.Logger.Errorf("failed to query sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
 		}))
 }
 

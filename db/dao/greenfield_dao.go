@@ -30,18 +30,9 @@ func (d *GreenfieldDao) GetLatestBlock() (*model.GreenfieldBlock, error) {
 	return &block, nil
 }
 
-func (d *GreenfieldDao) GetTransactionsByStatus(s db.TxStatus) ([]*model.GreenfieldRelayTransaction, error) {
+func (d *GreenfieldDao) GetTransactionsByStatusWithLimit(s db.TxStatus, limit int64) ([]*model.GreenfieldRelayTransaction, error) {
 	txs := make([]*model.GreenfieldRelayTransaction, 0)
-	err := d.DB.Where("status = ? ", s).Find(&txs).Order("tx_time desc").Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, err
-	}
-	return txs, nil
-}
-
-func (d *GreenfieldDao) GetTransactionsByStatusAndHeight(status db.TxStatus, height uint64) ([]*model.GreenfieldRelayTransaction, error) {
-	txs := make([]*model.GreenfieldRelayTransaction, 0)
-	err := d.DB.Where("status = ? and height = ?", status, height).Find(&txs).Order("tx_time asc").Error
+	err := d.DB.Where("status = ? ", s).Order("height asc").Limit(int(limit)).Find(&txs).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -82,6 +73,12 @@ func (d *GreenfieldDao) GetLatestSequenceByChannelIdAndStatus(channelId types.Ch
 
 func (d *GreenfieldDao) UpdateTransactionStatus(id int64, status db.TxStatus) error {
 	err := d.DB.Model(model.GreenfieldRelayTransaction{}).Where("id = ?", id).Updates(
+		model.GreenfieldRelayTransaction{Status: status, UpdatedTime: time.Now().Unix()}).Error
+	return err
+}
+
+func UpdateTransactionStatus(dbTx *gorm.DB, id int64, status db.TxStatus) error {
+	err := dbTx.Model(model.GreenfieldRelayTransaction{}).Where("id = ?", id).Updates(
 		model.GreenfieldRelayTransaction{Status: status, UpdatedTime: time.Now().Unix()}).Error
 	return err
 }
