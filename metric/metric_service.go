@@ -112,14 +112,14 @@ func NewMetricService(config *config.Config) *MetricService {
 	// register greenfield oracle channel
 	nextSendOracleSeq := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, 0),
-		Help: "Next Send Oracle sequence",
+		Help: fmt.Sprintf("Next Send Oracle sequence"),
 	})
 	ms[fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, 0)] = nextSendOracleSeq
 	prometheus.MustRegister(nextSendOracleSeq)
 
 	nextReceiveOracleSeq := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, 0),
-		Help: "Next Delivery Oracle sequence",
+		Help: fmt.Sprintf("Next Delivery Oracle sequence"),
 	})
 	ms[fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, 0)] = nextReceiveOracleSeq
 	prometheus.MustRegister(nextReceiveOracleSeq)
