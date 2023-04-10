@@ -94,12 +94,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 			a.inturnRelayerSequenceStatus.NextDeliverySeq = inTurnRelayerStartSeq
 		}
 		startSeq = a.inturnRelayerSequenceStatus.NextDeliverySeq
-		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSeq)
-		seqFromChain, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
-		if err != nil {
-			return err
-		}
-		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
 		a.inturnRelayerSequenceStatus.HasRetrieved = false
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
@@ -114,6 +108,11 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		}
 		a.relayerNonce = startNonce
 	}
+	err = a.updateMetrics(uint8(channelId), startSeq)
+	if err != nil {
+		return err
+	}
+
 	endSequence, err := a.daoManager.BSCDao.GetLatestOracleSequenceByStatus(db.AllVoted)
 	if err != nil {
 		return err
@@ -194,5 +193,15 @@ func (a *BSCAssembler) processPkgs(pkgs []*model.BscRelayPackage, channelId uint
 		return err
 	}
 	a.inturnRelayerSequenceStatus.NextDeliverySeq = sequence + 1
+	return nil
+}
+
+func (a *BSCAssembler) updateMetrics(channelId uint8, nextDeliveryOracleSeq uint64) error {
+	a.metricService.SetNextReceiveSequenceForChannel(channelId, nextDeliveryOracleSeq)
+	nextSendOracleSeq, err := a.bscExecutor.GetNextSendSequenceForChannelWithRetry()
+	if err != nil {
+		return err
+	}
+	a.metricService.SetNextSendSequenceForChannel(channelId, nextSendOracleSeq)
 	return nil
 }

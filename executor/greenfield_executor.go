@@ -179,7 +179,7 @@ func (e *GreenfieldExecutor) GetNextDeliverySequenceForChannelWithRetry(channelI
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			logging.Logger.Infof("failed to query sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
+			logging.Logger.Errorf("failed to query receive sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -191,6 +191,31 @@ func (e *GreenfieldExecutor) getNextDeliverySequenceForChannel(channelID types.C
 	return sequence, nil
 }
 
+// GetNextSendSequenceForChannelWithRetry gets the next send sequence of specified channel from Greenfield
+func (e *GreenfieldExecutor) GetNextSendSequenceForChannelWithRetry(channelID types.ChannelId) (sequence uint64, err error) {
+	return sequence, retry.Do(func() error {
+		sequence, err = e.getNextSendSequenceForChannel(channelID)
+		return err
+	}, relayercommon.RtyAttem,
+		relayercommon.RtyDelay,
+		relayercommon.RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			logging.Logger.Errorf("failed to query send sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
+		}))
+}
+
+func (e *GreenfieldExecutor) getNextSendSequenceForChannel(channelId types.ChannelId) (uint64, error) {
+	res, err := e.getGnfdClient().SendSequence(
+		context.Background(),
+		&crosschaintypes.QuerySendSequenceRequest{ChannelId: uint32(channelId)},
+	)
+	if err != nil {
+		return 0, err
+	}
+	return res.Sequence, nil
+}
+
+// GetNextReceiveOracleSequence gets the next receive Oracle sequence from Greenfield
 func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 	res, err := e.getGnfdClient().CrosschainQueryClient.ReceiveSequence(
 		context.Background(),
@@ -202,9 +227,8 @@ func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 	return res.Sequence, nil
 }
 
-// GetNextReceiveSequenceForChannel gets the sequence specifically for bsc -> gnfd package's channel
+// GetNextReceiveSequenceForChannel gets the sequence specifically for bsc -> gnfd package's channel from Greenfield
 func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.ChannelId) (uint64, error) {
-
 	res, err := e.getGnfdClient().ReceiveSequence(
 		context.Background(),
 		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},

@@ -23,8 +23,8 @@ const (
 	MetricNameBSCRelayerStartTime = "BSC_relayer_start_time" // inturn relayer start time
 	MetricNameBSCRelayerEndTime   = "BSC_relayer_end_time"   // inturn relayer end time
 
-	MetricNameNextSequenceForChannelFromDB    = "next_seq_from_DB_for_channel"
-	MetricNameNextSequenceForChannelFromChain = "next_seq_from_chain_for_channel"
+	MetricNameNextSendSequenceForChannel    = "next_send_seq_for_channel"
+	MetricNameNextReceiveSequenceForChannel = "next_receive_seq_for_channel"
 )
 
 type MetricService struct {
@@ -110,35 +110,35 @@ func NewMetricService(config *config.Config) *MetricService {
 	prometheus.MustRegister(bscRelayerEndTimeMetric)
 
 	// register greenfield oracle channel
-	nextSeqFromDB := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromDB, 0),
-		Help: fmt.Sprintf("Next delivery sequence read from DB for channel %d", 0),
+	nextSendOracleSeq := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, 0),
+		Help: fmt.Sprintf("Next Send Oracle sequence"),
 	})
-	ms[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromDB, 0)] = nextSeqFromDB
-	prometheus.MustRegister(nextSeqFromDB)
+	ms[fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, 0)] = nextSendOracleSeq
+	prometheus.MustRegister(nextSendOracleSeq)
 
-	nextSeqFromChain := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromChain, 0),
-		Help: fmt.Sprintf("Next delivery sequence read from chain for channel %d", 0),
+	nextReceiveOracleSeq := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, 0),
+		Help: fmt.Sprintf("Next Delivery Oracle sequence"),
 	})
-	ms[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromChain, 0)] = nextSeqFromChain
-	prometheus.MustRegister(nextSeqFromChain)
+	ms[fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, 0)] = nextReceiveOracleSeq
+	prometheus.MustRegister(nextReceiveOracleSeq)
 
 	// register gnfd -> bsc channels
 	for _, c := range config.GreenfieldConfig.MonitorChannelList {
-		nextSeqFromDB = prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromDB, c),
-			Help: fmt.Sprintf("Next delivery sequence retreived from DB for channel %d", c),
+		nextSendSeq := prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, c),
+			Help: fmt.Sprintf("Next Send sequence for channel %d", c),
 		})
-		ms[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromDB, c)] = nextSeqFromDB
-		prometheus.MustRegister(nextSeqFromDB)
+		ms[fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, c)] = nextSendSeq
+		prometheus.MustRegister(nextSendSeq)
 
-		nextSeqFromChain = prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromChain, c),
-			Help: fmt.Sprintf("Next delivery sequence retreived from chain for channel %d", c),
+		nextReceiveSeq := prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, c),
+			Help: fmt.Sprintf("Next delivery sequence for channel %d", c),
 		})
-		ms[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromChain, c)] = nextSeqFromChain
-		prometheus.MustRegister(nextSeqFromChain)
+		ms[fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, c)] = nextReceiveSeq
+		prometheus.MustRegister(nextReceiveSeq)
 	}
 
 	return &MetricService{
@@ -215,10 +215,10 @@ func (m *MetricService) setGnfdInturnRelayerEndTime(end uint64) {
 	m.MetricsMap[MetricNameGnfdRelayerEndTime].(prometheus.Gauge).Set(float64(end))
 }
 
-func (m *MetricService) SetNextSequenceForChannelFromDB(channel uint8, seq uint64) {
-	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromDB, channel)].(prometheus.Gauge).Set(float64(seq))
+func (m *MetricService) SetNextSendSequenceForChannel(channel uint8, seq uint64) {
+	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, channel)].(prometheus.Gauge).Set(float64(seq))
 }
 
-func (m *MetricService) SetNextSequenceForChannelFromChain(channel uint8, seq uint64) {
-	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextSequenceForChannelFromChain, channel)].(prometheus.Gauge).Set(float64(seq))
+func (m *MetricService) SetNextReceiveSequenceForChannel(channel uint8, seq uint64) {
+	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, channel)].(prometheus.Gauge).Set(float64(seq))
 }
