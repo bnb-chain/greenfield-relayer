@@ -221,14 +221,14 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 		return nil
 	}
 
-	if err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators, tx.Id); err != nil {
+	if err = p.queryMoreThanTwoThirdVotesForTx(localVote, validators); err != nil {
 		return err
 	}
 	return nil
 }
 
 // queryMoreThanTwoThirdVotesForTx queries votes from votePool
-func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []types.Validator, txId int64) error {
+func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *model.Vote, validators []types.Validator) error {
 	triedTimes := 0
 	validVotesTotalCount := 1 // assume local vote is valid
 	channelId := localVote.ChannelId
@@ -237,13 +237,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 
 	for range ticker.C {
 		triedTimes++
-		// skip current tx if reach the max retry. And reset tx status so that it can be picked up by sign vote goroutine
-		// and check if sequence is filled
 		if triedTimes > QueryVotepoolMaxRetryTimes {
-			if err := p.daoManager.GreenfieldDao.UpdateTransactionStatus(txId, db.Saved); err != nil {
-				logging.Logger.Errorf("failed to transaction status to 'Saved', packages' id=%d", txId)
-				return err
-			}
 			return errors.New("exceed max retry")
 		}
 
