@@ -177,7 +177,7 @@ func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (l
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			logging.Logger.Infof("failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			logging.Logger.Errorf("failed to query latest height, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -238,6 +238,7 @@ func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, erro
 	return header, nil
 }
 
+// GetNextReceiveSequenceForChannelWithRetry gets the next receive sequence for specified channel from BSC
 func (e *BSCExecutor) GetNextReceiveSequenceForChannelWithRetry(channelID rtypes.ChannelId) (sequence uint64, err error) {
 	return sequence, retry.Do(func() error {
 		sequence, err = e.getNextReceiveSequenceForChannel(channelID)
@@ -246,7 +247,7 @@ func (e *BSCExecutor) GetNextReceiveSequenceForChannelWithRetry(channelID rtypes
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			logging.Logger.Errorf("failed to query sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
+			logging.Logger.Errorf("failed to query receive sequence for channel %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -258,6 +259,32 @@ func (e *BSCExecutor) getNextReceiveSequenceForChannel(channelID rtypes.ChannelI
 	return e.getCrossChainClient().ChannelReceiveSequenceMap(callOpts, uint8(channelID))
 }
 
+// GetNextSendSequenceForChannelWithRetry gets the next send oracle sequence from  BSC
+func (e *BSCExecutor) GetNextSendSequenceForChannelWithRetry() (sequence uint64, err error) {
+	return sequence, retry.Do(func() error {
+		sequence, err = e.getNextSendOracleSequence()
+		return err
+	}, relayercommon.RtyAttem,
+		relayercommon.RtyDelay,
+		relayercommon.RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			logging.Logger.Errorf("failed to query send oracle sequence, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+		}))
+}
+
+func (e *BSCExecutor) getNextSendOracleSequence() (sequence uint64, err error) {
+	callOpts := &bind.CallOpts{
+		Pending: true,
+		Context: context.Background(),
+	}
+	sentOracleSeq, err := e.getCrossChainClient().OracleSequence(callOpts)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(sentOracleSeq + 1), nil
+}
+
+// GetNextDeliveryOracleSequenceWithRetry gets the next delivery Oracle sequence from Greenfield
 func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry() (sequence uint64, err error) {
 	return sequence, retry.Do(func() error {
 		sequence, err = e.getNextDeliveryOracleSequence()
@@ -266,7 +293,7 @@ func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry() (sequence uint64,
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			logging.Logger.Infof("failed to query oracle sequence, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			logging.Logger.Errorf("failed to query oracle sequence, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -324,7 +351,7 @@ func (e *BSCExecutor) QueryTendermintLightBlockWithRetry(height int64) (lightBlo
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			logging.Logger.Infof("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			logging.Logger.Errorf("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 
@@ -340,7 +367,7 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte,
 		relayercommon.RtyDelay,
 		relayercommon.RtyErr,
 		retry.OnRetry(func(n uint, err error) {
-			logging.Logger.Infof("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
+			logging.Logger.Errorf("failed to query tendermint header, attempt: %d times, max_attempts: %d", n+1, relayercommon.RtyAttNum)
 		}))
 }
 

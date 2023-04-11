@@ -29,11 +29,11 @@ func TestGetNextReceiveOracleSequence(t *testing.T) {
 	t.Log(oracleSeq)
 }
 
-func TestGetNextReceiveSequenceForChannel(t *testing.T) {
+func TestGetNextSendSequenceForChannel(t *testing.T) {
 	e := InitGnfdExecutor()
-	oracleSeq, err := e.GetNextReceiveSequenceForChannel(1)
+	sendSeq, err := e.GetNextSendSequenceForChannelWithRetry(1)
 	require.NoError(t, err)
-	t.Log(oracleSeq)
+	t.Log(sendSeq)
 }
 
 func TestGetInturnRelayer(t *testing.T) {

@@ -119,13 +119,6 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 			a.mutex.Unlock()
 		}
 		startSeq = a.inturnRelayerSequenceStatusMap[channelId].NextDeliverySeq
-		// in-turn relayer get the start sequence from chain once during its interval
-		a.metricService.SetNextSequenceForChannelFromDB(uint8(channelId), startSeq)
-		seqFromChain, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
-		if err != nil {
-			return err
-		}
-		a.metricService.SetNextSequenceForChannelFromChain(uint8(channelId), seqFromChain)
 	} else {
 		a.mutex.Lock()
 		a.inturnRelayerSequenceStatusMap[channelId].HasRetrieved = false
@@ -136,6 +129,11 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		if err != nil {
 			return err
 		}
+	}
+
+	err := a.updateMetrics(channelId, startSeq)
+	if err != nil {
+		return err
 	}
 
 	endSequence, err := a.daoManager.GreenfieldDao.GetLatestSequenceByChannelIdAndStatus(channelId, db.AllVoted)
@@ -219,4 +217,14 @@ func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, no
 
 func (a *GreenfieldAssembler) getMonitorChannels() []uint8 {
 	return a.config.GreenfieldConfig.MonitorChannelList
+}
+
+func (a *GreenfieldAssembler) updateMetrics(channelId types.ChannelId, nextDeliverySeq uint64) error {
+	a.metricService.SetNextReceiveSequenceForChannel(uint8(channelId), nextDeliverySeq)
+	nextSendSeq, err := a.greenfieldExecutor.GetNextSendSequenceForChannelWithRetry(channelId)
+	if err != nil {
+		return err
+	}
+	a.metricService.SetNextSendSequenceForChannel(uint8(channelId), nextSendSeq)
+	return nil
 }
