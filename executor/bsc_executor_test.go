@@ -28,6 +28,12 @@ func TestGetNextReceiveSequence(t *testing.T) {
 	t.Log(seq)
 }
 
+func TestGetNextSendOracleSequence(t *testing.T) {
+	seq, err := InitBSCExecutor().getNextSendOracleSequence()
+	require.NoError(t, err)
+	t.Log(seq)
+}
+
 func TestGetBlockHeader(t *testing.T) {
 	e := InitBSCExecutor()
 	height, err := e.GetLatestBlockHeightWithRetry()

@@ -262,28 +262,24 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.Ch
 		return nil
 	}
 	// Query from votePool until there are more than 2/3 votes
-	if err = p.queryMoreThanTwoThirdValidVotes(localVote, validators, pkgIds); err != nil {
+	if err = p.queryMoreThanTwoThirdValidVotes(localVote, validators); err != nil {
 		return err
 	}
 	return nil
 }
 
 // queryMoreThanTwoThirdValidVotes queries votes from votePool
-func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []*tmtypes.Validator, pkgIds []int64) error {
+func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote, validators []*tmtypes.Validator) error {
 	triedTimes := 0
 	validVotesTotalCnt := 1
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
-	logging.Logger.Infof("queries votes for for channel %d and seq %d", channelId, seq)
+	logging.Logger.Debugf("queries votes for for channel %d and seq %d", channelId, seq)
 
 	for range ticker.C {
 		triedTimes++
 		if triedTimes > QueryVotepoolMaxRetryTimes {
-			if err := p.daoManager.BSCDao.UpdateBatchPackagesStatus(pkgIds, db.Saved); err != nil {
-				logging.Logger.Errorf("failed to update packages status to 'Saved', packages' id=%v", pkgIds)
-				return err
-			}
 			return errors.New("exceed max retry")
 		}
 		queriedVotes, err := p.bscExecutor.GreenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
