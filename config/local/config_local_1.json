@@ -64,13 +64,13 @@
     "port": 8081
   },
   "db_config": {
-    "dialect": "mysql",
-    "key_type": "local_private_key",
+    "dialect": "sqlite3",
+    "key_type": "",
     "aws_region": "",
     "aws_secret_name": "",
-    "password": "pass",
-    "username": "root",
-    "url": "/local-greenfield-relayer1?charset=utf8&parseTime=True&loc=Local",
+    "password": "",
+    "username": "",
+    "url": "local-greenfield-relayer1.db",
     "max_idle_conns": 10,
     "max_open_conns": 100
   },

@@ -167,10 +167,10 @@ type DBConfig struct {
 }
 
 func (cfg *DBConfig) Validate() {
-	if cfg.Dialect != DBDialectMysql {
-		panic(fmt.Sprintf("only %s supported", DBDialectMysql))
+	if cfg.Dialect != DBDialectMysql && cfg.Dialect != DBDialectSqlite3 {
+		panic(fmt.Sprintf("only %s and %s supported", DBDialectMysql, DBDialectSqlite3))
 	}
-	if cfg.Username == "" || cfg.Url == "" {
+	if cfg.Dialect == DBDialectMysql && (cfg.Username == "" || cfg.Url == "") {
 		panic("db config is not correct")
 	}
 }

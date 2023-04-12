@@ -3,15 +3,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
-	"time"
-
-	"github.com/spf13/viper"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-
 	"github.com/bnb-chain/greenfield-relayer/assembler"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
@@ -21,6 +12,14 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/relayer"
 	"github.com/bnb-chain/greenfield-relayer/vote"
+	"github.com/spf13/viper"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"log"
+	"os"
+	"time"
 )
 
 type App struct {
@@ -35,10 +34,6 @@ func NewApp(cfg *config.Config) *App {
 	if password == "" {
 		password = getDBPass(&cfg.DBConfig)
 	}
-
-	url := cfg.DBConfig.Url
-	dbPath := fmt.Sprintf("%s:%s@%s", username, password, url)
-
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
@@ -48,8 +43,20 @@ func NewApp(cfg *config.Config) *App {
 			Colorful:                  true,          // Disable color
 		},
 	)
+	var db *gorm.DB
+	var err error
+	var dialector gorm.Dialector
 
-	db, err := gorm.Open(mysql.Open(dbPath), &gorm.Config{
+	if cfg.DBConfig.Dialect == config.DBDialectMysql {
+		url := cfg.DBConfig.Url
+		dbPath := fmt.Sprintf("%s:%s@%s", username, password, url)
+		dialector = mysql.Open(dbPath)
+	} else if cfg.DBConfig.Dialect == config.DBDialectSqlite3 {
+		dialector = sqlite.Open(cfg.DBConfig.Url)
+	} else {
+		panic(fmt.Sprintf("unexpected DB dialect %s", cfg.DBConfig.Dialect))
+	}
+	db, err = gorm.Open(dialector, &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
