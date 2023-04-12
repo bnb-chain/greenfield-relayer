@@ -70,7 +70,7 @@
     "aws_secret_name": "",
     "password": "",
     "username": "",
-    "url": "local-greenfield-relayer0.db",
+    "url": "deployment/localup/.local/local-greenfield-relayer0.db",
     "max_idle_conns": 10,
     "max_open_conns": 100
   },
