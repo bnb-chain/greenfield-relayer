@@ -109,7 +109,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 			err = p.greenfieldExecutor.BroadcastVote(v)
 			if err != nil {
-				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
+				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d, err=%s", tx.ChannelId, tx.Sequence, err.Error())
 			}
 			return nil
 		}, retry.Context(context.Background()), rcommon.RtyAttem, rcommon.RtyDelay, rcommon.RtyErr); err != nil {
