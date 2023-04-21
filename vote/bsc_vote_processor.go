@@ -99,7 +99,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 			// aggregate pkgs with same oracle seq
 			payload, err := hex.DecodeString(pkg.PayLoad)
 			if err != nil {
-				return fmt.Errorf("decode payload error, payload=%s", pkg.PayLoad)
+				return fmt.Errorf("decode payload error, payload=%s, err=%s", pkg.PayLoad, err.Error())
 			}
 
 			pack := oracletypes.Package{

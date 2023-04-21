@@ -102,7 +102,9 @@ Go version above 1.19
   "compress": false
 }
 ```
-4. Config your database settings.
+4. Config your database settings. We Support mysql or sqlite.
+
+example: use mysql
 ```
 "db_config": {
   "dialect": "mysql",
@@ -115,6 +117,23 @@ Go version above 1.19
     "max_idle_conns": 10,
     "max_open_conns": 100
 }
+```
+
+ use sqlite
+```
+  "db_config": {
+    "dialect": "sqlite3",
+    "key_type": "",
+    "aws_region": "",
+    "aws_secret_name": "",
+    "password": "",
+    "username": "",
+    "url": "local-greenfield-relayer0.db",
+    "max_idle_conns": 10,
+    "max_open_conns": 100
+  },
+
+
 ```
 
 5. Set alert config to send a telegram message when the data-seeds are not healthy.
@@ -143,13 +162,13 @@ $ make build_docker
 
 ## Run locally
 
-### Run MySQL in Docker
+### Run MySQL in Docker(this can be skipped if you are using sqlite)
 
 ```shell
 docker run --name gnfd-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:8.0
 ```
 
-### Create Schema
+#### Create Schema
 
 Create schema in MySQL client:
 

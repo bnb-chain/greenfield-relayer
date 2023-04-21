@@ -126,7 +126,7 @@ func (e *GreenfieldExecutor) getRpcClient() client.Client {
 	return e.gnfdClients.GetClient().TendermintClient.RpcClient.TmClient
 }
 
-func (e *GreenfieldExecutor) getGnfdClient() *sdkclient.GreenfieldClient {
+func (e *GreenfieldExecutor) GetGnfdClient() *sdkclient.GreenfieldClient {
 	return e.gnfdClients.GetClient().GreenfieldClient
 }
 
@@ -205,7 +205,7 @@ func (e *GreenfieldExecutor) GetNextSendSequenceForChannelWithRetry(channelID ty
 }
 
 func (e *GreenfieldExecutor) getNextSendSequenceForChannel(channelId types.ChannelId) (uint64, error) {
-	res, err := e.getGnfdClient().SendSequence(
+	res, err := e.GetGnfdClient().SendSequence(
 		context.Background(),
 		&crosschaintypes.QuerySendSequenceRequest{ChannelId: uint32(channelId)},
 	)
@@ -217,7 +217,7 @@ func (e *GreenfieldExecutor) getNextSendSequenceForChannel(channelId types.Chann
 
 // GetNextReceiveOracleSequence gets the next receive Oracle sequence from Greenfield
 func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
-	res, err := e.getGnfdClient().CrosschainQueryClient.ReceiveSequence(
+	res, err := e.GetGnfdClient().CrosschainQueryClient.ReceiveSequence(
 		context.Background(),
 		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(relayercommon.OracleChannelId)},
 	)
@@ -229,7 +229,7 @@ func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
 
 // GetNextReceiveSequenceForChannel gets the sequence specifically for bsc -> gnfd package's channel from Greenfield
 func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.ChannelId) (uint64, error) {
-	res, err := e.getGnfdClient().ReceiveSequence(
+	res, err := e.GetGnfdClient().ReceiveSequence(
 		context.Background(),
 		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},
 	)
@@ -292,10 +292,10 @@ func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 }
 
 func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
-	return e.getGnfdClient().GetNonce()
+	return e.GetGnfdClient().GetNonce()
 }
 
-func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
+func (e *GreenfieldExecutor) ClaimPackages(client *sdkclient.GreenfieldClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
 	msgClaim := oracletypes.NewMsgClaim(
 		e.address,
 		e.getSrcChainId(),
@@ -306,8 +306,7 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 		voteAddressSet,
 		aggregatedSig,
 	)
-
-	txRes, err := e.getGnfdClient().BroadcastTx(
+	txRes, err := client.BroadcastTx(
 		[]sdk.Msg{msgClaim},
 		&sdktypes.TxOption{
 			NoSimulate: true,
@@ -326,7 +325,7 @@ func (e *GreenfieldExecutor) ClaimPackages(payloadBts []byte, aggregatedSig []by
 }
 
 func (e *GreenfieldExecutor) GetInturnRelayer() (*oracletypes.QueryInturnRelayerResponse, error) {
-	return e.getGnfdClient().OracleQueryClient.InturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
+	return e.GetGnfdClient().OracleQueryClient.InturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
 }
 
 func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
