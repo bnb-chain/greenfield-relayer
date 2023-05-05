@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/votepool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	"github.com/ethereum/go-ethereum/rlp"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-relayer/common"

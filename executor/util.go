@@ -3,11 +3,11 @@ package executor
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/eth/ethsecp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 )
 
 func Cdc() *codec.ProtoCodec {

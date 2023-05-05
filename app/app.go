@@ -12,6 +12,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/relayer"
 	"github.com/bnb-chain/greenfield-relayer/vote"
+	_ "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"

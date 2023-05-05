@@ -9,32 +9,28 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
+	"github.com/cometbft/cometbft/rpc/client"
+	ctypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/votepool"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	crosschaintypes "github.com/cosmos/cosmos-sdk/x/crosschain/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/rpc/client"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/votepool"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
-	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client/chain"
-	sdkkeys "github.com/bnb-chain/greenfield-go-sdk/keys"
-	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/types"
+	gnfdsdktypes "github.com/bnb-chain/greenfield/sdk/types"
 )
 
 type GreenfieldExecutor struct {
 	BscExecutor   *BSCExecutor
-	gnfdClients   *sdkclient.GnfdCompositeClients
+	gnfdClients   GnfdCompositeClients
 	config        *config.Config
 	address       string
 	validators    []*tmtypes.Validator // used to cache validators
@@ -48,11 +44,6 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 	if privKey == "" {
 		privKey = getGreenfieldPrivateKey(&cfg.GreenfieldConfig)
 	}
-	km, err := sdkkeys.NewPrivateKeyManager(privKey)
-	if err != nil {
-		panic(err)
-	}
-
 	blsPrivKeyStr := viper.GetString(config.FlagConfigBlsPrivateKey)
 	if blsPrivKeyStr == "" {
 		blsPrivKeyStr = getGreenfieldBlsPrivateKey(&cfg.GreenfieldConfig)
@@ -63,16 +54,18 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 	if err != nil {
 		panic(err)
 	}
-	clients := sdkclient.NewGnfdCompositClients(
-		cfg.GreenfieldConfig.GRPCAddrs,
+	account, err := sdktypes.NewAccountFromPrivateKey("test", privKey)
+	if err != nil {
+		panic(err)
+	}
+	clients := NewGnfdCompositClients(
 		cfg.GreenfieldConfig.RPCAddrs,
 		cfg.GreenfieldConfig.ChainIdString,
-		sdkclient.WithKeyManager(km),
-		sdkclient.WithGrpcDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
+		account,
 	)
 	return &GreenfieldExecutor{
 		gnfdClients:   clients,
-		address:       km.GetAddr().String(),
+		address:       account.GetAddress().String(),
 		config:        cfg,
 		cdc:           Cdc(),
 		BlsPrivateKey: blsPrivKeyBts,
@@ -123,15 +116,15 @@ func getGreenfieldBlsPrivateKey(cfg *config.GreenfieldConfig) string {
 }
 
 func (e *GreenfieldExecutor) getRpcClient() client.Client {
-	return e.gnfdClients.GetClient().TendermintClient.RpcClient.TmClient
+	return e.gnfdClients.GetClient().TmClient
 }
 
-func (e *GreenfieldExecutor) GetGnfdClient() *sdkclient.GreenfieldClient {
-	return e.gnfdClients.GetClient().GreenfieldClient
+func (e *GreenfieldExecutor) GetGnfdClient() *GnfdCompositeClient {
+	return e.gnfdClients.GetClient()
 }
 
 func (e *GreenfieldExecutor) GetBlockAndBlockResultAtHeight(height int64) (*tmtypes.Block, *ctypes.ResultBlockResults, error) {
-	block, err := e.getRpcClient().Block(context.Background(), &height)
+	block, err := e.GetGnfdClient().TmClient.Block(context.Background(), &height)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -205,38 +198,26 @@ func (e *GreenfieldExecutor) GetNextSendSequenceForChannelWithRetry(channelID ty
 }
 
 func (e *GreenfieldExecutor) getNextSendSequenceForChannel(channelId types.ChannelId) (uint64, error) {
-	res, err := e.GetGnfdClient().SendSequence(
+	return e.GetGnfdClient().GetChannelSendSequence(
 		context.Background(),
-		&crosschaintypes.QuerySendSequenceRequest{ChannelId: uint32(channelId)},
+		uint32(channelId),
 	)
-	if err != nil {
-		return 0, err
-	}
-	return res.Sequence, nil
 }
 
 // GetNextReceiveOracleSequence gets the next receive Oracle sequence from Greenfield
 func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
-	res, err := e.GetGnfdClient().CrosschainQueryClient.ReceiveSequence(
+	return e.GetGnfdClient().GetChannelReceiveSequence(
 		context.Background(),
-		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(relayercommon.OracleChannelId)},
+		uint32(relayercommon.OracleChannelId),
 	)
-	if err != nil {
-		return 0, err
-	}
-	return res.Sequence, nil
 }
 
 // GetNextReceiveSequenceForChannel gets the sequence specifically for bsc -> gnfd package's channel from Greenfield
 func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.ChannelId) (uint64, error) {
-	res, err := e.GetGnfdClient().ReceiveSequence(
+	return e.GetGnfdClient().GetChannelReceiveSequence(
 		context.Background(),
-		&crosschaintypes.QueryReceiveSequenceRequest{ChannelId: uint32(channelId)},
+		uint32(channelId),
 	)
-	if err != nil {
-		return 0, err
-	}
-	return res.Sequence, nil
 }
 
 func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, error) {
@@ -292,12 +273,16 @@ func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 }
 
 func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
-	return e.GetGnfdClient().GetNonce()
+	acc, err := e.GetGnfdClient().Client.GetAccount(context.Background(), e.address)
+	if err != nil {
+		return 0, err
+	}
+	return acc.GetSequence(), nil
 }
 
-func (e *GreenfieldExecutor) ClaimPackages(client *sdkclient.GreenfieldClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
-	msgClaim := oracletypes.NewMsgClaim(
-		e.address,
+func (e *GreenfieldExecutor) ClaimPackages(client *GnfdCompositeClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
+
+	txRes, err := client.Claims(context.Background(),
 		e.getSrcChainId(),
 		e.getDestChainId(),
 		oracleSeq,
@@ -305,27 +290,24 @@ func (e *GreenfieldExecutor) ClaimPackages(client *sdkclient.GreenfieldClient, p
 		payloadBts,
 		voteAddressSet,
 		aggregatedSig,
-	)
-	txRes, err := client.BroadcastTx(
-		[]sdk.Msg{msgClaim},
-		&sdktypes.TxOption{
+		gnfdsdktypes.TxOption{
 			NoSimulate: true,
 			GasLimit:   e.config.GreenfieldConfig.GasLimit,
-			FeeAmount:  sdk.NewCoins(sdk.NewCoin(sdktypes.Denom, sdk.NewInt(int64(e.config.GreenfieldConfig.FeeAmount)))),
+			FeeAmount:  sdk.NewCoins(sdk.NewCoin(gnfdsdktypes.Denom, sdk.NewInt(int64(e.config.GreenfieldConfig.FeeAmount)))),
 			Nonce:      nonce,
 		},
 	)
 	if err != nil {
 		return "", err
 	}
-	if txRes.TxResponse.Code != 0 {
-		return "", fmt.Errorf("claim error, code=%d, log=%s", txRes.TxResponse.Code, txRes.TxResponse.RawLog)
+	if txRes.Code != 0 {
+		return "", fmt.Errorf("claim error, code=%d, log=%s", txRes.Code, txRes.RawLog)
 	}
-	return txRes.TxResponse.TxHash, nil
+	return txRes.TxHash, nil
 }
 
 func (e *GreenfieldExecutor) GetInturnRelayer() (*oracletypes.QueryInturnRelayerResponse, error) {
-	return e.GetGnfdClient().OracleQueryClient.InturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
+	return e.GetGnfdClient().GetInturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
 }
 
 func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
@@ -333,7 +315,7 @@ func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, even
 	queryMap[VotePoolQueryParameterEventType] = int(eventType)
 	queryMap[VotePoolQueryParameterEventHash] = eventHash
 	var queryVote ctypes.ResultQueryVote
-	_, err := e.gnfdClients.GetClient().JsonRpcClient.Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
+	_, err := e.gnfdClients.GetClient().Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +325,7 @@ func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, even
 func (e *GreenfieldExecutor) BroadcastVote(v *votepool.Vote) error {
 	broadcastMap := make(map[string]interface{})
 	broadcastMap[VotePoolBroadcastParameterKey] = *v
-	_, err := e.gnfdClients.GetClient().JsonRpcClient.Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &ctypes.ResultBroadcastVote{})
+	_, err := e.gnfdClients.GetClient().Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &ctypes.ResultBroadcastVote{})
 	if err != nil {
 		return err
 	}

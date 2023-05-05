@@ -4,11 +4,11 @@ import (
 	"encoding/hex"
 	"reflect"
 
+	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/votepool"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/prysm/crypto/bls"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/votepool"
 	"github.com/willf/bitset"
 
 	"github.com/bnb-chain/greenfield-relayer/db/model"

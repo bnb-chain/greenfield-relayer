@@ -1,9 +1,9 @@
 package vote
 
 import (
+	"github.com/cometbft/cometbft/votepool"
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	blscmn "github.com/prysmaticlabs/prysm/crypto/bls/common"
-	"github.com/tendermint/tendermint/votepool"
 )
 
 type VoteSigner struct {
