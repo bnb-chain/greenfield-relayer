@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.40.45
 	github.com/bnb-chain/greenfield v0.0.12-0.20230505090117-ba4c104f6422
 	github.com/bnb-chain/greenfield-go-sdk v0.0.10-0.20230505105955-d1df5c67a5f8
+	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.37.1
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
 	github.com/ethereum/go-ethereum v1.10.26
@@ -45,7 +46,6 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect

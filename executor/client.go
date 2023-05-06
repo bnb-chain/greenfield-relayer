@@ -2,33 +2,21 @@ package executor
 
 import (
 	"context"
+	"sync"
+
+	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+
 	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client"
 	"github.com/bnb-chain/greenfield-go-sdk/types"
 	"github.com/bnb-chain/greenfield/sdk/client"
-	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	"sync"
 )
 
-type TendermintClient struct {
-	client.TendermintClient
-	*jsonrpcclient.Client // for interacting with votepool
-}
-
-func NewTendermintClient(provider string) TendermintClient {
-	rpcClient := client.NewTendermintClient(provider)
-	jsonRpc, err := jsonrpcclient.New(provider)
-	if err != nil {
-		panic(err)
-	}
-	return TendermintClient{
-		TendermintClient: rpcClient,
-		Client:           jsonRpc,
-	}
-}
+type JsonRpcClient = *jsonrpcclient.Client
 
 type GnfdCompositeClient struct {
 	sdkclient.Client
-	TendermintClient
+	client.TendermintClient
+	JsonRpcClient
 	Height int64
 }
 
@@ -39,14 +27,19 @@ type GnfdCompositeClients struct {
 func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Account) GnfdCompositeClients {
 	clients := make([]*GnfdCompositeClient, 0)
 	for i := 0; i < len(rpcAddrs); i++ {
-		tmClient := NewTendermintClient(rpcAddrs[i])
+
 		sdkClient, err := sdkclient.New(chainId, rpcAddrs[i], sdkclient.Option{DefaultAccount: account})
+		if err != nil {
+			panic(err)
+		}
+		jsonRpcClient, err := jsonrpcclient.New(rpcAddrs[i])
 		if err != nil {
 			panic(err)
 		}
 		clients = append(clients, &GnfdCompositeClient{
 			Client:           sdkClient,
-			TendermintClient: tmClient,
+			TendermintClient: client.NewTendermintClient(rpcAddrs[i]),
+			JsonRpcClient:    jsonRpcClient,
 		})
 	}
 	return GnfdCompositeClients{

@@ -9,18 +9,16 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
-	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
-	"github.com/cometbft/cometbft/rpc/client"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/votepool"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/spf13/viper"
 
+	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/logging"
@@ -34,7 +32,6 @@ type GreenfieldExecutor struct {
 	config        *config.Config
 	address       string
 	validators    []*tmtypes.Validator // used to cache validators
-	cdc           *codec.ProtoCodec
 	BlsPrivateKey []byte
 	BlsPubKey     []byte
 }
@@ -67,7 +64,6 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		gnfdClients:   clients,
 		address:       account.GetAddress().String(),
 		config:        cfg,
-		cdc:           Cdc(),
 		BlsPrivateKey: blsPrivKeyBts,
 		BlsPubKey:     blsPrivKey.PublicKey().Marshal(),
 	}
@@ -115,10 +111,6 @@ func getGreenfieldBlsPrivateKey(cfg *config.GreenfieldConfig) string {
 	return cfg.BlsPrivateKey
 }
 
-func (e *GreenfieldExecutor) getRpcClient() client.Client {
-	return e.gnfdClients.GetClient().TmClient
-}
-
 func (e *GreenfieldExecutor) GetGnfdClient() *GnfdCompositeClient {
 	return e.gnfdClients.GetClient()
 }
@@ -128,7 +120,7 @@ func (e *GreenfieldExecutor) GetBlockAndBlockResultAtHeight(height int64) (*tmty
 	if err != nil {
 		return nil, nil, err
 	}
-	blockResults, err := e.getRpcClient().BlockResults(context.Background(), &height)
+	blockResults, err := e.GetGnfdClient().TmClient.BlockResults(context.Background(), &height)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -140,11 +132,11 @@ func (e *GreenfieldExecutor) GetLatestBlockHeight() (latestHeight uint64, err er
 }
 
 func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, error) {
-	validators, err := e.getRpcClient().Validators(context.Background(), &height, nil, nil)
+	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), &height, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	commit, err := e.getRpcClient().Commit(context.Background(), &height)
+	commit, err := e.GetGnfdClient().TmClient.Commit(context.Background(), &height)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +176,7 @@ func (e *GreenfieldExecutor) getNextDeliverySequenceForChannel(channelID types.C
 	return sequence, nil
 }
 
-// GetNextSendSequenceForChannelWithRetry gets the next send sequence of specified channel from Greenfield
+// GetNextSendSequenceForChannelWithRetry gets the next send sequence of a specified channel from Greenfield
 func (e *GreenfieldExecutor) GetNextSendSequenceForChannelWithRetry(channelID types.ChannelId) (sequence uint64, err error) {
 	return sequence, retry.Do(func() error {
 		sequence, err = e.getNextSendSequenceForChannel(channelID)
@@ -221,7 +213,7 @@ func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.Ch
 }
 
 func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, error) {
-	validators, err := e.getRpcClient().Validators(context.Background(), nil, nil, nil)
+	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +222,7 @@ func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, erro
 
 func (e *GreenfieldExecutor) QueryValidatorsAtHeight(height uint64) ([]*tmtypes.Validator, error) {
 	h := int64(height)
-	validators, err := e.getRpcClient().Validators(context.Background(), &h, nil, nil)
+	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), &h, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +265,7 @@ func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 }
 
 func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
-	acc, err := e.GetGnfdClient().Client.GetAccount(context.Background(), e.address)
+	acc, err := e.GetGnfdClient().GetAccount(context.Background(), e.address)
 	if err != nil {
 		return 0, err
 	}

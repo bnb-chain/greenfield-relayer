@@ -3,6 +3,17 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"time"
+
+	_ "github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/spf13/viper"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	"github.com/bnb-chain/greenfield-relayer/assembler"
 	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
@@ -12,15 +23,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/metric"
 	"github.com/bnb-chain/greenfield-relayer/relayer"
 	"github.com/bnb-chain/greenfield-relayer/vote"
-	_ "github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/spf13/viper"
-	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-	"log"
-	"os"
-	"time"
 )
 
 type App struct {
