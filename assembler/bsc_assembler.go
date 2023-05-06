@@ -121,6 +121,8 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		return nil
 	}
 	logging.Logger.Debugf("start seq and end enq are %d and %d", startSeq, endSequence)
+
+	client := a.greenfieldExecutor.GetGnfdClient()
 	for i := startSeq; i <= uint64(endSequence); i++ {
 		pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(i)
 		if err != nil {
@@ -140,7 +142,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		if !isInturnRelyer && time.Now().Unix() < pkgTime+a.config.RelayConfig.BSCToGreenfieldInturnRelayerTimeout {
 			return nil
 		}
-		if err := a.processPkgs(a.greenfieldExecutor.GetGnfdClient(), pkgs, uint8(channelId), i, a.relayerNonce, isInturnRelyer); err != nil {
+		if err := a.processPkgs(client, pkgs, uint8(channelId), i, a.relayerNonce, isInturnRelyer); err != nil {
 			return err
 		}
 
