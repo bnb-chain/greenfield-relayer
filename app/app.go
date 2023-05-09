@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
