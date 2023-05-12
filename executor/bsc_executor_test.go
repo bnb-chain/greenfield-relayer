@@ -101,12 +101,3 @@ func TestGetRelayerInterval(t *testing.T) {
 	t.Log(r.Start)
 	t.Log(r.End)
 }
-
-func TestContractAddresses(t *testing.T) {
-	e := InitBSCExecutor()
-	govhub, _ := e.getGreenfieldLightClient().GOVHUB(nil)
-	t.Logf("gov hub address %s", govhub.String())
-	ca, _ := e.getGreenfieldLightClient().CROSSCHAIN(nil)
-	t.Logf("crosschain address %s", ca.String())
-
-}
