@@ -44,11 +44,6 @@ Go version above 1.19
       "http://127.0.0.1:26751",
       "http://127.0.0.1:26752"
     ],
-    "grpc_addrs": [
-      "localhost:9090",
-      "localhost:9091",
-      "localhost:9092"
-    ],
     "private_key": "your_private_key",
     "bls_private_key": "your_private_key",
     "chain_id": 18,     // greenfield oracle module defines this

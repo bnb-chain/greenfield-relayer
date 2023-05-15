@@ -12,7 +12,7 @@ import (
 )
 
 func InitBSCExecutor() *BSCExecutor {
-	cfg := InitTestConfig()
+	cfg := GetTestConfig()
 	return NewBSCExecutor(cfg)
 }
 

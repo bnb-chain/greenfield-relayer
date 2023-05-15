@@ -7,9 +7,6 @@
     "rpc_addrs": [
       "http://127.0.0.1:26750"
     ],
-    "grpc_addrs": [
-      "localhost:9090"
-    ],
     "private_key": "your_private_key",
     "bls_private_key": "your_private_key",
     "chain_id": 1,
