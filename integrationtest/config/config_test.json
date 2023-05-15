@@ -10,8 +10,8 @@
     "grpc_addrs": [
       "localhost:9090"
     ],
-    "private_key": "193cc3742af5821e7ffe07bb9f1595d3dd18bf15e0d8901292ea6e5315993561",
-    "bls_private_key": "5d3732d62b2dbaf9253c9b94aae611793c85a77969eb0e3f573b0f314e1ddd20",
+    "private_key": "your_private_key",
+    "bls_private_key": "your_private_key",
     "chain_id": 18,
     "start_height": 1,
     "number_of_blocks_for_finality": 0,
@@ -27,7 +27,7 @@
     "rpc_addrs": [
       "http://127.0.0.1:8502"
     ],
-    "private_key": "193cc3742af5821e7ffe07bb9f1595d3dd18bf15e0d8901292ea6e5315993561",
+    "private_key": "your_private_key",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
     "number_of_blocks_for_finality": 2,
@@ -42,8 +42,8 @@
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
     "bsc_cross_chain_package_event_name": "CrossChainPackage",
     "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",
-    "cross_chain_contract_addr": "0x2E4E7C9728F4bF2620b359a7D79c88184262d0bf",
-    "greenfield_light_client_contract_addr": "0xE9E6013dcffc09b092C6C97f659ffC13Dcad98F0"
+    "cross_chain_contract_addr": "0x1F82F1f3d7a10538920CA1856481f1b5aB782158",
+    "greenfield_light_client_contract_addr": "0x37aac91D8029DAA9a06AA24178CEd28Fcf378fBf"
   },
   "vote_pool_config": {
     "broadcast_interval_in_millisecond": 1000,
