@@ -51,7 +51,7 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 	if err != nil {
 		panic(err)
 	}
-	account, err := sdktypes.NewAccountFromPrivateKey("test", privKey)
+	account, err := sdktypes.NewAccountFromPrivateKey("relayer", privKey)
 	if err != nil {
 		panic(err)
 	}
