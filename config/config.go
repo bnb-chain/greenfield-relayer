@@ -33,7 +33,6 @@ type GreenfieldConfig struct {
 	AWSSecretName             string   `json:"aws_secret_name"`
 	AWSBlsSecretName          string   `json:"aws_bls_secret_name"`
 	RPCAddrs                  []string `json:"rpc_addrs"`
-	GRPCAddrs                 []string `json:"grpc_addrs"`
 	PrivateKey                string   `json:"private_key"`
 	BlsPrivateKey             string   `json:"bls_private_key"`
 	ChainId                   uint64   `json:"chain_id"`

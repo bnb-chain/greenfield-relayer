@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/tendermint/tendermint/votepool"
+	"github.com/cometbft/cometbft/votepool"
 
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 )

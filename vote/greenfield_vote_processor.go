@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/cometbft/cometbft/votepool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/tendermint/tendermint/votepool"
 	"gorm.io/gorm"
 
 	rcommon "github.com/bnb-chain/greenfield-relayer/common"

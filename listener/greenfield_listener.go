@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	ctypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -252,57 +252,57 @@ func (l *GreenfieldListener) sync(nextHeight uint64, validatorsHash string) erro
 func constructRelayTx(event abci.Event, height uint64) (*model.GreenfieldRelayTransaction, error) {
 	relayTx := model.GreenfieldRelayTransaction{}
 	for _, attr := range event.Attributes {
-		switch string(attr.Key) {
+		switch attr.Key {
 		case "channel_id":
-			chanelId, err := strconv.ParseInt(string(attr.Value), 10, 8)
+			chanelId, err := strconv.ParseInt(attr.Value, 10, 8)
 			if err != nil {
 				return nil, err
 			}
 			relayTx.ChannelId = uint8(chanelId)
 		case "src_chain_id":
-			srcChainId, err := strconv.ParseInt(string(attr.Value), 10, 32)
+			srcChainId, err := strconv.ParseInt(attr.Value, 10, 32)
 			if err != nil {
 				return nil, err
 			}
 			relayTx.SrcChainId = uint32(srcChainId)
 		case "dest_chain_id":
-			destChainId, err := strconv.ParseInt(string(attr.Value), 10, 32)
+			destChainId, err := strconv.ParseInt(attr.Value, 10, 32)
 			if err != nil {
 				return nil, err
 			}
 			relayTx.DestChainId = uint32(destChainId)
 		case "package_load":
-			payloadStr, err := strconv.Unquote(string(attr.Value))
+			payloadStr, err := strconv.Unquote(attr.Value)
 			if err != nil {
 				return nil, err
 			}
 			relayTx.PayLoad = payloadStr
 		case "sequence":
-			seq, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
+			seq, err := util.QuotedStrToIntWithBitSize(attr.Value, 64)
 			if err != nil {
 				return nil, err
 			}
 			relayTx.Sequence = seq
 		case "package_type":
-			packType, err := strconv.ParseInt(string(attr.Value), 10, 32)
+			packType, err := strconv.ParseInt(attr.Value, 10, 32)
 			if err != nil {
 				return nil, err
 			}
 			relayTx.PackageType = uint32(packType)
 		case "timestamp":
-			ts, err := util.QuotedStrToIntWithBitSize(string(attr.Value), 64)
+			ts, err := util.QuotedStrToIntWithBitSize(attr.Value, 64)
 			if err != nil {
 				return nil, err
 			}
 			relayTx.TxTime = int64(ts)
 		case "relayer_fee":
-			feeStr, err := strconv.Unquote(string(attr.Value))
+			feeStr, err := strconv.Unquote(attr.Value)
 			if err != nil {
 				return nil, err
 			}
 			relayTx.RelayerFee = feeStr
 		case "ack_relayer_fee":
-			feeStr, err := strconv.Unquote(string(attr.Value))
+			feeStr, err := strconv.Unquote(attr.Value)
 			if err != nil {
 				return nil, err
 			}
