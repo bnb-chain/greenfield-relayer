@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"sync"
 
 	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
@@ -30,11 +31,13 @@ func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Ac
 
 		sdkClient, err := sdkclient.New(chainId, rpcAddrs[i], sdkclient.Option{DefaultAccount: account})
 		if err != nil {
-			panic(err)
+			logging.Logger.Errorf("rpc node %s is not available", rpcAddrs[i])
+			continue
 		}
 		jsonRpcClient, err := jsonrpcclient.New(rpcAddrs[i])
 		if err != nil {
-			panic(err)
+			logging.Logger.Errorf("rpc node %s is not available", rpcAddrs[i])
+			continue
 		}
 		clients = append(clients, &GnfdCompositeClient{
 			Client:           sdkClient,
