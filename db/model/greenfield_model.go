@@ -28,6 +28,7 @@ type GreenfieldRelayTransaction struct {
 	PayLoad       string `gorm:"type:text"`
 	RelayerFee    string `gorm:"NOT NULL"`
 	AckRelayerFee string `gorm:"NOT NULL"`
+	TxHash        string
 	ClaimedTxHash string
 	Status        db.TxStatus `gorm:"NOT NULL;index:idx_greenfield_relay_transaction_channel_seq_status;idx_greenfield_relay_transaction_height_status"`
 	TxTime        int64       `gorm:"NOT NULL"`
