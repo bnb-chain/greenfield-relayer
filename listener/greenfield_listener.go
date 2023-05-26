@@ -68,7 +68,7 @@ func (l *GreenfieldListener) poll() error {
 	waitCh := make(chan struct{})
 
 	go func() {
-		go l.monitorTxEvents(uint64(block.Height), blockResults.TxsResults, relayTxCh, errChan, wg)
+		go l.monitorTxEvents(block, blockResults.TxsResults, relayTxCh, errChan, wg)
 		go l.monitorEndBlockEvents(uint64(block.Height), blockResults.EndBlockEvents, relayTxCh, errChan, wg)
 		go l.monitorValidators(block, errChan, wg)
 		wg.Wait()
@@ -110,13 +110,15 @@ func (l *GreenfieldListener) getBlockAndBlockResult(height uint64) (*ctypes.Resu
 	return blockResults, block, nil
 }
 
-func (l *GreenfieldListener) monitorTxEvents(height uint64, txRes []*abci.ResponseDeliverTx, txChan chan *model.GreenfieldRelayTransaction, errChan chan error, wg *sync.WaitGroup) {
+func (l *GreenfieldListener) monitorTxEvents(block *tmtypes.Block, txRes []*abci.ResponseDeliverTx, txChan chan *model.GreenfieldRelayTransaction, errChan chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
 	// Cross chain Transfer events
-	for _, tx := range txRes {
+	for idx, tx := range txRes {
 		for _, event := range tx.Events {
 			if event.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
-				relayTx, err := constructRelayTx(event, height)
+				relayTx, err := constructRelayTx(event, uint64(block.Height))
+				relayTx.TxHash = hex.EncodeToString(block.Txs[idx].Hash())
+
 				if err != nil {
 					errChan <- err
 					return
