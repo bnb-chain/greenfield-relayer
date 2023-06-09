@@ -599,6 +599,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "inTurnRelayerValidityPeriod",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "bytes",
@@ -609,6 +622,25 @@
       "name": "initialize",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "isRelayer",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -738,6 +770,40 @@
         }
       ],
       "name": "verifyPackage",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "eventTime",
+          "type": "uint64"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_payload",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_blsSignature",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_validatorSetBitMap",
+          "type": "uint256"
+        }
+      ],
+      "name": "verifyRelayerAndPackage",
       "outputs": [
         {
           "internalType": "bool",
