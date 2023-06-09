@@ -65,7 +65,7 @@ func (cfg *GreenfieldConfig) Validate() {
 		panic("privateKey of Greenfield should not be empty")
 	}
 	if cfg.GasLimit <= 0 || cfg.FeeAmount <= 0 {
-		panic(fmt.Sprintf("gas_limit and fee_amount should be larger than 0"))
+		panic("gas_limit and fee_amount should be larger than 0")
 	}
 }
 
@@ -121,16 +121,16 @@ type RelayConfig struct {
 
 func (cfg *RelayConfig) Validate() {
 	if cfg.BSCToGreenfieldInturnRelayerTimeout <= 0 {
-		panic(fmt.Sprintf("bsc_to_greenfield_inturn_relayer_timeout should be larger than 0"))
+		panic("bsc_to_greenfield_inturn_relayer_timeout should be larger than 0")
 	}
 	if cfg.GreenfieldToBSCInturnRelayerTimeout <= 0 {
-		panic(fmt.Sprintf("greenfield_to_bsc_inturn_relayer_timeout should be larger than 0"))
+		panic("greenfield_to_bsc_inturn_relayer_timeout should be larger than 0")
 	}
 	if cfg.GreenfieldSequenceUpdateLatency <= 0 {
-		panic(fmt.Sprintf("greenfield_sequence_update_latency should be larger than 0"))
+		panic("greenfield_sequence_update_latency should be larger than 0")
 	}
 	if cfg.BSCSequenceUpdateLatency <= 0 {
-		panic(fmt.Sprintf("bsc_sequence_update_latency should be larger than 0"))
+		panic("bsc_sequence_update_latency should be larger than 0")
 	}
 }
 
@@ -142,13 +142,13 @@ type VotePoolConfig struct {
 
 func (cfg *VotePoolConfig) Validate() {
 	if cfg.BroadcastIntervalInMillisecond <= 0 {
-		panic(fmt.Sprintf("broadcast_interval_in_millisecond should be larger than 0"))
+		panic("broadcast_interval_in_millisecond should be larger than 0")
 	}
 	if cfg.VotesBatchMaxSizePerInterval <= 0 {
-		panic(fmt.Sprintf("votes_batch_max_size_per_interval should be larger than 0"))
+		panic("votes_batch_max_size_per_interval should be larger than 0")
 	}
 	if cfg.QueryIntervalInMillisecond <= 0 {
-		panic(fmt.Sprintf("query_interval_in_millisecond should be larger than 0"))
+		panic("query_interval_in_millisecond should be larger than 0")
 	}
 }
 
