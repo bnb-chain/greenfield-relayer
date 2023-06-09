@@ -39,8 +39,8 @@ type GreenfieldConfig struct {
 	StartHeight               uint64   `json:"start_height"`
 	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
 	MonitorChannelList        []uint8  `json:"monitor_channel_list"`
-	GasLimit                  uint64   `json:"gas_limit"`
-	FeeAmount                 uint64   `json:"fee_amount"`
+	GasLimit                  int64    `json:"gas_limit"`
+	FeeAmount                 int64    `json:"fee_amount"`
 	ChainIdString             string   `json:"chain_id_string"`
 }
 
@@ -63,6 +63,9 @@ func (cfg *GreenfieldConfig) Validate() {
 	}
 	if cfg.KeyType != KeyTypeAWSPrivateKey && cfg.PrivateKey == "" {
 		panic("privateKey of Greenfield should not be empty")
+	}
+	if cfg.GasLimit <= 0 || cfg.FeeAmount <= 0 {
+		panic(fmt.Sprintf("gas_limit and fee_amount should be larger than 0"))
 	}
 }
 
@@ -116,10 +119,37 @@ type RelayConfig struct {
 	GreenfieldLightClientContractAddr   string `json:"greenfield_light_client_contract_addr"`
 }
 
+func (cfg *RelayConfig) Validate() {
+	if cfg.BSCToGreenfieldInturnRelayerTimeout <= 0 {
+		panic(fmt.Sprintf("bsc_to_greenfield_inturn_relayer_timeout should be larger than 0"))
+	}
+	if cfg.GreenfieldToBSCInturnRelayerTimeout <= 0 {
+		panic(fmt.Sprintf("greenfield_to_bsc_inturn_relayer_timeout should be larger than 0"))
+	}
+	if cfg.GreenfieldSequenceUpdateLatency <= 0 {
+		panic(fmt.Sprintf("greenfield_sequence_update_latency should be larger than 0"))
+	}
+	if cfg.BSCSequenceUpdateLatency <= 0 {
+		panic(fmt.Sprintf("bsc_sequence_update_latency should be larger than 0"))
+	}
+}
+
 type VotePoolConfig struct {
 	BroadcastIntervalInMillisecond int64 `json:"broadcast_interval_in_millisecond"`
 	VotesBatchMaxSizePerInterval   int64 `json:"votes_batch_max_size_per_interval"`
 	QueryIntervalInMillisecond     int64 `json:"query_interval_in_millisecond"`
+}
+
+func (cfg *VotePoolConfig) Validate() {
+	if cfg.BroadcastIntervalInMillisecond <= 0 {
+		panic(fmt.Sprintf("broadcast_interval_in_millisecond should be larger than 0"))
+	}
+	if cfg.VotesBatchMaxSizePerInterval <= 0 {
+		panic(fmt.Sprintf("votes_batch_max_size_per_interval should be larger than 0"))
+	}
+	if cfg.QueryIntervalInMillisecond <= 0 {
+		panic(fmt.Sprintf("query_interval_in_millisecond should be larger than 0"))
+	}
 }
 
 type LogConfig struct {
@@ -170,14 +200,20 @@ func (cfg *DBConfig) Validate() {
 		panic(fmt.Sprintf("only %s and %s supported", DBDialectMysql, DBDialectSqlite3))
 	}
 	if cfg.Dialect == DBDialectMysql && (cfg.Username == "" || cfg.Url == "") {
-		panic("db config is not correct")
+		panic("db config is not correct, missing username and/or url")
+	}
+	if cfg.MaxIdleConns == 0 || cfg.MaxOpenConns == 0 {
+		panic("db connections is not correct")
 	}
 }
 
 func (cfg *Config) Validate() {
 	cfg.AdminConfig.Validate()
 	cfg.LogConfig.Validate()
+	cfg.GreenfieldConfig.Validate()
 	cfg.BSCConfig.Validate()
+	cfg.RelayConfig.Validate()
+	cfg.VotePoolConfig.Validate()
 	cfg.DBConfig.Validate()
 }
 
@@ -186,6 +222,7 @@ func ParseConfigFromJson(content string) *Config {
 	if err := json.Unmarshal([]byte(content), &config); err != nil {
 		panic(err)
 	}
+	config.Validate()
 	return &config
 }
 
@@ -199,8 +236,6 @@ func ParseConfigFromFile(filePath string) *Config {
 	if err := json.Unmarshal(bz, &config); err != nil {
 		panic(err)
 	}
-
 	config.Validate()
-
 	return &config
 }
