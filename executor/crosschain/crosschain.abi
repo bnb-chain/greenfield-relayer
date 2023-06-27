@@ -180,25 +180,6 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "refundAddress",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "refundAmount",
-          "type": "uint256"
-        }
-      ],
-      "name": "RefundFeeTooLow",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
           "name": "executor",
           "type": "address"
         }
@@ -824,19 +805,6 @@
       "name": "handlePackage",
       "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "inTurnRelayerValidityPeriod",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
       "type": "function"
     },
     {

@@ -341,7 +341,7 @@ func (p *GreenfieldVoteProcessor) aggregatePayloadForTx(tx *model.GreenfieldRela
 	// relayerfee big.Int
 	relayerFeeBts, err := p.txFeeToBytes(tx.RelayerFee)
 	if err != nil {
-		logging.Logger.Errorf("failed to convert tx relayerFee %s from string to big.Int", tx.AckRelayerFee)
+		logging.Logger.Errorf("failed to convert tx relayerFee %s from string to big.Int", tx.RelayerFee)
 		return nil, err
 	}
 	aggregatedPayload = append(aggregatedPayload, relayerFeeBts...)

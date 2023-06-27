@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	_ "encoding/json"
 	"fmt"
 	"time"
 
@@ -284,8 +283,8 @@ func (e *GreenfieldExecutor) ClaimPackages(client *GnfdCompositeClient, payloadB
 		aggregatedSig,
 		gnfdsdktypes.TxOption{
 			NoSimulate: true,
-			GasLimit:   e.config.GreenfieldConfig.GasLimit,
-			FeeAmount:  sdk.NewCoins(sdk.NewCoin(gnfdsdktypes.Denom, sdk.NewInt(int64(e.config.GreenfieldConfig.FeeAmount)))),
+			GasLimit:   uint64(e.config.GreenfieldConfig.GasLimit),
+			FeeAmount:  sdk.NewCoins(sdk.NewCoin(gnfdsdktypes.Denom, sdk.NewInt(e.config.GreenfieldConfig.FeeAmount))),
 			Nonce:      nonce,
 		},
 	)
