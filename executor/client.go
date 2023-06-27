@@ -2,13 +2,13 @@ package executor
 
 import (
 	"context"
-	"github.com/bnb-chain/greenfield-relayer/logging"
 	"sync"
 
 	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 
 	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client"
 	"github.com/bnb-chain/greenfield-go-sdk/types"
+	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield/sdk/client"
 )
 
