@@ -143,6 +143,23 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 			return nil
 		}
 		if err := a.processPkgs(client, pkgs, uint8(channelId), i, a.relayerNonce, isInturnRelyer); err != nil {
+			// There is a slight possibility that multiple batches of transactions are broadcast to the different Nodes with the same block height.
+			// say there are Node1, Node2 and cur Height is H, batch1(tx1, tx2, tx3) is broadcast on Node1, then batch2(tx4, tx5)
+			// broadcast on Node2 will fail due to inconsistency of nonce and channel sequence.
+			// Even the inturn relayer can resume crosschain delivery at next block(Because realyer would retry batch2 at block H+1). But it would
+			// waste plenty of gas. In that case, pasue the relayer 1 block. calibrate inturn relayer nonce and sequence
+			if isInturnRelyer {
+				newNonce, nonceErr := a.greenfieldExecutor.GetNonceOnNextBlock()
+				if nonceErr != nil {
+					return nonceErr
+				}
+				a.relayerNonce = newNonce
+				newNextDeliveryOracleSeq, nonceErr := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+				if nonceErr != nil {
+					return nonceErr
+				}
+				a.inturnRelayerSequenceStatus.NextDeliverySeq = newNextDeliveryOracleSeq
+			}
 			return err
 		}
 

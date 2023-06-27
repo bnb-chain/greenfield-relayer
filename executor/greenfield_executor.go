@@ -271,8 +271,15 @@ func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
 	return acc.GetSequence(), nil
 }
 
-func (e *GreenfieldExecutor) ClaimPackages(client *GnfdCompositeClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
+func (e *GreenfieldExecutor) GetNonceOnNextBlock() (uint64, error) {
+	err := e.GetGnfdClient().WaitForNextBlock(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	return e.GetNonce()
+}
 
+func (e *GreenfieldExecutor) ClaimPackages(client *GnfdCompositeClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
 	txRes, err := client.Claims(context.Background(),
 		e.getSrcChainId(),
 		e.getDestChainId(),
