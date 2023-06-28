@@ -23,6 +23,7 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	gnfdsdktypes "github.com/bnb-chain/greenfield/sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type GreenfieldExecutor struct {
@@ -271,8 +272,15 @@ func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
 	return acc.GetSequence(), nil
 }
 
-func (e *GreenfieldExecutor) ClaimPackages(client *GnfdCompositeClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
+func (e *GreenfieldExecutor) GetNonceOnNextBlock() (uint64, error) {
+	err := e.GetGnfdClient().WaitForNextBlock(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	return e.GetNonce()
+}
 
+func (e *GreenfieldExecutor) ClaimPackages(client *GnfdCompositeClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
 	txRes, err := client.Claims(context.Background(),
 		e.getSrcChainId(),
 		e.getDestChainId(),
@@ -291,6 +299,15 @@ func (e *GreenfieldExecutor) ClaimPackages(client *GnfdCompositeClient, payloadB
 	if err != nil {
 		return "", err
 	}
+
+	if txRes.Codespace == oracletypes.ModuleName && txRes.Code == oracletypes.ErrInvalidReceiveSequence.ABCICode() {
+		return "", oracletypes.ErrInvalidReceiveSequence
+	}
+
+	if txRes.Codespace == sdkErrors.RootCodespace && txRes.Code == sdkErrors.ErrWrongSequence.ABCICode() {
+		return "", sdkErrors.ErrWrongSequence
+	}
+
 	if txRes.Code != 0 {
 		return "", fmt.Errorf("claim error, code=%d, log=%s", txRes.Code, txRes.RawLog)
 	}
