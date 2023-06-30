@@ -31,12 +31,12 @@ func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Ac
 
 		sdkClient, err := sdkclient.New(chainId, rpcAddrs[i], sdkclient.Option{DefaultAccount: account})
 		if err != nil {
-			logging.Logger.Errorf("rpc node %s is not available", rpcAddrs[i])
+			logging.Logger.Errorf("rpc node %s is not available, err: %v", rpcAddrs[i], err)
 			continue
 		}
 		jsonRpcClient, err := jsonrpcclient.New(rpcAddrs[i])
 		if err != nil {
-			logging.Logger.Errorf("rpc node %s is not available", rpcAddrs[i])
+			logging.Logger.Errorf("jsonrpc node %s is not available, err: %v", rpcAddrs[i], err)
 			continue
 		}
 		clients = append(clients, &GnfdCompositeClient{
