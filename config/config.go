@@ -84,26 +84,26 @@ type BSCConfig struct {
 
 func (cfg *BSCConfig) Validate() {
 	if len(cfg.RPCAddrs) == 0 {
-		panic("provider address of Binance Smart Chain should not be empty")
+		panic("provider address of BNB Smart Chain should not be empty")
 	}
 
 	if cfg.KeyType == "" {
-		panic("key_type Binance Smart Chain should not be empty")
+		panic("key_type BNB Smart Chain should not be empty")
 	}
 	if cfg.KeyType != KeyTypeLocalPrivateKey && cfg.KeyType != KeyTypeAWSPrivateKey {
-		panic(fmt.Sprintf("key_type of Binance Smart Chain only supports %s and %s", KeyTypeLocalPrivateKey, KeyTypeAWSPrivateKey))
+		panic(fmt.Sprintf("key_type of BNB Smart Chain only supports %s and %s", KeyTypeLocalPrivateKey, KeyTypeAWSPrivateKey))
 	}
 	if cfg.KeyType == KeyTypeAWSPrivateKey && cfg.AWSRegion == "" {
-		panic("aws_region of Binance Smart Chain should not be empty")
+		panic("aws_region of BNB Smart Chain should not be empty")
 	}
 	if cfg.KeyType == KeyTypeAWSPrivateKey && cfg.AWSSecretName == "" {
-		panic("aws_secret_name of Binance Smart Chain should not be empty")
+		panic("aws_secret_name of BNB Smart Chain should not be empty")
 	}
 	if cfg.KeyType != KeyTypeAWSPrivateKey && cfg.PrivateKey == "" {
-		panic("privateKey of Binance Smart Chain should not be empty")
+		panic("privateKey of BNB Smart Chain should not be empty")
 	}
 	if cfg.GasLimit == 0 {
-		panic("gas_limit of Binance Smart Chain should be larger than 0")
+		panic("gas_limit of BNB Smart Chain should be larger than 0")
 	}
 }
 
