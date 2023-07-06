@@ -217,7 +217,7 @@ func (p *GreenfieldVoteProcessor) prepareEnoughValidVotesForTx(tx *model.Greenfi
 	if err != nil {
 		return err
 	}
-	if count > int64(len(validators))*2/3 {
+	if votesEnough(int(count), len(validators)) {
 		return nil
 	}
 
@@ -291,7 +291,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 
 		validVotesTotalCount += validVotesCountPerReq
 
-		if validVotesTotalCount > len(validators)*2/3 {
+		if votesEnough(validVotesTotalCount, len(validators)) {
 			return nil
 		}
 

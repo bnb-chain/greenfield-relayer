@@ -258,7 +258,7 @@ func (p *BSCVoteProcessor) prepareEnoughValidVotesForPackages(channelId types.Ch
 	if err != nil {
 		return err
 	}
-	if count > int64(len(validators))*2/3 {
+	if votesEnough(int(count), len(validators)) {
 		return nil
 	}
 	// Query from votePool until there are more than 2/3 votes
@@ -330,7 +330,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 
 		validVotesTotalCnt += validVotesCntPerReq
 
-		if validVotesTotalCnt > len(validators)*2/3 {
+		if votesEnough(int(validVotesTotalCnt), len(validators)) {
 			return nil
 		}
 		if !isLocalVoteIncluded {
