@@ -169,10 +169,11 @@ replace (
 	cosmossdk.io/api => github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230425074444-eb5869b05fe9
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230425074444-eb5869b05fe9
 
+	github.com/bnb-chain/greenfield => github.com/alexgao001/greenfield v0.0.0-20230714091943-5a7109c428ea
+	github.com/bnb-chain/greenfield-go-sdk => github.com/alexgao001/greenfield-go-sdk v0.0.0-20230714092150-d2357f9fde5c
+	github.com/cometbft/cometbft => github.com/alexgao001/greenfield-cometbft v0.0.0-20230714091711-f411f589d7bf
+
 	// replace
-	github.com/bnb-chain/greenfield => github.com/alexgao001/greenfield v0.0.0-20230714083057-e552a1087d25
-	github.com/bnb-chain/greenfield-go-sdk => github.com/alexgao001/greenfield-go-sdk v0.0.0-20230714083317-f1d687ca35fb
-	github.com/cometbft/cometbft => github.com/alexgao001/greenfield-cometbft v0.0.0-20230714052225-80cb642bf8dc
 	github.com/cometbft/cometbft-db => github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1
 	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v0.2.3-alpha.3
 	github.com/cosmos/iavl => github.com/bnb-chain/greenfield-iavl v0.20.1-alpha.1
