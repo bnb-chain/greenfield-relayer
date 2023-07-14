@@ -9,14 +9,12 @@ import (
 	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client"
 	"github.com/bnb-chain/greenfield-go-sdk/types"
 	"github.com/bnb-chain/greenfield-relayer/logging"
-	"github.com/bnb-chain/greenfield/sdk/client"
 )
 
 type JsonRpcClient = *jsonrpcclient.Client
 
 type GnfdCompositeClient struct {
 	sdkclient.Client
-	client.TendermintClient
 	JsonRpcClient
 	Height int64
 }
@@ -29,7 +27,7 @@ func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Ac
 	clients := make([]*GnfdCompositeClient, 0)
 	for i := 0; i < len(rpcAddrs); i++ {
 
-		sdkClient, err := sdkclient.New(chainId, rpcAddrs[i], sdkclient.Option{DefaultAccount: account})
+		sdkClient, err := sdkclient.New(chainId, rpcAddrs[i], sdkclient.Option{DefaultAccount: account, UseWebSocketConn: true})
 		if err != nil {
 			logging.Logger.Errorf("rpc node %s is not available", rpcAddrs[i])
 			continue
@@ -40,9 +38,8 @@ func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Ac
 			continue
 		}
 		clients = append(clients, &GnfdCompositeClient{
-			Client:           sdkClient,
-			TendermintClient: client.NewTendermintClient(rpcAddrs[i]),
-			JsonRpcClient:    jsonRpcClient,
+			Client:        sdkClient,
+			JsonRpcClient: jsonRpcClient,
 		})
 	}
 	return GnfdCompositeClients{
@@ -79,7 +76,7 @@ func (gc *GnfdCompositeClients) GetClient() *GnfdCompositeClient {
 
 func getClientBlockHeight(clientChan chan *GnfdCompositeClient, wg *sync.WaitGroup, client *GnfdCompositeClient) {
 	defer wg.Done()
-	status, err := client.TmClient.Status(context.Background())
+	status, err := client.GetStatus(context.Background())
 	if err != nil {
 		return
 	}

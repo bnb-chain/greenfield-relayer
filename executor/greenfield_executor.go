@@ -116,15 +116,15 @@ func (e *GreenfieldExecutor) GetGnfdClient() *GnfdCompositeClient {
 }
 
 func (e *GreenfieldExecutor) GetBlockAndBlockResultAtHeight(height int64) (*tmtypes.Block, *ctypes.ResultBlockResults, error) {
-	block, err := e.GetGnfdClient().TmClient.Block(context.Background(), &height)
+	block, err := e.GetGnfdClient().GetBlockByHeight(context.Background(), height)
 	if err != nil {
 		return nil, nil, err
 	}
-	blockResults, err := e.GetGnfdClient().TmClient.BlockResults(context.Background(), &height)
+	blockResults, err := e.GetGnfdClient().GetBlockResultByHeight(context.Background(), height)
 	if err != nil {
 		return nil, nil, err
 	}
-	return block.Block, blockResults, nil
+	return block, blockResults, nil
 }
 
 func (e *GreenfieldExecutor) GetLatestBlockHeight() (latestHeight uint64, err error) {
@@ -132,15 +132,15 @@ func (e *GreenfieldExecutor) GetLatestBlockHeight() (latestHeight uint64, err er
 }
 
 func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, error) {
-	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), &height, nil, nil)
+	validators, err := e.GetGnfdClient().GetValidatorsByHeight(context.Background(), height)
 	if err != nil {
 		return nil, err
 	}
-	commit, err := e.GetGnfdClient().TmClient.Commit(context.Background(), &height)
+	commit, err := e.GetGnfdClient().GetCommit(context.Background(), height)
 	if err != nil {
 		return nil, err
 	}
-	validatorSet := tmtypes.NewValidatorSet(validators.Validators)
+	validatorSet := tmtypes.NewValidatorSet(validators)
 	if err != nil {
 		return nil, err
 	}
@@ -213,20 +213,15 @@ func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.Ch
 }
 
 func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, error) {
-	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), nil, nil, nil)
+	_, validators, err := e.GetGnfdClient().GetValidatorSet(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	return validators.Validators, nil
+	return validators, nil
 }
 
 func (e *GreenfieldExecutor) QueryValidatorsAtHeight(height uint64) ([]*tmtypes.Validator, error) {
-	h := int64(height)
-	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), &h, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	return validators.Validators, nil
+	return e.GetGnfdClient().GetValidatorsByHeight(context.Background(), int64(height))
 }
 
 func (e *GreenfieldExecutor) QueryCachedLatestValidators() ([]*tmtypes.Validator, error) {
