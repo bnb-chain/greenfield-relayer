@@ -2,8 +2,11 @@ package assembler
 
 import (
 	"bytes"
+	"cosmossdk.io/errors"
 	"encoding/hex"
 	"fmt"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
@@ -143,9 +146,28 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 			return nil
 		}
 		if err := a.processPkgs(client, pkgs, uint8(channelId), i, a.relayerNonce, isInturnRelyer); err != nil {
+			if !isInturnRelyer {
+				return err
+			}
+			// There is a slight possibility that multiple batches of transactions are broadcast to the different Nodes with the same block height.
+			// say there are Node1, Node2 and cur Height is H, batch1(tx1, tx2, tx3) is broadcast on Node1, then batch2(tx4, tx5)
+			// broadcast on Node2 will fail due to inconsistency of nonce and channel sequence.
+			// Even the inturn relayer can resume crosschain delivery at next block(Because realyer would retry batch2 at block H+1). But it would
+			// waste plenty of gas. In that case, pasue the relayer 1 block. calibrate inturn relayer nonce and sequence
+			if errors.IsOf(err, sdkErrors.ErrWrongSequence, oracletypes.ErrInvalidReceiveSequence) {
+				newNonce, nonceErr := a.greenfieldExecutor.GetNonceOnNextBlock()
+				if nonceErr != nil {
+					return nonceErr
+				}
+				a.relayerNonce = newNonce
+				newNextDeliveryOracleSeq, seqErr := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+				if seqErr != nil {
+					return seqErr
+				}
+				a.inturnRelayerSequenceStatus.NextDeliverySeq = newNextDeliveryOracleSeq
+			}
 			return err
 		}
-
 		logging.Logger.Infof("relayed packages with oracle sequence %d ", i)
 		a.relayerNonce++
 	}
