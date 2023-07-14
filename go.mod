@@ -6,8 +6,8 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.40.45
-	github.com/bnb-chain/greenfield v0.2.3-0.20230711112213-f847ad5053fd
-	github.com/bnb-chain/greenfield-go-sdk v0.2.3-alpha.2.0.20230711140408-70d38d2b9611
+	github.com/bnb-chain/greenfield v0.2.3-alpha.5
+	github.com/bnb-chain/greenfield-go-sdk v0.2.3-alpha.4
 	github.com/cometbft/cometbft v0.37.1
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/ethereum/go-ethereum v1.10.26
