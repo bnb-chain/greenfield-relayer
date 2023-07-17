@@ -85,17 +85,17 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 
 		// in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
 		// transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
-		isFilled, err := p.isTxSequenceFilled(tx)
-		if err != nil {
-			return err
-		}
-		if isFilled {
-			if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
-				return err
-			}
-			logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
-			continue
-		}
+		//isFilled, err := p.isTxSequenceFilled(tx)
+		//if err != nil {
+		//	return err
+		//}
+		//if isFilled {
+		//	if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
+		//		return err
+		//	}
+		//	logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
+		//	continue
+		//}
 
 		aggregatedPayload, err := p.aggregatePayloadForTx(tx)
 		if err != nil {
@@ -108,9 +108,11 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 			logging.Logger.Debugf("broadcasting vote with c %d and seq %d", tx.ChannelId, tx.Sequence)
 
 			err = p.greenfieldExecutor.BroadcastVote(v)
+			fmt.Printf("broadcast vote ...")
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d, err=%s", tx.ChannelId, tx.Sequence, err.Error())
 			}
+
 			return nil
 		}, retry.Context(context.Background()), rcommon.RtyAttem, rcommon.RtyDelay, rcommon.RtyErr); err != nil {
 			return err
@@ -177,19 +179,19 @@ func (p *GreenfieldVoteProcessor) collectVotes() error {
 
 func (p *GreenfieldVoteProcessor) collectVoteForTx(tx *model.GreenfieldRelayTransaction, errChan chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
-	isFilled, err := p.isTxSequenceFilled(tx)
+	_, err := p.isTxSequenceFilled(tx)
 	if err != nil {
 		errChan <- err
 		return
 	}
-	if isFilled {
-		if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
-			errChan <- err
-			return
-		}
-		logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
-		return
-	}
+	//if isFilled {
+	//	if err = p.daoManager.GreenfieldDao.UpdateTransactionStatus(tx.Id, db.Delivered); err != nil {
+	//		errChan <- err
+	//		return
+	//	}
+	//	logging.Logger.Infof("sequence %d for channel %d has already been filled ", tx.Sequence, tx.ChannelId)
+	//	return
+	//}
 
 	if err = p.prepareEnoughValidVotesForTx(tx); err != nil {
 		errChan <- err

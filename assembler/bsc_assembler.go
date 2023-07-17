@@ -174,7 +174,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	return nil
 }
 
-func (a *BSCAssembler) processPkgs(client *executor.GnfdCompositeClient, pkgs []*model.BscRelayPackage, channelId uint8, sequence uint64, nonce uint64, isInturnRelyer bool) error {
+func (a *BSCAssembler) processPkgs(client *executor.GreenfieldClient, pkgs []*model.BscRelayPackage, channelId uint8, sequence uint64, nonce uint64, isInturnRelyer bool) error {
 	// Get votes result for a packages, which are already validated and qualified to aggregate sig
 
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(channelId, sequence)

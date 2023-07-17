@@ -4,42 +4,30 @@ import (
 	"context"
 	"sync"
 
-	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-
 	sdkclient "github.com/bnb-chain/greenfield-go-sdk/client"
 	"github.com/bnb-chain/greenfield-go-sdk/types"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 )
 
-type JsonRpcClient = *jsonrpcclient.Client
-
-type GnfdCompositeClient struct {
+type GreenfieldClient struct {
 	sdkclient.Client
-	JsonRpcClient
 	Height int64
 }
 
 type GnfdCompositeClients struct {
-	clients []*GnfdCompositeClient
+	clients []*GreenfieldClient
 }
 
 func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Account) GnfdCompositeClients {
-	clients := make([]*GnfdCompositeClient, 0)
+	clients := make([]*GreenfieldClient, 0)
 	for i := 0; i < len(rpcAddrs); i++ {
-
 		sdkClient, err := sdkclient.New(chainId, rpcAddrs[i], sdkclient.Option{DefaultAccount: account, UseWebSocketConn: true})
 		if err != nil {
 			logging.Logger.Errorf("rpc node %s is not available", rpcAddrs[i])
 			continue
 		}
-		jsonRpcClient, err := jsonrpcclient.New(rpcAddrs[i])
-		if err != nil {
-			logging.Logger.Errorf("rpc node %s is not available", rpcAddrs[i])
-			continue
-		}
-		clients = append(clients, &GnfdCompositeClient{
-			Client:        sdkClient,
-			JsonRpcClient: jsonRpcClient,
+		clients = append(clients, &GreenfieldClient{
+			Client: sdkClient,
 		})
 	}
 	return GnfdCompositeClients{
@@ -47,10 +35,10 @@ func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Ac
 	}
 }
 
-func (gc *GnfdCompositeClients) GetClient() *GnfdCompositeClient {
+func (gc *GnfdCompositeClients) GetClient() *GreenfieldClient {
 	wg := new(sync.WaitGroup)
 	wg.Add(len(gc.clients))
-	clientCh := make(chan *GnfdCompositeClient)
+	clientCh := make(chan *GreenfieldClient)
 	waitCh := make(chan struct{})
 	go func() {
 		for _, c := range gc.clients {
@@ -74,7 +62,7 @@ func (gc *GnfdCompositeClients) GetClient() *GnfdCompositeClient {
 	}
 }
 
-func getClientBlockHeight(clientChan chan *GnfdCompositeClient, wg *sync.WaitGroup, client *GnfdCompositeClient) {
+func getClientBlockHeight(clientChan chan *GreenfieldClient, wg *sync.WaitGroup, client *GreenfieldClient) {
 	defer wg.Done()
 	status, err := client.GetStatus(context.Background())
 	if err != nil {

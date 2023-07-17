@@ -111,7 +111,7 @@ func getGreenfieldBlsPrivateKey(cfg *config.GreenfieldConfig) string {
 	return cfg.BlsPrivateKey
 }
 
-func (e *GreenfieldExecutor) GetGnfdClient() *GnfdCompositeClient {
+func (e *GreenfieldExecutor) GetGnfdClient() *GreenfieldClient {
 	return e.gnfdClients.GetClient()
 }
 
@@ -275,7 +275,7 @@ func (e *GreenfieldExecutor) GetNonceOnNextBlock() (uint64, error) {
 	return e.GetNonce()
 }
 
-func (e *GreenfieldExecutor) ClaimPackages(client *GnfdCompositeClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
+func (e *GreenfieldExecutor) ClaimPackages(client *GreenfieldClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
 	txRes, err := client.Claims(context.Background(),
 		e.getSrcChainId(),
 		e.getDestChainId(),
@@ -314,25 +314,15 @@ func (e *GreenfieldExecutor) GetInturnRelayer() (*oracletypes.QueryInturnRelayer
 }
 
 func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
-	queryMap := make(map[string]interface{})
-	queryMap[VotePoolQueryParameterEventType] = int(eventType)
-	queryMap[VotePoolQueryParameterEventHash] = eventHash
-	var queryVote ctypes.ResultQueryVote
-	_, err := e.gnfdClients.GetClient().Call(context.Background(), VotePoolQueryMethodName, queryMap, &queryVote)
+	votes, err := e.gnfdClients.GetClient().QueryVote(context.Background(), int(eventType), eventHash)
 	if err != nil {
 		return nil, err
 	}
-	return queryVote.Votes, nil
+	return votes.Votes, nil
 }
 
 func (e *GreenfieldExecutor) BroadcastVote(v *votepool.Vote) error {
-	broadcastMap := make(map[string]interface{})
-	broadcastMap[VotePoolBroadcastParameterKey] = *v
-	_, err := e.gnfdClients.GetClient().Call(context.Background(), VotePoolBroadcastMethodName, broadcastMap, &ctypes.ResultBroadcastVote{})
-	if err != nil {
-		return err
-	}
-	return nil
+	return e.gnfdClients.GetClient().BroadcastVote(context.Background(), *v)
 }
 
 func (e *GreenfieldExecutor) getDestChainId() uint32 {
