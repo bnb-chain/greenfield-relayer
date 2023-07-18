@@ -59,6 +59,7 @@ func NewGreenfieldExecutor(cfg *config.Config) *GreenfieldExecutor {
 		cfg.GreenfieldConfig.RPCAddrs,
 		cfg.GreenfieldConfig.ChainIdString,
 		account,
+		cfg.GreenfieldConfig.UseWebsocket,
 	)
 	return &GreenfieldExecutor{
 		gnfdClients:   clients,
@@ -116,11 +117,13 @@ func (e *GreenfieldExecutor) GetGnfdClient() *GreenfieldClient {
 }
 
 func (e *GreenfieldExecutor) GetBlockAndBlockResultAtHeight(height int64) (*tmtypes.Block, *ctypes.ResultBlockResults, error) {
-	block, err := e.GetGnfdClient().GetBlockByHeight(context.Background(), height)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	block, err := e.GetGnfdClient().GetBlockByHeight(ctx, height)
 	if err != nil {
 		return nil, nil, err
 	}
-	blockResults, err := e.GetGnfdClient().GetBlockResultByHeight(context.Background(), height)
+	blockResults, err := e.GetGnfdClient().GetBlockResultByHeight(ctx, height)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -132,11 +135,13 @@ func (e *GreenfieldExecutor) GetLatestBlockHeight() (latestHeight uint64, err er
 }
 
 func (e *GreenfieldExecutor) QueryTendermintLightBlock(height int64) ([]byte, error) {
-	validators, err := e.GetGnfdClient().GetValidatorsByHeight(context.Background(), height)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	validators, err := e.GetGnfdClient().GetValidatorsByHeight(ctx, height)
 	if err != nil {
 		return nil, err
 	}
-	commit, err := e.GetGnfdClient().GetCommit(context.Background(), height)
+	commit, err := e.GetGnfdClient().GetCommit(ctx, height)
 	if err != nil {
 		return nil, err
 	}
@@ -190,30 +195,38 @@ func (e *GreenfieldExecutor) GetNextSendSequenceForChannelWithRetry(channelID ty
 }
 
 func (e *GreenfieldExecutor) getNextSendSequenceForChannel(channelId types.ChannelId) (uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
 	return e.GetGnfdClient().GetChannelSendSequence(
-		context.Background(),
+		ctx,
 		uint32(channelId),
 	)
 }
 
 // GetNextReceiveOracleSequence gets the next receive Oracle sequence from Greenfield
 func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
 	return e.GetGnfdClient().GetChannelReceiveSequence(
-		context.Background(),
+		ctx,
 		uint32(relayercommon.OracleChannelId),
 	)
 }
 
 // GetNextReceiveSequenceForChannel gets the sequence specifically for bsc -> gnfd package's channel from Greenfield
 func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.ChannelId) (uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
 	return e.GetGnfdClient().GetChannelReceiveSequence(
-		context.Background(),
+		ctx,
 		uint32(channelId),
 	)
 }
 
 func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, error) {
-	_, validators, err := e.GetGnfdClient().GetValidatorSet(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	_, validators, err := e.GetGnfdClient().GetValidatorSet(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +234,9 @@ func (e *GreenfieldExecutor) queryLatestValidators() ([]*tmtypes.Validator, erro
 }
 
 func (e *GreenfieldExecutor) QueryValidatorsAtHeight(height uint64) ([]*tmtypes.Validator, error) {
-	return e.GetGnfdClient().GetValidatorsByHeight(context.Background(), int64(height))
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	return e.GetGnfdClient().GetValidatorsByHeight(ctx, int64(height))
 }
 
 func (e *GreenfieldExecutor) QueryCachedLatestValidators() ([]*tmtypes.Validator, error) {
@@ -260,7 +275,9 @@ func (e *GreenfieldExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 }
 
 func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
-	acc, err := e.GetGnfdClient().GetAccount(context.Background(), e.address)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	acc, err := e.GetGnfdClient().GetAccount(ctx, e.address)
 	if err != nil {
 		return 0, err
 	}
@@ -268,7 +285,9 @@ func (e *GreenfieldExecutor) GetNonce() (uint64, error) {
 }
 
 func (e *GreenfieldExecutor) GetNonceOnNextBlock() (uint64, error) {
-	err := e.GetGnfdClient().WaitForNextBlock(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	err := e.GetGnfdClient().WaitForNextBlock(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -276,7 +295,9 @@ func (e *GreenfieldExecutor) GetNonceOnNextBlock() (uint64, error) {
 }
 
 func (e *GreenfieldExecutor) ClaimPackages(client *GreenfieldClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
-	txRes, err := client.Claims(context.Background(),
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	txRes, err := client.Claims(ctx,
 		e.getSrcChainId(),
 		e.getDestChainId(),
 		oracleSeq,
@@ -310,11 +331,15 @@ func (e *GreenfieldExecutor) ClaimPackages(client *GreenfieldClient, payloadBts 
 }
 
 func (e *GreenfieldExecutor) GetInturnRelayer() (*oracletypes.QueryInturnRelayerResponse, error) {
-	return e.GetGnfdClient().GetInturnRelayer(context.Background(), &oracletypes.QueryInturnRelayerRequest{})
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	return e.GetGnfdClient().GetInturnRelayer(ctx, &oracletypes.QueryInturnRelayerRequest{})
 }
 
 func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {
-	votes, err := e.gnfdClients.GetClient().QueryVote(context.Background(), int(eventType), eventHash)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	votes, err := e.gnfdClients.GetClient().QueryVote(ctx, int(eventType), eventHash)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +347,9 @@ func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, even
 }
 
 func (e *GreenfieldExecutor) BroadcastVote(v *votepool.Vote) error {
-	return e.gnfdClients.GetClient().BroadcastVote(context.Background(), *v)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	return e.gnfdClients.GetClient().BroadcastVote(ctx, *v)
 }
 
 func (e *GreenfieldExecutor) getDestChainId() uint32 {

@@ -18,10 +18,10 @@ type GnfdCompositeClients struct {
 	clients []*GreenfieldClient
 }
 
-func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Account) GnfdCompositeClients {
+func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Account, useWebsocket bool) GnfdCompositeClients {
 	clients := make([]*GreenfieldClient, 0)
 	for i := 0; i < len(rpcAddrs); i++ {
-		sdkClient, err := sdkclient.New(chainId, rpcAddrs[i], sdkclient.Option{DefaultAccount: account, UseWebSocketConn: true})
+		sdkClient, err := sdkclient.New(chainId, rpcAddrs[i], sdkclient.Option{DefaultAccount: account, UseWebSocketConn: useWebsocket})
 		if err != nil {
 			logging.Logger.Errorf("rpc node %s is not available", rpcAddrs[i])
 			continue

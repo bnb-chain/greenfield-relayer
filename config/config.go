@@ -42,6 +42,7 @@ type GreenfieldConfig struct {
 	GasLimit                  int64    `json:"gas_limit"`
 	FeeAmount                 int64    `json:"fee_amount"`
 	ChainIdString             string   `json:"chain_id_string"`
+	UseWebsocket              bool     `json:"use_websocket"`
 }
 
 func (cfg *GreenfieldConfig) Validate() {
