@@ -69,7 +69,7 @@ func (l *BSCListener) poll() error {
 			nextHeight = latestPolledBlockHeight + 1
 		}
 
-		latestBlockHeight, err := l.bscExecutor.GetLatestBlockHeightWithRetry()
+		latestBlockHeight, err := l.bscExecutor.GetLatestFinalizedBlockHeightWithRetry()
 		if err != nil {
 			logging.Logger.Errorf("failed to get latest blockHeight, error: %s", err.Error())
 			return err

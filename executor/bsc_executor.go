@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/rpc"
 	"math/big"
 	"sync"
 	"time"
@@ -165,13 +166,17 @@ func (e *BSCExecutor) SwitchClient() {
 	logging.Logger.Infof("switch to provider: %s", e.config.BSCConfig.RPCAddrs[e.clientIdx])
 }
 
-func (e *BSCExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
-	return e.getLatestBlockHeightWithRetry(e.GetRpcClient())
+func (e *BSCExecutor) GetLatestFinalizedBlockHeightWithRetry() (latestHeight uint64, err error) {
+	return e.getLatestBlockHeightWithRetry(e.GetRpcClient(), true)
 }
 
-func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (latestHeight uint64, err error) {
+func (e *BSCExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
+	return e.getLatestBlockHeightWithRetry(e.GetRpcClient(), false)
+}
+
+func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client, finalized bool) (latestHeight uint64, err error) {
 	return latestHeight, retry.Do(func() error {
-		latestHeight, err = e.getLatestBlockHeight(client)
+		latestHeight, err = e.getLatestBlockHeight(client, finalized)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -181,10 +186,14 @@ func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (l
 		}))
 }
 
-func (e *BSCExecutor) getLatestBlockHeight(client *ethclient.Client) (uint64, error) {
+func (e *BSCExecutor) getLatestBlockHeight(client *ethclient.Client, finalized bool) (uint64, error) {
 	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-	block, err := client.BlockByNumber(ctxWithTimeout, nil)
+	var blockNum *big.Int
+	if finalized {
+		blockNum = big.NewInt(int64(rpc.FinalizedBlockNumber))
+	}
+	block, err := client.BlockByNumber(ctxWithTimeout, blockNum)
 	if err != nil {
 		return 0, err
 	}
@@ -202,7 +211,7 @@ func (e *BSCExecutor) UpdateClientLoop() {
 				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
 					e.config.AlertConfig.TelegramChatId, msg)
 			}
-			height, err := e.getLatestBlockHeight(bscClient.rpcClient)
+			height, err := e.getLatestBlockHeight(bscClient.rpcClient, true)
 			if err != nil {
 				logging.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue

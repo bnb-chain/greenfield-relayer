@@ -48,7 +48,6 @@ Go version above 1.19
     "bls_private_key": "your_private_key",
     "chain_id": 18,     // greenfield oracle module defines this
     "start_height": 1,
-    "number_of_blocks_for_finality": 0,
     "monitor_channel_list": [1,2,3],
     "gas_limit": 30000,
     "fee_amount": 150000000000000,
@@ -73,8 +72,8 @@ Go version above 1.19
 2. Config crosschain and greenfield light client smart contracts addresses, others can keep default value. 
 ```
 "relay_config": {
-    "bsc_to_greenfield_inturn_relayer_timeout": 90,
-    "greenfield_to_bsc_inturn_relayer_timeout": 15,
+    "bsc_to_greenfield_inturn_relayer_timeout": 40,
+    "greenfield_to_bsc_inturn_relayer_timeout": 45,
     "greenfield_sequence_update_latency": 8,
     "bsc_sequence_update_latency": 12,
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",

@@ -7,17 +7,13 @@
     "rpc_addrs": [
       "http://127.0.0.1:26750"
     ],
-    "grpc_addrs": [
-      "localhost:9090"
-    ],
     "private_key": "your_private_key",
     "bls_private_key": "your_private_key",
     "chain_id": 18,
     "start_height": 1,
-    "number_of_blocks_for_finality": 0,
-    "monitor_channel_list": [1,2,3],
-    "gas_limit": 30000,
-    "fee_amount": 150000000000000,
+    "monitor_channel_list": [1,2,3,4,5,6],
+    "gas_limit": 1000,
+    "fee_amount": 5000000000000,
     "chain_id_string": "greenfield_9000-121"
   },
   "bsc_config": {
@@ -30,12 +26,11 @@
     "private_key": "your_private_key",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
-    "number_of_blocks_for_finality": 2,
     "start_height": 0,
     "chain_id": 714
   },
   "relay_config": {
-    "bsc_to_greenfield_inturn_relayer_timeout": 90,
+    "bsc_to_greenfield_inturn_relayer_timeout": 40,
     "greenfield_to_bsc_inturn_relayer_timeout": 45,
     "greenfield_sequence_update_latency": 8,
     "bsc_sequence_update_latency": 12,

@@ -17,6 +17,9 @@ func InitBSCExecutor() *BSCExecutor {
 }
 
 func TestGetBlockHeight(t *testing.T) {
+	finalizedHeight, err := InitBSCExecutor().GetLatestFinalizedBlockHeightWithRetry()
+	require.NoError(t, err)
+	t.Log(finalizedHeight)
 	height, err := InitBSCExecutor().GetLatestBlockHeightWithRetry()
 	require.NoError(t, err)
 	t.Log(height)
@@ -36,7 +39,7 @@ func TestGetNextSendOracleSequence(t *testing.T) {
 
 func TestGetBlockHeader(t *testing.T) {
 	e := InitBSCExecutor()
-	height, err := e.GetLatestBlockHeightWithRetry()
+	height, err := e.GetLatestFinalizedBlockHeightWithRetry()
 	require.NoError(t, err)
 	header, err := e.GetBlockHeaderAtHeight(height)
 	require.NoError(t, err)
@@ -78,7 +81,7 @@ func TestSyncTendermintHeader(t *testing.T) {
 func TestGetLogsFromHeader(t *testing.T) {
 	e := InitBSCExecutor()
 	client := e.GetRpcClient()
-	height, err := e.GetLatestBlockHeightWithRetry()
+	height, err := e.GetLatestFinalizedBlockHeightWithRetry()
 	require.NoError(t, err)
 	header, err := e.GetBlockHeaderAtHeight(height)
 	require.NoError(t, err)

@@ -19,4 +19,6 @@ const (
 	VotePoolQueryMethodName         = "query_vote"
 	VotePoolQueryParameterEventType = "event_type"
 	VotePoolQueryParameterEventHash = "event_hash"
+
+	FinalizedBlockNumber = int64(-3)
 )
