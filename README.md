@@ -48,9 +48,9 @@ Go version above 1.19
     "bls_private_key": "your_private_key",
     "chain_id": 18,     // greenfield oracle module defines this
     "start_height": 1,
-    "monitor_channel_list": [1,2,3],
-    "gas_limit": 30000,
-    "fee_amount": 150000000000000,
+    "monitor_channel_list": [1,2,3,4,5,6],
+    "gas_limit": 1000,
+    "fee_amount": 5000000000000,
     "chain_id_string": "greenfield_9000-121"
   }, 
   "bsc_config": {
@@ -63,7 +63,6 @@ Go version above 1.19
     "private_key": "your_private_key",
     "gas_limit": 4700000,
     "gas_price": 20000000000,
-    "number_of_blocks_for_finality": 10,
     "start_height": 0,
     "chain_id": 714
   }
@@ -107,7 +106,7 @@ example: use mysql
     "aws_secret_name": "",
     "password": "pass",
     "username": "root",
-    "url": "/local-greenfield-relayer1?charset=utf8&parseTime=True&loc=Local",
+    "url": "/greenfield-relayer?charset=utf8&parseTime=True&loc=Local",
     "max_idle_conns": 10,
     "max_open_conns": 100
 }
@@ -122,7 +121,7 @@ example: use mysql
     "aws_secret_name": "",
     "password": "",
     "username": "",
-    "url": "local-greenfield-relayer0.db",
+    "url": "greenfield-relayer.db",
     "max_idle_conns": 10,
     "max_open_conns": 100
   },
@@ -173,7 +172,7 @@ CREATE SCHEMA IF NOT EXISTS `greenfield-relayer` DEFAULT CHARACTER SET utf8 COLL
 ### Fill in config file
 
 Get relayer private key and bls private key in Hex format, fill them in the config/config.json alone with Greenfield, 
-BSC network gRPC/RPC addresses, chain id and BSC smart contracts addresses.
+BSC network RPC addresses, chain id and BSC smart contracts addresses.
 
 ```shell script
 $ ./build/greenfield-relayer --config-type [local or aws] --config-path config_file_path  --aws-region [aws region or omit] --aws-secret-key [aws secret key for config or omit]

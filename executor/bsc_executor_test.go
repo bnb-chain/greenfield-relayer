@@ -17,12 +17,12 @@ func InitBSCExecutor() *BSCExecutor {
 }
 
 func TestGetBlockHeight(t *testing.T) {
-	finalizedHeight, err := InitBSCExecutor().GetLatestFinalizedBlockHeightWithRetry()
-	require.NoError(t, err)
-	t.Log(finalizedHeight)
 	height, err := InitBSCExecutor().GetLatestBlockHeightWithRetry()
 	require.NoError(t, err)
 	t.Log(height)
+	finalizedHeight, err := InitBSCExecutor().GetLatestFinalizedBlockHeightWithRetry()
+	require.NoError(t, err)
+	t.Log(finalizedHeight)
 }
 
 func TestGetNextReceiveSequence(t *testing.T) {
