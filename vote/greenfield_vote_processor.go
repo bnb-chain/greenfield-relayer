@@ -83,8 +83,8 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 	// for every tx, we are going to sign it and broadcast vote of it.
 	for _, tx := range txs {
 
-		// in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
-		// transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
+		//in case there is chance that reprocessing same transactions(caused by DB data loss) or processing outdated
+		//transactions from block( when relayer need to catch up others), this ensures relayer will skip to next transaction directly
 		isFilled, err := p.isTxSequenceFilled(tx)
 		if err != nil {
 			return err
@@ -111,6 +111,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d, err=%s", tx.ChannelId, tx.Sequence, err.Error())
 			}
+
 			return nil
 		}, retry.Context(context.Background()), rcommon.RtyAttem, rcommon.RtyDelay, rcommon.RtyErr); err != nil {
 			return err

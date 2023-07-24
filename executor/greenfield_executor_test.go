@@ -45,9 +45,9 @@ func TestGetInturnRelayer(t *testing.T) {
 
 func TestGetLatestValidators(t *testing.T) {
 	e := GnfdExecutor()
-	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), nil, nil, nil)
+	_, validators, err := e.GetGnfdClient().GetValidatorSet(context.Background())
 	assert.NoError(t, err)
-	for i, validator := range validators.Validators {
+	for i, validator := range validators {
 		t.Logf("validator %d", i)
 		t.Logf("validator pubkey %s", hexutil.Encode(validator.PubKey.Bytes()))
 		t.Logf("validator votingpower %d", validator.VotingPower)
@@ -58,13 +58,12 @@ func TestGetLatestValidators(t *testing.T) {
 
 func TestGetConsensusStatus(t *testing.T) {
 	e := GnfdExecutor()
-	h := int64(1)
-	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), &h, nil, nil)
+	validators, err := e.GetGnfdClient().GetValidatorsByHeight(context.Background(), 1)
 	assert.NoError(t, err)
 	b, _, err := e.GetBlockAndBlockResultAtHeight(1)
 	assert.NoError(t, err)
 	t.Logf("NexValidator Hash: %s", hex.EncodeToString(b.NextValidatorsHash))
-	for i, validator := range validators.Validators {
+	for i, validator := range validators {
 		t.Logf("validator %d", i)
 		t.Logf("validator pubkey %s", hexutil.Encode(validator.PubKey.Bytes()))
 		t.Logf("validator votingpower %d", validator.VotingPower)
@@ -77,22 +76,20 @@ func TestGetConsensusStatus(t *testing.T) {
 }
 
 func getCysString(e *GreenfieldExecutor) (string, error) {
-	height := int64(1)
-	// get init consensus state
-	validators, err := e.GetGnfdClient().TmClient.Validators(context.Background(), &height, nil, nil)
+	validators, err := e.GetGnfdClient().GetValidatorsByHeight(context.Background(), 1)
 	if err != nil {
 		return "", err
 	}
-	block, err := e.GetGnfdClient().TmClient.Block(context.Background(), &height)
+	block, err := e.GetGnfdClient().GetBlockByHeight(context.Background(), 1)
 	if err != nil {
 		return "", err
 	}
 	cs := ConsensusState{
-		ChainID:              block.Block.ChainID,
-		Height:               uint64(block.Block.Height),
-		NextValidatorSetHash: block.Block.NextValidatorsHash,
+		ChainID:              block.ChainID,
+		Height:               uint64(block.Height),
+		NextValidatorSetHash: block.NextValidatorsHash,
 		ValidatorSet: &cbfttypes.ValidatorSet{
-			Validators: validators.Validators,
+			Validators: validators,
 		},
 	}
 	csBytes, err := cs.encodeConsensusState()

@@ -229,9 +229,9 @@ func (e *BSCExecutor) UpdateClientLoop() {
 }
 
 func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, error) {
-	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-	header, err := e.GetRpcClient().HeaderByNumber(ctxWithTimeout, big.NewInt(int64(height)))
+	header, err := e.GetRpcClient().HeaderByNumber(ctx, big.NewInt(int64(height)))
 	if err != nil {
 		return nil, err
 	}
@@ -252,9 +252,11 @@ func (e *BSCExecutor) GetNextReceiveSequenceForChannelWithRetry(channelID rtypes
 }
 
 func (e *BSCExecutor) getNextReceiveSequenceForChannel(channelID rtypes.ChannelId) (sequence uint64, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
 	callOpts := &bind.CallOpts{
 		Pending: true,
-		Context: context.Background(),
+		Context: ctx,
 	}
 	return e.getCrossChainClient().ChannelReceiveSequenceMap(callOpts, uint8(channelID))
 }
@@ -273,9 +275,11 @@ func (e *BSCExecutor) GetNextSendSequenceForChannelWithRetry() (sequence uint64,
 }
 
 func (e *BSCExecutor) getNextSendOracleSequence() (sequence uint64, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
 	callOpts := &bind.CallOpts{
 		Pending: true,
-		Context: context.Background(),
+		Context: ctx,
 	}
 	sentOracleSeq, err := e.getCrossChainClient().OracleSequence(callOpts)
 	if err != nil {
@@ -324,7 +328,9 @@ func (e *BSCExecutor) getGasPrice() *big.Int {
 }
 
 func (e *BSCExecutor) SyncTendermintLightBlock(height uint64) (common.Hash, error) {
-	nonce, err := e.GetRpcClient().PendingNonceAt(context.Background(), e.txSender)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	nonce, err := e.GetRpcClient().PendingNonceAt(ctx, e.txSender)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -372,7 +378,9 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte,
 }
 
 func (e *BSCExecutor) GetNonce() (uint64, error) {
-	return e.GetRpcClient().PendingNonceAt(context.Background(), e.txSender)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	return e.GetRpcClient().PendingNonceAt(ctx, e.txSender)
 }
 
 func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte, nonce uint64) (common.Hash, error) {
@@ -437,9 +445,11 @@ func (e *BSCExecutor) UpdateCachedLatestValidatorsLoop() {
 }
 
 func (e *BSCExecutor) GetLightClientLatestHeight() (uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
 	callOpts := &bind.CallOpts{
 		Pending: true,
-		Context: context.Background(),
+		Context: ctx,
 	}
 	latestHeight, err := e.getGreenfieldLightClient().GnfdHeight(callOpts)
 	if err != nil {
@@ -461,9 +471,11 @@ func (e *BSCExecutor) GetValidatorsBlsPublicKey() ([]string, error) {
 }
 
 func (e *BSCExecutor) GetInturnRelayer() (*rtypes.InturnRelayer, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
 	callOpts := &bind.CallOpts{
 		Pending: true,
-		Context: context.Background(),
+		Context: ctx,
 	}
 	r, err := e.getGreenfieldLightClient().GetInturnRelayer(callOpts)
 	if err != nil {
