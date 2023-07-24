@@ -117,12 +117,11 @@ func (l *GreenfieldListener) monitorTxEvents(block *tmtypes.Block, txRes []*abci
 		for _, event := range tx.Events {
 			if event.Type == l.config.RelayConfig.GreenfieldEventTypeCrossChain {
 				relayTx, err := constructRelayTx(event, uint64(block.Height))
-				relayTx.TxHash = hex.EncodeToString(block.Txs[idx].Hash())
-
 				if err != nil {
 					errChan <- err
 					return
 				}
+				relayTx.TxHash = hex.EncodeToString(block.Txs[idx].Hash())
 				txChan <- relayTx
 			}
 		}
