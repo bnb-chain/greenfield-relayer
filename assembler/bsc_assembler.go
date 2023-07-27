@@ -70,7 +70,11 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	isInturnRelyer := bytes.Equal(a.blsPubKey, inturnRelayerPubkey)
 
 	a.metricService.SetGnfdInturnRelayerMetrics(isInturnRelyer, inturnRelayer.RelayInterval.Start, inturnRelayer.RelayInterval.End)
-	var startSeq uint64
+
+	var (
+		startSeq    uint64
+		endSequence int64
+	)
 
 	if isInturnRelyer {
 		if !a.inturnRelayerSequenceStatus.HasRetrieved {
@@ -115,13 +119,20 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if err != nil {
 		return err
 	}
-
-	endSequence, err := a.daoManager.BSCDao.GetLatestOracleSequenceByStatus(db.AllVoted)
-	if err != nil {
-		return err
-	}
-	if endSequence == -1 {
-		return nil
+	if isInturnRelyer {
+		endSequence, err = a.daoManager.BSCDao.GetLatestOracleSequenceByStatus(db.AllVoted)
+		if err != nil {
+			return err
+		}
+		if endSequence == -1 {
+			return nil
+		}
+	} else {
+		endSeq, err := a.bscExecutor.GetNextSendSequenceForChannelWithRetry()
+		if err != nil {
+			return err
+		}
+		endSequence = int64(endSeq)
 	}
 	logging.Logger.Debugf("start seq and end enq are %d and %d", startSeq, endSequence)
 
@@ -176,7 +187,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 
 func (a *BSCAssembler) processPkgs(client *executor.GreenfieldClient, pkgs []*model.BscRelayPackage, channelId uint8, sequence uint64, nonce uint64, isInturnRelyer bool) error {
 	// Get votes result for a packages, which are already validated and qualified to aggregate sig
-
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(channelId, sequence)
 	if err != nil {
 		logging.Logger.Errorf("failed to get votes result for packages for channel %d and sequence %d", channelId, sequence)
