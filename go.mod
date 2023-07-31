@@ -7,7 +7,7 @@ require (
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.40.45
 	github.com/bnb-chain/greenfield v0.2.3
-	github.com/bnb-chain/greenfield-go-sdk v0.2.3-alpha.3.0.20230724054656-5614440e16f1
+	github.com/bnb-chain/greenfield-go-sdk v0.2.3
 	github.com/cometbft/cometbft v0.37.1
 	github.com/cosmos/cosmos-sdk v0.47.3
 	github.com/ethereum/go-ethereum v1.10.26
