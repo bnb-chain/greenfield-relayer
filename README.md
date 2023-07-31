@@ -27,7 +27,7 @@ The relayer mainly consists of 3 components: Listener, Vote Processor and Transa
 
 ### Requirement
 
-Go version above 1.19
+Go version above 1.20
 
 ## Deployment 
 
