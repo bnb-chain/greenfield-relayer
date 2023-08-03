@@ -79,7 +79,7 @@ func (l *BSCListener) poll() error {
 			return nil
 		}
 	}
-	if err = l.monitorCrossChainPkgAt(nextHeight, latestPolledBlock); err != nil {
+	if err = l.monitorCrossChainPkgAt(nextHeight); err != nil {
 		logging.Logger.Errorf("encounter error when monitor cross-chain packages at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
@@ -90,7 +90,7 @@ func (l *BSCListener) getLatestPolledBlock() (*model.BscBlock, error) {
 	return l.DaoManager.BSCDao.GetLatestBlock()
 }
 
-func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBlock *model.BscBlock) error {
+func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64) error {
 	nextHeightBlockHeader, err := l.bscExecutor.GetBlockHeaderAtHeight(nextHeight)
 	if err != nil {
 		return err

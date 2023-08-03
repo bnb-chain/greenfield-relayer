@@ -41,6 +41,7 @@ type GreenfieldConfig struct {
 	GasLimit           int64    `json:"gas_limit"`
 	FeeAmount          int64    `json:"fee_amount"`
 	ChainIdString      string   `json:"chain_id_string"`
+	UseWebsocket       bool     `json:"use_websocket"`
 }
 
 func (cfg *GreenfieldConfig) Validate() {
@@ -69,15 +70,16 @@ func (cfg *GreenfieldConfig) Validate() {
 }
 
 type BSCConfig struct {
-	KeyType       string   `json:"key_type"`
-	AWSRegion     string   `json:"aws_region"`
-	AWSSecretName string   `json:"aws_secret_name"`
-	RPCAddrs      []string `json:"rpc_addrs"`
-	PrivateKey    string   `json:"private_key"`
-	GasLimit      uint64   `json:"gas_limit"`
-	GasPrice      uint64   `json:"gas_price"`
-	StartHeight   uint64   `json:"start_height"`
-	ChainId       uint64   `json:"chain_id"`
+	KeyType                   string   `json:"key_type"`
+	AWSRegion                 string   `json:"aws_region"`
+	AWSSecretName             string   `json:"aws_secret_name"`
+	RPCAddrs                  []string `json:"rpc_addrs"`
+	PrivateKey                string   `json:"private_key"`
+	GasLimit                  uint64   `json:"gas_limit"`
+	GasPrice                  uint64   `json:"gas_price"`
+	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
+	StartHeight               uint64   `json:"start_height"`
+	ChainId                   uint64   `json:"chain_id"`
 }
 
 func (cfg *BSCConfig) Validate() {

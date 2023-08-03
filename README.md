@@ -27,7 +27,7 @@ The relayer mainly consists of 3 components: Listener, Vote Processor and Transa
 
 ### Requirement
 
-Go version above 1.19
+Go version above 1.20
 
 ## Deployment 
 
@@ -51,7 +51,8 @@ Go version above 1.19
     "monitor_channel_list": [1,2,3,4,5,6],
     "gas_limit": 1000,
     "fee_amount": 5000000000000,
-    "chain_id_string": "greenfield_9000-121"
+    "chain_id_string": "greenfield_9000-121",
+    "use_websocket": true
   }, 
   "bsc_config": {
     "key_type": "local_private_key",

@@ -97,7 +97,10 @@ func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId typ
 }
 
 func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *types.InturnRelayer, isInturnRelyer bool) error {
-	var startSeq uint64
+	var (
+		startSeq    uint64
+		endSequence int64
+	)
 
 	if isInturnRelyer {
 		if !a.inturnRelayerSequenceStatusMap[channelId].HasRetrieved {
@@ -136,13 +139,22 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		return err
 	}
 
-	endSequence, err := a.daoManager.GreenfieldDao.GetLatestSequenceByChannelIdAndStatus(channelId, db.AllVoted)
-	if err != nil {
-		return err
+	if isInturnRelyer {
+		endSequence, err = a.daoManager.GreenfieldDao.GetLatestSequenceByChannelIdAndStatus(channelId, db.AllVoted)
+		if err != nil {
+			return err
+		}
+		if endSequence == -1 {
+			return nil
+		}
+	} else {
+		endSeq, err := a.greenfieldExecutor.GetNextSendSequenceForChannelWithRetry(channelId)
+		if err != nil {
+			return err
+		}
+		endSequence = int64(endSeq)
 	}
-	if endSequence == -1 {
-		return nil
-	}
+
 	logging.Logger.Debugf("channel %d start seq and end enq are %d and %d", channelId, startSeq, endSequence)
 
 	for i := startSeq; i <= uint64(endSequence); i++ {
