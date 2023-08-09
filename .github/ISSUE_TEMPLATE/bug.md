@@ -1,6 +1,6 @@
 ---
 name: Report a bug
-about: Something with greenfield is not working as expected
+about: Something with greenfield-relayer is not working as expected
 title: ''
 labels: 'type:bug'
 assignees: ''
