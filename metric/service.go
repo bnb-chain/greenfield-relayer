@@ -25,6 +25,8 @@ const (
 
 	MetricNameNextSendSequenceForChannel    = "next_send_seq_for_channel"
 	MetricNameNextReceiveSequenceForChannel = "next_receive_seq_for_channel"
+
+	MetricNameBSCLowBalance = "bsc_low_balance"
 )
 
 type MetricService struct {
@@ -141,6 +143,13 @@ func NewMetricService(config *config.Config) *MetricService {
 		prometheus.MustRegister(nextReceiveSeq)
 	}
 
+	bscLowBalanceMetric := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameBSCLowBalance,
+		Help: "BSC relayer balance is lower than 1BNB, and not enoght reward(<0.1BNB)",
+	})
+	ms[MetricNameBSCLowBalance] = bscLowBalanceMetric
+	prometheus.MustRegister(bscLowBalanceMetric)
+
 	return &MetricService{
 		MetricsMap: ms,
 		cfg:        config,
@@ -221,4 +230,12 @@ func (m *MetricService) SetNextSendSequenceForChannel(channel uint8, seq uint64)
 
 func (m *MetricService) SetNextReceiveSequenceForChannel(channel uint8, seq uint64) {
 	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, channel)].(prometheus.Gauge).Set(float64(seq))
+}
+
+func (m *MetricService) SetBSCLowBalance(isLow bool) {
+	var flag float64
+	if isLow {
+		flag = 1
+	}
+	m.MetricsMap[MetricNameBSCLowBalance].(prometheus.Gauge).Set(flag)
 }

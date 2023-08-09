@@ -13,7 +13,7 @@ import (
 
 func InitBSCExecutor() *BSCExecutor {
 	cfg := GetTestConfig()
-	return NewBSCExecutor(cfg)
+	return NewBSCExecutor(cfg, nil)
 }
 
 func TestGetBlockHeight(t *testing.T) {

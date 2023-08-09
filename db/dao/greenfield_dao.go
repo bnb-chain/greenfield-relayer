@@ -135,3 +135,23 @@ func (d *GreenfieldDao) GetLatestSyncedTransaction() (*model.SyncLightBlockTrans
 	}
 	return &tx, nil
 }
+
+func (d *GreenfieldDao) DeleteBlocks(threshHold int64) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		err := dbTx.Where("height < ?", threshHold).Delete(model.GreenfieldBlock{}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (d *GreenfieldDao) DeleteTransactions(threshHold int64) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		err := dbTx.Where("height < ?", threshHold).Delete(model.GreenfieldRelayTransaction{}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}

@@ -155,3 +155,23 @@ func (d *BSCDao) DeleteBlockAndPackagesAtHeight(height uint64) error {
 		return nil
 	})
 }
+
+func (d *BSCDao) DeleteBlocks(threshHold int64) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		err := dbTx.Where("height < ?", threshHold).Delete(model.BscBlock{}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (d *BSCDao) DeletePackages(threshHold int64) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		err := dbTx.Where("height < ?", threshHold).Delete(model.BscRelayPackage{}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
