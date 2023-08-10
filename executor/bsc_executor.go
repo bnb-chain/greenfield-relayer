@@ -74,7 +74,9 @@ func initBSCClients(config *config.Config) []*BSCClient {
 		relayerHub, err := relayerhub.NewRelayerhub(
 			common.HexToAddress(config.RelayConfig.RelayerHubContractAddr),
 			rpcClient)
-
+		if err != nil {
+			panic("new relayer hub error")
+		}
 		bscClients = append(bscClients, &BSCClient{
 			rpcClient:             rpcClient,
 			crossChainClient:      crossChainClient,
