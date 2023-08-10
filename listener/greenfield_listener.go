@@ -3,6 +3,7 @@ package listener
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/cometbft/cometbft/votepool"
 	"strconv"
 	"sync"
 	"time"
@@ -316,4 +317,33 @@ func constructRelayTx(event abci.Event, height uint64) (*model.GreenfieldRelayTr
 	relayTx.Height = height
 	relayTx.UpdatedTime = time.Now().Unix()
 	return &relayTx, nil
+}
+
+func (l *GreenfieldListener) PurgeLoop() {
+	numOfHistroicalBlocks := int64(100000)
+	ticker := time.NewTicker(time.Minute * 10)
+	for range ticker.C {
+		latestGnfdBlock, err := l.DaoManager.GreenfieldDao.GetLatestBlock()
+		if err != nil {
+			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
+			continue
+		}
+		threshHold := int64(latestGnfdBlock.Height) - numOfHistroicalBlocks
+		if threshHold > 0 {
+			err = l.DaoManager.GreenfieldDao.DeleteBlocks(threshHold)
+			if err != nil {
+				logging.Logger.Errorf("failed to delete gnfd blocks, err=%s", err.Error())
+				continue
+			}
+			err = l.DaoManager.GreenfieldDao.DeleteTransactions(threshHold)
+			if err != nil {
+				logging.Logger.Errorf("failed to delete gnfd transactions, err=%s", err.Error())
+				continue
+			}
+			err = l.DaoManager.VoteDao.DeleteVotes(threshHold, uint32(votepool.ToBscCrossChainEvent))
+			if err != nil {
+				logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
+			}
+		}
+	}
 }

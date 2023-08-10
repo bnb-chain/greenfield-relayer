@@ -35,6 +35,7 @@ func (r *BSCRelayer) Start() {
 	go r.UpdateCachedLatestValidatorsLoop()
 	go r.UpdateClientLoop()
 	go r.ClaimRewardLoop()
+	go r.PurgeLoop()
 }
 
 // MonitorEventsLoop will monitor cross chain events for every block and persist into DB
@@ -64,4 +65,8 @@ func (r *BSCRelayer) UpdateClientLoop() {
 
 func (r *BSCRelayer) ClaimRewardLoop() {
 	r.bscExecutor.ClaimRewardLoop()
+}
+
+func (r *BSCRelayer) PurgeLoop() {
+	r.Listener.PurgeLoop()
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
+	"github.com/cometbft/cometbft/votepool"
 	"strings"
 	"time"
 
@@ -179,4 +180,32 @@ func (l *BSCListener) getCrossChainPackageEventHash() ethcommon.Hash {
 
 func (l *BSCListener) getCrossChainContractAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(l.config.RelayConfig.CrossChainContractAddr)
+}
+
+func (l *BSCListener) PurgeLoop() {
+	numOfHistroicalBlocks := int64(100000)
+	ticker := time.NewTicker(time.Minute * 10)
+	for range ticker.C {
+		latestBscBlock, err := l.DaoManager.BSCDao.GetLatestBlock()
+		if err != nil {
+			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
+			continue
+		}
+		threshHold := int64(latestBscBlock.Height) - numOfHistroicalBlocks
+		if threshHold > 0 {
+			err = l.DaoManager.BSCDao.DeleteBlocks(threshHold)
+			if err != nil {
+				logging.Logger.Errorf("failed to delete Bsc blocks, err=%s", err.Error())
+				continue
+			}
+			err = l.DaoManager.BSCDao.DeletePackages(threshHold)
+			if err != nil {
+				logging.Logger.Errorf("failed to delete bsc packages, err=%s", err.Error())
+			}
+			err = l.DaoManager.VoteDao.DeleteVotes(threshHold, uint32(votepool.FromBscCrossChainEvent))
+			if err != nil {
+				logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
+			}
+		}
+	}
 }
