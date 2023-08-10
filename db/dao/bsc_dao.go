@@ -178,9 +178,12 @@ func (d *BSCDao) DeletePackagesBelowHeightWithLimit(threshHold int64, limit int)
 
 func (d *BSCDao) ExistsUnprocessedPackage(threshHold int64) (bool, error) {
 	tx := model.BscRelayPackage{}
-	err := d.DB.Model(model.BscRelayPackage{}).Where("height < ?", threshHold).Order("id desc").Take(&tx).Error
+	err := d.DB.Model(model.BscRelayPackage{}).Where("status = ? or status = ? and height < ?", db.Saved, db.SelfVoted, threshHold).Take(&tx).Error
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, nil
+		}
 		return false, err
 	}
-	return tx.Status == db.Saved || tx.Status == db.SelfVoted, nil
+	return true, nil
 }
