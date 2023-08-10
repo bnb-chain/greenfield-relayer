@@ -13,6 +13,7 @@ const (
 	RPCTimeout                     = 3 * time.Second
 	RelayerBytesLength             = 48
 	UpdateCachedValidatorsInterval = 1 * time.Minute
+	ClaimRewardInterval            = 1 * time.Minute
 )
 
 var (

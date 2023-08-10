@@ -3,7 +3,6 @@ package listener
 import (
 	"bytes"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -328,9 +327,7 @@ func (l *GreenfieldListener) PurgeLoop() {
 			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
 			continue
 		}
-		fmt.Printf("latestGnfdBlock is %d\n", latestGnfdBlock.Height)
 		threshHold := int64(latestGnfdBlock.Height) - NumOfHistoricalBlocks
-		fmt.Printf("threshHold is %d\n", threshHold)
 
 		if threshHold > 0 {
 			err = l.DaoManager.GreenfieldDao.DeleteBlocksBelowHeight(threshHold)
