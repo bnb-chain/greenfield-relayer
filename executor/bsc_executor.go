@@ -539,13 +539,16 @@ func (e *BSCExecutor) getRewardBalance() (*big.Int, error) {
 }
 
 func (e *BSCExecutor) ClaimRewardLoop() {
-	ticker := time.NewTicker(time.Minute)
+	ticker := time.NewTicker(time.Second * 10)
 	for range ticker.C {
+		logging.Logger.Infof("starting claiming rewards loop")
 		balance, err := e.getRelayerBalance()
 		if err != nil {
 			logging.Logger.Errorf("failed to get relayer balance err=%s", err.Error())
 			continue
 		}
+		logging.Logger.Infof("current relayer balance is %v,\n", balance)
+
 		// should not claim if balance > 1 BNB
 		if balance.Cmp(BSCBalanceThreshold) > 0 {
 			continue
@@ -555,15 +558,17 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 			logging.Logger.Errorf("failed to get relayer reward balance err=%s", err.Error())
 			continue
 		}
-		// > 0.1 BNB
-		if rewardBalance.Cmp(BSCRewardThreshold) > 0 {
-			txHash, err := e.claimReward()
-			if err != nil {
-				logging.Logger.Errorf("failed to claim reward, txHash=%s, err=%s", txHash, err.Error())
-			}
-			e.metricService.SetBSCLowBalance(false)
+		logging.Logger.Infof("current relayer reward balance is %v,\n", balance)
+		if rewardBalance.Cmp(BSCRewardThreshold) <= 0 {
+			e.metricService.SetBSCLowBalance(true)
 			continue
 		}
-		e.metricService.SetBSCLowBalance(true)
+		// > 0.1 BNB
+		txHash, err := e.claimReward()
+		if err != nil {
+			logging.Logger.Errorf("failed to claim reward, txHash=%s, err=%s", txHash, err.Error())
+		}
+		logging.Logger.Infof("claimed rewards, txHash is %s\n", txHash)
+		e.metricService.SetBSCLowBalance(false)
 	}
 }

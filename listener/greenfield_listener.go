@@ -3,6 +3,7 @@ package listener
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -327,9 +328,12 @@ func (l *GreenfieldListener) PurgeLoop() {
 			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
 			continue
 		}
+		fmt.Printf("latestGnfdBlock is %d\n", latestGnfdBlock.Height)
 		threshHold := int64(latestGnfdBlock.Height) - NumOfHistoricalBlocks
+		fmt.Printf("threshHold is %d\n", threshHold)
+
 		if threshHold > 0 {
-			err = l.DaoManager.GreenfieldDao.DeleteBlocks(threshHold)
+			err = l.DaoManager.GreenfieldDao.DeleteBlocksBelowHeight(threshHold)
 			if err != nil {
 				logging.Logger.Errorf("failed to delete gnfd blocks, err=%s", err.Error())
 				continue
@@ -341,12 +345,12 @@ func (l *GreenfieldListener) PurgeLoop() {
 			if exists {
 				continue
 			}
-			err = l.DaoManager.GreenfieldDao.DeleteTransactions(threshHold)
+			err = l.DaoManager.GreenfieldDao.DeleteTransactionsBelowHeight(threshHold)
 			if err != nil {
 				logging.Logger.Errorf("failed to delete gnfd transactions, err=%s", err.Error())
 				continue
 			}
-			err = l.DaoManager.VoteDao.DeleteVotes(threshHold, uint32(votepool.ToBscCrossChainEvent))
+			err = l.DaoManager.VoteDao.DeleteVotesBelowHeight(threshHold, uint32(votepool.ToBscCrossChainEvent))
 			if err != nil {
 				logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
 			}

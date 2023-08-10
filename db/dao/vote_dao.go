@@ -81,7 +81,7 @@ func (d *VoteDao) SaveBatchVotes(votes []*model.Vote) error {
 	})
 }
 
-func (d *VoteDao) DeleteVotes(threshHold int64, eventType uint32) error {
+func (d *VoteDao) DeleteVotesBelowHeight(threshHold int64, eventType uint32) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		err := dbTx.Where("event_type = ? and height < ?", eventType, threshHold).Delete(model.Vote{}).Error
 		if err != nil {

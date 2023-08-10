@@ -190,28 +190,29 @@ func (l *BSCListener) PurgeLoop() {
 			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
 			continue
 		}
-		threshHold := int64(latestBscBlock.Height) - NumOfHistoricalBlocks
-		if threshHold > 0 {
-			err = l.DaoManager.BSCDao.DeleteBlocks(threshHold)
-			if err != nil {
-				logging.Logger.Errorf("failed to delete Bsc blocks, err=%s", err.Error())
-				continue
-			}
-			exists, err := l.DaoManager.BSCDao.ExistsUnprocessedPackages(threshHold)
-			if err != nil {
-				continue
-			}
-			if exists {
-				continue
-			}
-			err = l.DaoManager.BSCDao.DeletePackages(threshHold)
-			if err != nil {
-				logging.Logger.Errorf("failed to delete bsc packages, err=%s", err.Error())
-			}
-			err = l.DaoManager.VoteDao.DeleteVotes(threshHold, uint32(votepool.FromBscCrossChainEvent))
-			if err != nil {
-				logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
-			}
+		blockHeightThreshHold := int64(latestBscBlock.Height) - NumOfHistoricalBlocks
+		if blockHeightThreshHold <= 0 {
+			continue
+		}
+		err = l.DaoManager.BSCDao.DeleteBlocksBelowHeight(blockHeightThreshHold)
+		if err != nil {
+			logging.Logger.Errorf("failed to delete Bsc blocks, err=%s", err.Error())
+			continue
+		}
+		exists, err := l.DaoManager.BSCDao.ExistsUnprocessedPackages(blockHeightThreshHold)
+		if err != nil {
+			continue
+		}
+		if exists {
+			continue
+		}
+		err = l.DaoManager.BSCDao.DeletePackagesBelowHeight(blockHeightThreshHold)
+		if err != nil {
+			logging.Logger.Errorf("failed to delete bsc packages, err=%s", err.Error())
+		}
+		err = l.DaoManager.VoteDao.DeleteVotesBelowHeight(blockHeightThreshHold, uint32(votepool.FromBscCrossChainEvent))
+		if err != nil {
+			logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
 		}
 	}
 }
