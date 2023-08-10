@@ -175,3 +175,12 @@ func (d *BSCDao) DeletePackages(threshHold int64) error {
 		return nil
 	})
 }
+
+func (d *BSCDao) ExistsUnprocessedPackages(threshHold int64) (bool, error) {
+	tx := model.BscRelayPackage{}
+	err := d.DB.Model(model.BscRelayPackage{}).Where("height < ?", threshHold).Order("id desc").Take(&tx).Error
+	if err != nil {
+		return false, err
+	}
+	return tx.Status == db.Saved || tx.Status == db.SelfVoted, nil
+}

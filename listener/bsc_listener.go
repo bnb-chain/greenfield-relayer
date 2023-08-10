@@ -3,11 +3,10 @@ package listener
 import (
 	"context"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
-	"github.com/cometbft/cometbft/votepool"
 	"strings"
 	"time"
 
+	"github.com/cometbft/cometbft/votepool"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
@@ -183,19 +183,25 @@ func (l *BSCListener) getCrossChainContractAddress() ethcommon.Address {
 }
 
 func (l *BSCListener) PurgeLoop() {
-	numOfHistroicalBlocks := int64(100000)
-	ticker := time.NewTicker(time.Minute * 10)
+	ticker := time.NewTicker(PurgeJobInterval)
 	for range ticker.C {
 		latestBscBlock, err := l.DaoManager.BSCDao.GetLatestBlock()
 		if err != nil {
 			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
 			continue
 		}
-		threshHold := int64(latestBscBlock.Height) - numOfHistroicalBlocks
+		threshHold := int64(latestBscBlock.Height) - NumOfHistoricalBlocks
 		if threshHold > 0 {
 			err = l.DaoManager.BSCDao.DeleteBlocks(threshHold)
 			if err != nil {
 				logging.Logger.Errorf("failed to delete Bsc blocks, err=%s", err.Error())
+				continue
+			}
+			exists, err := l.DaoManager.BSCDao.ExistsUnprocessedPackages(threshHold)
+			if err != nil {
+				continue
+			}
+			if exists {
 				continue
 			}
 			err = l.DaoManager.BSCDao.DeletePackages(threshHold)

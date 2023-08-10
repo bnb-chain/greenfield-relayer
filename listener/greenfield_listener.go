@@ -3,7 +3,6 @@ package listener
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/cometbft/cometbft/votepool"
 	"strconv"
 	"sync"
 	"time"
@@ -11,6 +10,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/votepool"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -320,19 +320,25 @@ func constructRelayTx(event abci.Event, height uint64) (*model.GreenfieldRelayTr
 }
 
 func (l *GreenfieldListener) PurgeLoop() {
-	numOfHistroicalBlocks := int64(100000)
-	ticker := time.NewTicker(time.Minute * 10)
+	ticker := time.NewTicker(PurgeJobInterval)
 	for range ticker.C {
 		latestGnfdBlock, err := l.DaoManager.GreenfieldDao.GetLatestBlock()
 		if err != nil {
 			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
 			continue
 		}
-		threshHold := int64(latestGnfdBlock.Height) - numOfHistroicalBlocks
+		threshHold := int64(latestGnfdBlock.Height) - NumOfHistoricalBlocks
 		if threshHold > 0 {
 			err = l.DaoManager.GreenfieldDao.DeleteBlocks(threshHold)
 			if err != nil {
 				logging.Logger.Errorf("failed to delete gnfd blocks, err=%s", err.Error())
+				continue
+			}
+			exists, err := l.DaoManager.GreenfieldDao.ExistsUnprocessedTransactions(threshHold)
+			if err != nil {
+				continue
+			}
+			if exists {
 				continue
 			}
 			err = l.DaoManager.GreenfieldDao.DeleteTransactions(threshHold)

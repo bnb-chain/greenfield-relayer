@@ -155,3 +155,12 @@ func (d *GreenfieldDao) DeleteTransactions(threshHold int64) error {
 		return nil
 	})
 }
+
+func (d *GreenfieldDao) ExistsUnprocessedTransactions(threshHold int64) (bool, error) {
+	tx := model.GreenfieldRelayTransaction{}
+	err := d.DB.Model(model.GreenfieldRelayTransaction{}).Where("height < ?", threshHold).Order("id desc").Take(&tx).Error
+	if err != nil {
+		return false, err
+	}
+	return tx.Status == db.Saved || tx.Status == db.SelfVoted, nil
+}

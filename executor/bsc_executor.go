@@ -6,10 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
-	"github.com/bnb-chain/greenfield-relayer/contract/greenfieldlightclient"
-	"github.com/bnb-chain/greenfield-relayer/contract/relayerhub"
-	"github.com/bnb-chain/greenfield-relayer/metric"
 	"math/big"
 	"sync"
 	"time"
@@ -24,7 +20,11 @@ import (
 
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
+	"github.com/bnb-chain/greenfield-relayer/contract/greenfieldlightclient"
+	"github.com/bnb-chain/greenfield-relayer/contract/relayerhub"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
@@ -544,7 +544,7 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 			logging.Logger.Errorf("failed to get relayer balance err=%s", err.Error())
 			continue
 		}
-		// should not claim if > 1 BNB
+		// should not claim if balance > 1 BNB
 		if balance.Cmp(BSCBalanceThreshold) > 0 {
 			continue
 		}
@@ -554,11 +554,12 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 			continue
 		}
 		// > 0.1 BNB
-		if rewardBalance.Cmp(rewardBalance) > 0 {
+		if rewardBalance.Cmp(BSCRewardThreshold) > 0 {
 			txHash, err := e.claimReward()
 			if err != nil {
 				logging.Logger.Errorf("failed to claim reward, txHash=%s, err=%s", txHash, err.Error())
 			}
+			e.metricService.SetBSCLowBalance(false)
 			continue
 		}
 		e.metricService.SetBSCLowBalance(true)
