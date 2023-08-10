@@ -328,29 +328,23 @@ func (l *GreenfieldListener) PurgeLoop() {
 			continue
 		}
 		threshHold := int64(latestGnfdBlock.Height) - NumOfHistoricalBlocks
-
-		if threshHold > 0 {
-			err = l.DaoManager.GreenfieldDao.DeleteBlocksBelowHeight(threshHold)
-			if err != nil {
-				logging.Logger.Errorf("failed to delete gnfd blocks, err=%s", err.Error())
-				continue
-			}
-			exists, err := l.DaoManager.GreenfieldDao.ExistsUnprocessedTransactions(threshHold)
-			if err != nil {
-				continue
-			}
-			if exists {
-				continue
-			}
-			err = l.DaoManager.GreenfieldDao.DeleteTransactionsBelowHeightWithLimit(threshHold, DeletionLimit)
-			if err != nil {
-				logging.Logger.Errorf("failed to delete gnfd transactions, err=%s", err.Error())
-				continue
-			}
-			err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(threshHold, uint32(votepool.ToBscCrossChainEvent), DeletionLimit)
-			if err != nil {
-				logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
-			}
+		if threshHold <= 0 {
+			continue
+		}
+		if err = l.DaoManager.GreenfieldDao.DeleteBlocksBelowHeight(threshHold); err != nil {
+			logging.Logger.Errorf("failed to delete gnfd blocks, err=%s", err.Error())
+			continue
+		}
+		exists, err := l.DaoManager.GreenfieldDao.ExistsUnprocessedTransaction(threshHold)
+		if err != nil || exists {
+			continue
+		}
+		if err = l.DaoManager.GreenfieldDao.DeleteTransactionsBelowHeightWithLimit(threshHold, DeletionLimit); err != nil {
+			logging.Logger.Errorf("failed to delete gnfd transactions, err=%s", err.Error())
+			continue
+		}
+		if err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(threshHold, uint32(votepool.ToBscCrossChainEvent), DeletionLimit); err != nil {
+			logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
 		}
 	}
 }

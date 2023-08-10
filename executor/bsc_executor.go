@@ -538,6 +538,8 @@ func (e *BSCExecutor) getRewardBalance() (*big.Int, error) {
 	return e.getRelayerHub().RewardMap(callOpts, e.txSender)
 }
 
+// ClaimRewardLoop relayer would claim the reward if its balance is below 1BNB and the Reward is over 0.1BNB.
+// if after refilled with the rewards, its balance is still lower than 1BNB, it will keep alerting
 func (e *BSCExecutor) ClaimRewardLoop() {
 	ticker := time.NewTicker(ClaimRewardInterval)
 	for range ticker.C {
@@ -551,6 +553,7 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 
 		// should not claim if balance > 1 BNB
 		if balance.Cmp(BSCBalanceThreshold) > 0 {
+			e.metricService.SetBSCLowBalance(false)
 			continue
 		}
 		rewardBalance, err := e.getRewardBalance()
@@ -569,6 +572,5 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 			logging.Logger.Errorf("failed to claim reward, txHash=%s, err=%s", txHash, err.Error())
 		}
 		logging.Logger.Infof("claimed rewards, txHash is %s", txHash)
-		e.metricService.SetBSCLowBalance(false)
 	}
 }

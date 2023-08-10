@@ -176,7 +176,7 @@ func (d *BSCDao) DeletePackagesBelowHeightWithLimit(threshHold int64, limit int)
 	})
 }
 
-func (d *BSCDao) ExistsUnprocessedPackages(threshHold int64) (bool, error) {
+func (d *BSCDao) ExistsUnprocessedPackage(threshHold int64) (bool, error) {
 	tx := model.BscRelayPackage{}
 	err := d.DB.Model(model.BscRelayPackage{}).Where("height < ?", threshHold).Order("id desc").Take(&tx).Error
 	if err != nil {

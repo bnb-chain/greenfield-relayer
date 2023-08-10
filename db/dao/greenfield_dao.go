@@ -156,7 +156,7 @@ func (d *GreenfieldDao) DeleteTransactionsBelowHeightWithLimit(threshHold int64,
 	})
 }
 
-func (d *GreenfieldDao) ExistsUnprocessedTransactions(threshHold int64) (bool, error) {
+func (d *GreenfieldDao) ExistsUnprocessedTransaction(threshHold int64) (bool, error) {
 	tx := model.GreenfieldRelayTransaction{}
 	err := d.DB.Model(model.GreenfieldRelayTransaction{}).Where("height < ?", threshHold).Order("id desc").Take(&tx).Error
 	if err != nil {
