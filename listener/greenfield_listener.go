@@ -342,12 +342,12 @@ func (l *GreenfieldListener) PurgeLoop() {
 			if exists {
 				continue
 			}
-			err = l.DaoManager.GreenfieldDao.DeleteTransactionsBelowHeight(threshHold)
+			err = l.DaoManager.GreenfieldDao.DeleteTransactionsBelowHeightWithLimit(threshHold, DeletionLimit)
 			if err != nil {
 				logging.Logger.Errorf("failed to delete gnfd transactions, err=%s", err.Error())
 				continue
 			}
-			err = l.DaoManager.VoteDao.DeleteVotesBelowHeight(threshHold, uint32(votepool.ToBscCrossChainEvent))
+			err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(threshHold, uint32(votepool.ToBscCrossChainEvent), DeletionLimit)
 			if err != nil {
 				logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
 			}

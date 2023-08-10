@@ -146,9 +146,9 @@ func (d *GreenfieldDao) DeleteBlocksBelowHeight(threshHold int64) error {
 	})
 }
 
-func (d *GreenfieldDao) DeleteTransactionsBelowHeight(threshHold int64) error {
+func (d *GreenfieldDao) DeleteTransactionsBelowHeightWithLimit(threshHold int64, limit int) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
-		err := dbTx.Where("height < ?", threshHold).Delete(model.GreenfieldRelayTransaction{}).Error
+		err := dbTx.Where("height < ?", threshHold).Delete(model.GreenfieldRelayTransaction{}).Limit(limit).Error
 		if err != nil {
 			return err
 		}

@@ -206,11 +206,11 @@ func (l *BSCListener) PurgeLoop() {
 		if exists {
 			continue
 		}
-		err = l.DaoManager.BSCDao.DeletePackagesBelowHeight(blockHeightThreshHold)
+		err = l.DaoManager.BSCDao.DeletePackagesBelowHeightWithLimit(blockHeightThreshHold, DeletionLimit)
 		if err != nil {
 			logging.Logger.Errorf("failed to delete bsc packages, err=%s", err.Error())
 		}
-		err = l.DaoManager.VoteDao.DeleteVotesBelowHeight(blockHeightThreshHold, uint32(votepool.FromBscCrossChainEvent))
+		err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(blockHeightThreshHold, uint32(votepool.FromBscCrossChainEvent), DeletionLimit)
 		if err != nil {
 			logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
 		}

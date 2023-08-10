@@ -166,9 +166,9 @@ func (d *BSCDao) DeleteBlocksBelowHeight(threshHold int64) error {
 	})
 }
 
-func (d *BSCDao) DeletePackagesBelowHeight(threshHold int64) error {
+func (d *BSCDao) DeletePackagesBelowHeightWithLimit(threshHold int64, limit int) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
-		err := dbTx.Where("height < ?", threshHold).Delete(model.BscRelayPackage{}).Error
+		err := dbTx.Where("height < ?", threshHold).Delete(model.BscRelayPackage{}).Limit(limit).Error
 		if err != nil {
 			return err
 		}
