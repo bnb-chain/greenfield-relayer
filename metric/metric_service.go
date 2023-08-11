@@ -2,11 +2,10 @@ package metric
 
 import (
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
+	"strconv"
 
 	"github.com/bnb-chain/greenfield-relayer/config"
 )
@@ -35,18 +34,16 @@ type MetricService struct {
 
 func NewMetricService(config *config.Config) *MetricService {
 	ms := make(map[string]prometheus.Metric, 0)
-	gnfdLabels := map[string]string{
+	labels := map[string]string{
 		"gnfdChainId": config.GreenfieldConfig.ChainIdString,
-	}
-	bscLabels := map[string]string{
-		"bscChainId": strconv.FormatUint(config.BSCConfig.ChainId, 10),
+		"bscChainId":  strconv.FormatUint(config.BSCConfig.ChainId, 10),
 	}
 
 	// Greenfield
 	gnfdSavedBlockMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameGnfdSavedBlock,
 		Help:        "Saved block height for Greenfield in Database",
-		ConstLabels: gnfdLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameGnfdSavedBlock] = gnfdSavedBlockMetric
 	prometheus.MustRegister(gnfdSavedBlockMetric)
@@ -54,7 +51,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	gnfdProcessedBlockMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameGnfdProcessedBlock,
 		Help:        "Processed block height for Greenfield in Database",
-		ConstLabels: gnfdLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameGnfdProcessedBlock] = gnfdProcessedBlockMetric
 	prometheus.MustRegister(gnfdProcessedBlockMetric)
@@ -62,7 +59,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	gnfdIsInturnRelayerMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameIsGnfdInturnRelayer,
 		Help:        "Whether relayer is inturn to relay transaction from BSC to Greenfield",
-		ConstLabels: gnfdLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameIsGnfdInturnRelayer] = gnfdIsInturnRelayerMetric
 	prometheus.MustRegister(gnfdIsInturnRelayerMetric)
@@ -71,7 +68,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	gnfdRelayerStartTimeMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameGnfdRelayerStartTime,
 		Help:        "inturn gnfd relayer start time or out-turn relayer previous start time",
-		ConstLabels: gnfdLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameGnfdRelayerStartTime] = gnfdRelayerStartTimeMetric
 	prometheus.MustRegister(gnfdRelayerStartTimeMetric)
@@ -79,7 +76,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	gnfdRelayerEndTimeMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameGnfdRelayerEndTime,
 		Help:        "inturn gnfd relayer end time or out-turn relayer previous end time",
-		ConstLabels: gnfdLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameGnfdRelayerEndTime] = gnfdRelayerEndTimeMetric
 	prometheus.MustRegister(gnfdRelayerEndTimeMetric)
@@ -88,7 +85,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	bscSavedBlockMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameBSCSavedBlock,
 		Help:        "Saved block height for BSC in Database",
-		ConstLabels: bscLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameBSCSavedBlock] = bscSavedBlockMetric
 	prometheus.MustRegister(bscSavedBlockMetric)
@@ -96,7 +93,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	bscProcessedBlockMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameBSCProcessedBlock,
 		Help:        "Processed block height for BSC in Database",
-		ConstLabels: bscLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameBSCProcessedBlock] = bscProcessedBlockMetric
 	prometheus.MustRegister(bscProcessedBlockMetric)
@@ -104,7 +101,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	bscIsInturnRelayerMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameIsBSCInturnRelayer,
 		Help:        "Whether relayer is inturn to relay transaction from Greenfield to BSC",
-		ConstLabels: bscLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameIsBSCInturnRelayer] = bscIsInturnRelayerMetric
 	prometheus.MustRegister(bscIsInturnRelayerMetric)
@@ -113,7 +110,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	bscRelayerStartTimeMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameBSCRelayerStartTime,
 		Help:        "inturn BSC relayer start time or out-turn relayer previous start time",
-		ConstLabels: bscLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameBSCRelayerStartTime] = bscRelayerStartTimeMetric
 	prometheus.MustRegister(bscRelayerStartTimeMetric)
@@ -121,7 +118,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	bscRelayerEndTimeMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        MetricNameBSCRelayerEndTime,
 		Help:        "inturn BSC relayer end time or out-turn relayer previous end time",
-		ConstLabels: bscLabels,
+		ConstLabels: labels,
 	})
 	ms[MetricNameBSCRelayerEndTime] = bscRelayerEndTimeMetric
 	prometheus.MustRegister(bscRelayerEndTimeMetric)
@@ -130,7 +127,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	nextSendOracleSeq := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, 0),
 		Help:        "Next Send Oracle sequence",
-		ConstLabels: gnfdLabels,
+		ConstLabels: labels,
 	})
 	ms[fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, 0)] = nextSendOracleSeq
 	prometheus.MustRegister(nextSendOracleSeq)
@@ -138,7 +135,7 @@ func NewMetricService(config *config.Config) *MetricService {
 	nextReceiveOracleSeq := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:        fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, 0),
 		Help:        "Next Delivery Oracle sequence",
-		ConstLabels: gnfdLabels,
+		ConstLabels: labels,
 	})
 	ms[fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, 0)] = nextReceiveOracleSeq
 	prometheus.MustRegister(nextReceiveOracleSeq)
@@ -148,7 +145,7 @@ func NewMetricService(config *config.Config) *MetricService {
 		nextSendSeq := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name:        fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, c),
 			Help:        fmt.Sprintf("Next Send sequence for channel %d", c),
-			ConstLabels: gnfdLabels,
+			ConstLabels: labels,
 		})
 		ms[fmt.Sprintf("%s_%d", MetricNameNextSendSequenceForChannel, c)] = nextSendSeq
 		prometheus.MustRegister(nextSendSeq)
@@ -156,7 +153,7 @@ func NewMetricService(config *config.Config) *MetricService {
 		nextReceiveSeq := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name:        fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, c),
 			Help:        fmt.Sprintf("Next delivery sequence for channel %d", c),
-			ConstLabels: gnfdLabels,
+			ConstLabels: labels,
 		})
 		ms[fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, c)] = nextReceiveSeq
 		prometheus.MustRegister(nextReceiveSeq)
