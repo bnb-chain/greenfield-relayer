@@ -2,12 +2,13 @@ package assembler
 
 import (
 	"bytes"
-	"cosmossdk.io/errors"
 	"encoding/hex"
 	"fmt"
+	"time"
+
+	"cosmossdk.io/errors"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
-	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"

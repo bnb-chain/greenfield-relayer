@@ -26,8 +26,9 @@ func DtoToEntity(v *model.Vote) (*votepool.Vote, error) {
 	return &res, nil
 }
 
-func EntityToDto(from *votepool.Vote, channelId uint8, sequence uint64, payload []byte) *model.Vote {
+func EntityToDto(from *votepool.Vote, channelId uint8, sequence uint64, payload []byte, height int64) *model.Vote {
 	v := model.Vote{
+		Height:       height,
 		PubKey:       hex.EncodeToString(from.PubKey[:]),
 		Signature:    hex.EncodeToString(from.Signature[:]),
 		EventType:    uint32(from.EventType),

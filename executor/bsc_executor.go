@@ -20,9 +20,11 @@ import (
 
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
-	"github.com/bnb-chain/greenfield-relayer/executor/crosschain"
-	"github.com/bnb-chain/greenfield-relayer/executor/greenfieldlightclient"
+	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
+	"github.com/bnb-chain/greenfield-relayer/contract/greenfieldlightclient"
+	"github.com/bnb-chain/greenfield-relayer/contract/relayerhub"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
@@ -30,13 +32,13 @@ type BSCClient struct {
 	rpcClient             *ethclient.Client
 	crossChainClient      *crosschain.Crosschain
 	greenfieldLightClient *greenfieldlightclient.Greenfieldlightclient
+	relayerHub            *relayerhub.Relayerhub
 	provider              string
 	height                uint64
 	updatedAt             time.Time
 }
 
 type BSCExecutor struct {
-	gasPriceMutex      sync.RWMutex
 	mutex              sync.RWMutex
 	GreenfieldExecutor *GreenfieldExecutor
 	clientIdx          int
@@ -46,6 +48,7 @@ type BSCExecutor struct {
 	txSender           common.Address
 	gasPrice           *big.Int
 	relayers           []rtypes.Validator // cached relayers
+	metricService      *metric.MetricService
 }
 
 func initBSCClients(config *config.Config) []*BSCClient {
@@ -68,10 +71,17 @@ func initBSCClients(config *config.Config) []*BSCClient {
 		if err != nil {
 			panic("new greenfield light client error")
 		}
+		relayerHub, err := relayerhub.NewRelayerhub(
+			common.HexToAddress(config.RelayConfig.RelayerHubContractAddr),
+			rpcClient)
+		if err != nil {
+			panic("new relayer hub error")
+		}
 		bscClients = append(bscClients, &BSCClient{
 			rpcClient:             rpcClient,
 			crossChainClient:      crossChainClient,
 			greenfieldLightClient: greenfieldLightClient,
+			relayerHub:            relayerHub,
 			provider:              provider,
 			updatedAt:             time.Now(),
 		})
@@ -101,7 +111,7 @@ func getBscPrivateKey(cfg *config.BSCConfig) string {
 	return privateKey
 }
 
-func NewBSCExecutor(cfg *config.Config) *BSCExecutor {
+func NewBSCExecutor(cfg *config.Config, metricService *metric.MetricService) *BSCExecutor {
 	privKey := viper.GetString(config.FlagConfigPrivateKey)
 	if privKey == "" {
 		privKey = getBscPrivateKey(&cfg.BSCConfig)
@@ -124,12 +134,13 @@ func NewBSCExecutor(cfg *config.Config) *BSCExecutor {
 		initGasPrice = big.NewInt(int64(cfg.BSCConfig.GasPrice))
 	}
 	return &BSCExecutor{
-		clientIdx:  0,
-		bscClients: initBSCClients(cfg),
-		privateKey: ecdsaPrivKey,
-		txSender:   txSender,
-		config:     cfg,
-		gasPrice:   initGasPrice,
+		clientIdx:     0,
+		bscClients:    initBSCClients(cfg),
+		privateKey:    ecdsaPrivKey,
+		txSender:      txSender,
+		config:        cfg,
+		gasPrice:      initGasPrice,
+		metricService: metricService,
 	}
 }
 
@@ -153,6 +164,12 @@ func (e *BSCExecutor) getGreenfieldLightClient() *greenfieldlightclient.Greenfie
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
 	return e.bscClients[e.clientIdx].greenfieldLightClient
+}
+
+func (e *BSCExecutor) getRelayerHub() *relayerhub.Relayerhub {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.bscClients[e.clientIdx].relayerHub
 }
 
 func (e *BSCExecutor) SwitchClient() {
@@ -322,8 +339,6 @@ func (e *BSCExecutor) getTransactor(nonce uint64) (*bind.TransactOpts, error) {
 }
 
 func (e *BSCExecutor) getGasPrice() *big.Int {
-	e.gasPriceMutex.RLock()
-	defer e.gasPriceMutex.RUnlock()
 	return e.gasPrice
 }
 
@@ -487,4 +502,75 @@ func (e *BSCExecutor) GetInturnRelayer() (*rtypes.InturnRelayer, error) {
 		Start:        r.Start.Uint64(),
 		End:          r.End.Uint64(),
 	}, nil
+}
+
+func (e *BSCExecutor) getRelayerBalance() (*big.Int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	return e.GetRpcClient().BalanceAt(ctx, e.txSender, nil)
+}
+
+func (e *BSCExecutor) claimReward() (common.Hash, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	nonce, err := e.GetRpcClient().PendingNonceAt(ctx, e.txSender)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	txOpts, err := e.getTransactor(nonce)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	txResp, err := e.getRelayerHub().ClaimReward(txOpts, e.txSender)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	return txResp.Hash(), nil
+}
+
+func (e *BSCExecutor) getRewardBalance() (*big.Int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	callOpts := &bind.CallOpts{
+		Pending: true,
+		Context: ctx,
+	}
+	return e.getRelayerHub().RewardMap(callOpts, e.txSender)
+}
+
+// ClaimRewardLoop relayer would claim the reward if its balance is below 1BNB and the Reward is over 0.1BNB.
+// if after refilled with the rewards, its balance is still lower than 1BNB, it will keep alerting
+func (e *BSCExecutor) ClaimRewardLoop() {
+	ticker := time.NewTicker(ClaimRewardInterval)
+	for range ticker.C {
+		logging.Logger.Info("starting claiming rewards loop")
+		balance, err := e.getRelayerBalance()
+		if err != nil {
+			logging.Logger.Errorf("failed to get relayer balance err=%s", err.Error())
+			continue
+		}
+		logging.Logger.Infof("current relayer balance is %v", balance)
+
+		// should not claim if balance > 1 BNB
+		if balance.Cmp(BSCBalanceThreshold) > 0 {
+			e.metricService.SetBSCLowBalance(false)
+			continue
+		}
+		rewardBalance, err := e.getRewardBalance()
+		if err != nil {
+			logging.Logger.Errorf("failed to get relayer reward balance err=%s", err.Error())
+			continue
+		}
+		logging.Logger.Infof("current relayer reward balance is %v", balance)
+		if rewardBalance.Cmp(BSCRewardThreshold) <= 0 {
+			e.metricService.SetBSCLowBalance(true)
+			continue
+		}
+		// > 0.1 BNB
+		txHash, err := e.claimReward()
+		if err != nil {
+			logging.Logger.Errorf("failed to claim reward, txHash=%s, err=%s", txHash, err.Error())
+		}
+		logging.Logger.Infof("claimed rewards, txHash is %s", txHash)
+	}
 }

@@ -76,18 +76,18 @@ func NewApp(cfg *config.Config) *App {
 	model.InitGreenfieldTables(db)
 	model.InitVoteTables(db)
 
+	metricService := metric.NewMetricService(cfg)
+
 	greenfieldDao := dao.NewGreenfieldDao(db)
 	bscDao := dao.NewBSCDao(db)
 	voteDao := dao.NewVoteDao(db)
 	daoManager := dao.NewDaoManager(greenfieldDao, bscDao, voteDao)
 
 	greenfieldExecutor := executor.NewGreenfieldExecutor(cfg)
-	bscExecutor := executor.NewBSCExecutor(cfg)
+	bscExecutor := executor.NewBSCExecutor(cfg, metricService)
 
 	greenfieldExecutor.SetBSCExecutor(bscExecutor)
 	bscExecutor.SetGreenfieldExecutor(greenfieldExecutor)
-
-	metricService := metric.NewMetricService(cfg)
 
 	// vote signer
 	signer := vote.NewVoteSigner(greenfieldExecutor.BlsPrivateKey)

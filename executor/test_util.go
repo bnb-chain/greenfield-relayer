@@ -17,7 +17,7 @@ func GetTestConfig() *config.Config {
 func InitExecutors() (*BSCExecutor, *GreenfieldExecutor) {
 	cfg := GetTestConfig()
 	gnfdExecutor := NewGreenfieldExecutor(cfg)
-	bscExecutor := NewBSCExecutor(cfg)
+	bscExecutor := NewBSCExecutor(cfg, nil)
 	gnfdExecutor.SetBSCExecutor(bscExecutor)
 	bscExecutor.SetGreenfieldExecutor(gnfdExecutor)
 	return bscExecutor, gnfdExecutor
