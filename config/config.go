@@ -105,6 +105,9 @@ func (cfg *BSCConfig) Validate() {
 	if cfg.GasLimit == 0 {
 		panic("gas_limit of BNB Smart Chain should be larger than 0")
 	}
+	if cfg.NumberOfBlocksForFinality < 2 || cfg.NumberOfBlocksForFinality > 21 {
+		panic("NumberOfBlocksForFinality should be [2, 21]")
+	}
 }
 
 type RelayConfig struct {

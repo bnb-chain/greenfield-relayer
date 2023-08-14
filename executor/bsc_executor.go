@@ -31,7 +31,7 @@ import (
 )
 
 type BSCClient struct {
-	rpcClient             *rpc.Client // for eth_getFinalizedBlock usage, supported by BSC
+	rpcClient             *rpc.Client // for apis eth_getFinalizedBlock and eth_getFinalizedHeader usage, supported by BSC
 	ethClient             *ethclient.Client
 	crossChainClient      *crosschain.Crosschain
 	greenfieldLightClient *greenfieldlightclient.Greenfieldlightclient
@@ -41,7 +41,7 @@ type BSCClient struct {
 	updatedAt             time.Time
 }
 
-func NewBSCClients(config *config.Config) []*BSCClient {
+func newBSCClients(config *config.Config) []*BSCClient {
 	bscClients := make([]*BSCClient, 0)
 	for _, provider := range config.BSCConfig.RPCAddrs {
 		rpcClient, err := rpc.DialContext(context.Background(), provider)
@@ -84,7 +84,6 @@ func NewBSCClients(config *config.Config) []*BSCClient {
 }
 
 type BSCExecutor struct {
-	gasPriceMutex      sync.RWMutex
 	mutex              sync.RWMutex
 	GreenfieldExecutor *GreenfieldExecutor
 	clientIdx          int
@@ -143,7 +142,7 @@ func NewBSCExecutor(cfg *config.Config, metricService *metric.MetricService) *BS
 	}
 	return &BSCExecutor{
 		clientIdx:     0,
-		bscClients:    NewBSCClients(cfg),
+		bscClients:    newBSCClients(cfg),
 		privateKey:    ecdsaPrivKey,
 		txSender:      txSender,
 		config:        cfg,
@@ -596,6 +595,7 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 	}
 }
 
+// getFinalizedBlockHeight gets the finalizedBlockHeight, which is the larger one between (fastFinalizedBlockHeight, NumberOfBlocksForFinality from config).
 func (e *BSCExecutor) getFinalizedBlockHeight(ctx context.Context, rpcClient *rpc.Client) (uint64, error) {
 	var head *types.Header
 	err := rpcClient.CallContext(ctx, &head, "eth_getFinalizedHeader", e.config.BSCConfig.NumberOfBlocksForFinality)

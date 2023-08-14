@@ -32,7 +32,7 @@
   },
   "relay_config": {
     "bsc_to_greenfield_inturn_relayer_timeout": 40,
-    "greenfield_to_bsc_inturn_relayer_timeout": 45,
+    "greenfield_to_bsc_inturn_relayer_timeout": 30,
     "greenfield_sequence_update_latency": 8,
     "bsc_sequence_update_latency": 12,
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",

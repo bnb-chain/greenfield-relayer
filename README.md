@@ -63,7 +63,8 @@ Go version above 1.20
     ],
     "private_key": "your_private_key",
     "gas_limit": 4700000,
-    "gas_price": 20000000000,
+    "gas_price": 10000000000,
+    "number_of_blocks_for_finality": 2,
     "start_height": 0,
     "chain_id": 714
   }
@@ -73,7 +74,7 @@ Go version above 1.20
 ```
 "relay_config": {
     "bsc_to_greenfield_inturn_relayer_timeout": 40,
-    "greenfield_to_bsc_inturn_relayer_timeout": 45,
+    "greenfield_to_bsc_inturn_relayer_timeout": 30,
     "greenfield_sequence_update_latency": 8,
     "bsc_sequence_update_latency": 12,
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
