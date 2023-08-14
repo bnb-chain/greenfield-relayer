@@ -117,6 +117,7 @@ type RelayConfig struct {
 	CrossChainPackageEventHex           string `json:"cross_chain_package_event_hex"`
 	CrossChainContractAddr              string `json:"cross_chain_contract_addr"`
 	GreenfieldLightClientContractAddr   string `json:"greenfield_light_client_contract_addr"`
+	RelayerHubContractAddr              string `json:"relayer_hub_contract_addr"`
 }
 
 func (cfg *RelayConfig) Validate() {

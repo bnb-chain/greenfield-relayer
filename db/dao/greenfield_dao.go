@@ -135,3 +135,35 @@ func (d *GreenfieldDao) GetLatestSyncedTransaction() (*model.SyncLightBlockTrans
 	}
 	return &tx, nil
 }
+
+func (d *GreenfieldDao) DeleteBlocksBelowHeight(threshHold int64) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		err := dbTx.Where("height < ?", threshHold).Delete(model.GreenfieldBlock{}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (d *GreenfieldDao) DeleteTransactionsBelowHeightWithLimit(threshHold int64, limit int) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		err := dbTx.Where("height < ?", threshHold).Delete(model.GreenfieldRelayTransaction{}).Limit(limit).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (d *GreenfieldDao) ExistsUnprocessedTransaction(threshHold int64) (bool, error) {
+	tx := model.GreenfieldRelayTransaction{}
+	err := d.DB.Model(model.GreenfieldRelayTransaction{}).Where("status = ? or status = ? and height < ?", db.Saved, db.SelfVoted, threshHold).Take(&tx).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}

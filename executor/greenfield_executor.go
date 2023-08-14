@@ -12,6 +12,7 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/votepool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
@@ -23,7 +24,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	gnfdsdktypes "github.com/bnb-chain/greenfield/sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type GreenfieldExecutor struct {

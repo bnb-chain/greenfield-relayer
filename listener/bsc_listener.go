@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cometbft/cometbft/votepool"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -13,10 +14,10 @@ import (
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
-	"github.com/bnb-chain/greenfield-relayer/executor/crosschain"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/metric"
 	rtypes "github.com/bnb-chain/greenfield-relayer/types"
@@ -157,4 +158,34 @@ func (l *BSCListener) getCrossChainPackageEventHash() ethcommon.Hash {
 
 func (l *BSCListener) getCrossChainContractAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(l.config.RelayConfig.CrossChainContractAddr)
+}
+
+func (l *BSCListener) PurgeLoop() {
+	ticker := time.NewTicker(PurgeJobInterval)
+	for range ticker.C {
+		latestBscBlock, err := l.DaoManager.BSCDao.GetLatestBlock()
+		if err != nil {
+			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
+			continue
+		}
+		blockHeightThreshHold := int64(latestBscBlock.Height) - NumOfHistoricalBlocks
+		if blockHeightThreshHold <= 0 {
+			continue
+		}
+		if err = l.DaoManager.BSCDao.DeleteBlocksBelowHeight(blockHeightThreshHold); err != nil {
+			logging.Logger.Errorf("failed to delete Bsc blocks, err=%s", err.Error())
+			continue
+		}
+		exists, err := l.DaoManager.BSCDao.ExistsUnprocessedPackage(blockHeightThreshHold)
+		if err != nil || exists {
+			continue
+		}
+		if err = l.DaoManager.BSCDao.DeletePackagesBelowHeightWithLimit(blockHeightThreshHold, DeletionLimit); err != nil {
+			logging.Logger.Errorf("failed to delete bsc packages, err=%s", err.Error())
+			continue
+		}
+		if err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(blockHeightThreshHold, uint32(votepool.FromBscCrossChainEvent), DeletionLimit); err != nil {
+			logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
+		}
+	}
 }

@@ -155,3 +155,35 @@ func (d *BSCDao) DeleteBlockAndPackagesAtHeight(height uint64) error {
 		return nil
 	})
 }
+
+func (d *BSCDao) DeleteBlocksBelowHeight(threshHold int64) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		err := dbTx.Where("height < ?", threshHold).Delete(model.BscBlock{}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (d *BSCDao) DeletePackagesBelowHeightWithLimit(threshHold int64, limit int) error {
+	return d.DB.Transaction(func(dbTx *gorm.DB) error {
+		err := dbTx.Where("height < ?", threshHold).Delete(model.BscRelayPackage{}).Limit(limit).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (d *BSCDao) ExistsUnprocessedPackage(threshHold int64) (bool, error) {
+	tx := model.BscRelayPackage{}
+	err := d.DB.Model(model.BscRelayPackage{}).Where("status = ? or status = ? and height < ?", db.Saved, db.SelfVoted, threshHold).Take(&tx).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
