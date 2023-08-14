@@ -80,7 +80,7 @@ func TestSyncTendermintHeader(t *testing.T) {
 
 func TestGetLogsFromHeader(t *testing.T) {
 	e := InitBSCExecutor()
-	client := e.GetRpcClient()
+	client := e.GetEthClient()
 	height, err := e.GetLatestFinalizedBlockHeightWithRetry()
 	require.NoError(t, err)
 	header, err := e.GetBlockHeaderAtHeight(height)

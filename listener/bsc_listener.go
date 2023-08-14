@@ -138,7 +138,7 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64) error {
 }
 
 func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log, error) {
-	client := l.bscExecutor.GetRpcClient()
+	client := l.bscExecutor.GetEthClient()
 	topics := [][]ethcommon.Hash{{l.getCrossChainPackageEventHash()}}
 	logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 		BlockHash: &blockHash,
