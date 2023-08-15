@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"time"
 
 	"cosmossdk.io/errors"
@@ -89,7 +90,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 				}
 				return nil
 			}
-			inTurnRelayerStartSeq, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+			inTurnRelayerStartSeq, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry(a.getChainId())
 			if err != nil {
 				return err
 			}
@@ -106,7 +107,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		a.inturnRelayerSequenceStatus.HasRetrieved = false
 		// non-inturn relayer retries every 10 second, gets the sequence from chain
 		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)
-		startSeq, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+		startSeq, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry(a.getChainId())
 		if err != nil {
 			return err
 		}
@@ -172,7 +173,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 					return nonceErr
 				}
 				a.relayerNonce = newNonce
-				newNextDeliveryOracleSeq, seqErr := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+				newNextDeliveryOracleSeq, seqErr := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry(a.getChainId())
 				if seqErr != nil {
 					return seqErr
 				}
@@ -238,4 +239,8 @@ func (a *BSCAssembler) updateMetrics(channelId uint8, nextDeliveryOracleSeq uint
 	}
 	a.metricService.SetNextSendSequenceForChannel(channelId, nextSendOracleSeq)
 	return nil
+}
+
+func (a *BSCAssembler) getChainId() sdk.ChainID {
+	return sdk.ChainID(a.config.BSCConfig.ChainId)
 }

@@ -3,6 +3,7 @@ package listener
 import (
 	"context"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strings"
 	"time"
 
@@ -20,7 +21,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/executor"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/metric"
-	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
 type BSCListener struct {
@@ -110,8 +110,8 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64) error {
 		logging.Logger.Infof("get log: %d, %s, %s", log.BlockNumber, log.Topics[0].String(), log.TxHash.String())
 		relayPkg, err := ParseRelayPackage(&l.crossChainAbi,
 			&log, nextHeightBlockHeader.Time,
-			rtypes.ChainId(l.config.GreenfieldConfig.ChainId),
-			rtypes.ChainId(l.config.BSCConfig.ChainId),
+			sdk.ChainID(l.config.GreenfieldConfig.ChainId),
+			sdk.ChainID(l.config.BSCConfig.ChainId),
 			&l.config.RelayConfig,
 		)
 		if err != nil {
