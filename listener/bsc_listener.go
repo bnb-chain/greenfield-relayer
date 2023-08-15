@@ -70,7 +70,7 @@ func (l *BSCListener) poll() error {
 			nextHeight = latestPolledBlockHeight + 1
 		}
 
-		latestBlockHeight, err := l.bscExecutor.GetLatestBlockHeightWithRetry()
+		latestBlockHeight, err := l.bscExecutor.GetLatestFinalizedBlockHeightWithRetry()
 		if err != nil {
 			logging.Logger.Errorf("failed to get latest blockHeight, error: %s", err.Error())
 			return err
@@ -80,7 +80,7 @@ func (l *BSCListener) poll() error {
 			return nil
 		}
 	}
-	if err = l.monitorCrossChainPkgAt(nextHeight, latestPolledBlock); err != nil {
+	if err = l.monitorCrossChainPkgAt(nextHeight); err != nil {
 		logging.Logger.Errorf("encounter error when monitor cross-chain packages at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
@@ -91,7 +91,7 @@ func (l *BSCListener) getLatestPolledBlock() (*model.BscBlock, error) {
 	return l.DaoManager.BSCDao.GetLatestBlock()
 }
 
-func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBlock *model.BscBlock) error {
+func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64) error {
 	nextHeightBlockHeader, err := l.bscExecutor.GetBlockHeaderAtHeight(nextHeight)
 	if err != nil {
 		return err
@@ -101,14 +101,6 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		return nil
 	}
 	logging.Logger.Infof("retrieved BSC block header at height=%d", nextHeight)
-	// check if the latest polled block in DB is forked, if so, delete it.
-	isForked, err := l.isForkedBlockAndDelete(latestPolledBlock, nextHeight, nextHeightBlockHeader.ParentHash)
-	if err != nil {
-		return err
-	}
-	if isForked {
-		return fmt.Errorf("there is fork at block height=%d", latestPolledBlock.Height)
-	}
 	logs, err := l.queryCrossChainLogs(nextHeightBlockHeader.Hash())
 	if err != nil {
 		return fmt.Errorf("failed to get logs from block at height=%d, err=%s", nextHeight, err.Error())
@@ -147,7 +139,7 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 }
 
 func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log, error) {
-	client := l.bscExecutor.GetRpcClient()
+	client := l.bscExecutor.GetEthClient()
 	topics := [][]ethcommon.Hash{{l.getCrossChainPackageEventHash()}}
 	logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 		BlockHash: &blockHash,
@@ -158,20 +150,6 @@ func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log
 		return nil, err
 	}
 	return logs, nil
-}
-
-func (l *BSCListener) isForkedBlockAndDelete(latestPolledBlock *model.BscBlock, nextHeight uint64, parentHash ethcommon.Hash) (bool, error) {
-	if latestPolledBlock.Height != 0 &&
-		latestPolledBlock.Height+1 == nextHeight &&
-		parentHash.String() != latestPolledBlock.BlockHash {
-		// delete latestPolledBlock and its cross-chain packages from DB
-		if err := l.DaoManager.BSCDao.DeleteBlockAndPackagesAtHeight(latestPolledBlock.Height); err != nil {
-			return true, err
-		}
-		logging.Logger.Infof("deleted block at height=%d from DB due to it is forked", latestPolledBlock.Height)
-		return true, nil
-	}
-	return false, nil
 }
 
 func (l *BSCListener) getCrossChainPackageEventHash() ethcommon.Hash {

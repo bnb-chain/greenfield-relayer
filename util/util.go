@@ -5,27 +5,8 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
 	"github.com/willf/bitset"
 )
-
-func IndexOf(element string, data []string) int {
-	for i, v := range data {
-		if element == v {
-			return i
-		}
-	}
-	return -1
-}
-
-func BlsPubKeyFromPrivKeyStr(privKeyStr string) []byte {
-	privKey, err := blst.SecretKeyFromBytes(common.Hex2Bytes(privKeyStr))
-	if err != nil {
-		panic(err)
-	}
-	return privKey.PublicKey().Marshal()
-}
 
 // QuotedStrToIntWithBitSize convert a QuoteStr ""6""  to int 6
 func QuotedStrToIntWithBitSize(str string, bitSize int) (uint64, error) {

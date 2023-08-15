@@ -28,21 +28,20 @@ func (cfg *AdminConfig) Validate() {
 }
 
 type GreenfieldConfig struct {
-	KeyType                   string   `json:"key_type"`
-	AWSRegion                 string   `json:"aws_region"`
-	AWSSecretName             string   `json:"aws_secret_name"`
-	AWSBlsSecretName          string   `json:"aws_bls_secret_name"`
-	RPCAddrs                  []string `json:"rpc_addrs"`
-	PrivateKey                string   `json:"private_key"`
-	BlsPrivateKey             string   `json:"bls_private_key"`
-	ChainId                   uint64   `json:"chain_id"`
-	StartHeight               uint64   `json:"start_height"`
-	NumberOfBlocksForFinality uint64   `json:"number_of_blocks_for_finality"`
-	MonitorChannelList        []uint8  `json:"monitor_channel_list"`
-	GasLimit                  int64    `json:"gas_limit"`
-	FeeAmount                 int64    `json:"fee_amount"`
-	ChainIdString             string   `json:"chain_id_string"`
-	UseWebsocket              bool     `json:"use_websocket"`
+	KeyType            string   `json:"key_type"`
+	AWSRegion          string   `json:"aws_region"`
+	AWSSecretName      string   `json:"aws_secret_name"`
+	AWSBlsSecretName   string   `json:"aws_bls_secret_name"`
+	RPCAddrs           []string `json:"rpc_addrs"`
+	PrivateKey         string   `json:"private_key"`
+	BlsPrivateKey      string   `json:"bls_private_key"`
+	ChainId            uint64   `json:"chain_id"`
+	StartHeight        uint64   `json:"start_height"`
+	MonitorChannelList []uint8  `json:"monitor_channel_list"`
+	GasLimit           int64    `json:"gas_limit"`
+	FeeAmount          int64    `json:"fee_amount"`
+	ChainIdString      string   `json:"chain_id_string"`
+	UseWebsocket       bool     `json:"use_websocket"`
 }
 
 func (cfg *GreenfieldConfig) Validate() {
@@ -105,6 +104,9 @@ func (cfg *BSCConfig) Validate() {
 	}
 	if cfg.GasLimit == 0 {
 		panic("gas_limit of BNB Smart Chain should be larger than 0")
+	}
+	if cfg.NumberOfBlocksForFinality < 2 || cfg.NumberOfBlocksForFinality > 21 {
+		panic("NumberOfBlocksForFinality should be [2, 21]")
 	}
 }
 

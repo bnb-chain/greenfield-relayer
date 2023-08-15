@@ -57,20 +57,12 @@ func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 
 // SignAndBroadcastVoteLoop signs using the bls private key, and broadcast the vote to votepool
 func (p *BSCVoteProcessor) signAndBroadcast() error {
-	latestHeight, err := p.bscExecutor.GetLatestBlockHeightWithRetry()
-	if err != nil {
-		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-		return err
-	}
 
+	// need to keep track of the height so that make sure that we aggregate packages are from only 1 block.
 	leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
 	if err != nil {
 		logging.Logger.Errorf("failed to get least saved packages' height, error: %s", err.Error())
 		return err
-	}
-
-	if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
-		return nil
 	}
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByHeightAndStatus(db.Saved, leastSavedPkgHeight)
 	if err != nil {
