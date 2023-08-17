@@ -3,9 +3,11 @@ package listener
 import (
 	"context"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strings"
 	"time"
 
+	"github.com/cometbft/cometbft/votepool"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -13,13 +15,12 @@ import (
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
+	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
 	"github.com/bnb-chain/greenfield-relayer/db/dao"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	"github.com/bnb-chain/greenfield-relayer/executor"
-	"github.com/bnb-chain/greenfield-relayer/executor/crosschain"
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/metric"
-	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
 type BSCListener struct {
@@ -69,7 +70,7 @@ func (l *BSCListener) poll() error {
 			nextHeight = latestPolledBlockHeight + 1
 		}
 
-		latestBlockHeight, err := l.bscExecutor.GetLatestBlockHeightWithRetry()
+		latestBlockHeight, err := l.bscExecutor.GetLatestFinalizedBlockHeightWithRetry()
 		if err != nil {
 			logging.Logger.Errorf("failed to get latest blockHeight, error: %s", err.Error())
 			return err
@@ -79,7 +80,7 @@ func (l *BSCListener) poll() error {
 			return nil
 		}
 	}
-	if err = l.monitorCrossChainPkgAt(nextHeight, latestPolledBlock); err != nil {
+	if err = l.monitorCrossChainPkgAt(nextHeight); err != nil {
 		logging.Logger.Errorf("encounter error when monitor cross-chain packages at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
@@ -90,7 +91,7 @@ func (l *BSCListener) getLatestPolledBlock() (*model.BscBlock, error) {
 	return l.DaoManager.BSCDao.GetLatestBlock()
 }
 
-func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBlock *model.BscBlock) error {
+func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64) error {
 	nextHeightBlockHeader, err := l.bscExecutor.GetBlockHeaderAtHeight(nextHeight)
 	if err != nil {
 		return err
@@ -100,14 +101,6 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		return nil
 	}
 	logging.Logger.Infof("retrieved BSC block header at height=%d", nextHeight)
-	// check if the latest polled block in DB is forked, if so, delete it.
-	isForked, err := l.isForkedBlockAndDelete(latestPolledBlock, nextHeight, nextHeightBlockHeader.ParentHash)
-	if err != nil {
-		return err
-	}
-	if isForked {
-		return fmt.Errorf("there is fork at block height=%d", latestPolledBlock.Height)
-	}
 	logs, err := l.queryCrossChainLogs(nextHeightBlockHeader.Hash())
 	if err != nil {
 		return fmt.Errorf("failed to get logs from block at height=%d, err=%s", nextHeight, err.Error())
@@ -117,8 +110,8 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		logging.Logger.Infof("get log: %d, %s, %s", log.BlockNumber, log.Topics[0].String(), log.TxHash.String())
 		relayPkg, err := ParseRelayPackage(&l.crossChainAbi,
 			&log, nextHeightBlockHeader.Time,
-			rtypes.ChainId(l.config.GreenfieldConfig.ChainId),
-			rtypes.ChainId(l.config.BSCConfig.ChainId),
+			sdk.ChainID(l.config.GreenfieldConfig.ChainId),
+			sdk.ChainID(l.config.BSCConfig.ChainId),
 			&l.config.RelayConfig,
 		)
 		if err != nil {
@@ -146,7 +139,7 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 }
 
 func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log, error) {
-	client := l.bscExecutor.GetRpcClient()
+	client := l.bscExecutor.GetEthClient()
 	topics := [][]ethcommon.Hash{{l.getCrossChainPackageEventHash()}}
 	logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 		BlockHash: &blockHash,
@@ -159,24 +152,40 @@ func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log
 	return logs, nil
 }
 
-func (l *BSCListener) isForkedBlockAndDelete(latestPolledBlock *model.BscBlock, nextHeight uint64, parentHash ethcommon.Hash) (bool, error) {
-	if latestPolledBlock.Height != 0 &&
-		latestPolledBlock.Height+1 == nextHeight &&
-		parentHash.String() != latestPolledBlock.BlockHash {
-		// delete latestPolledBlock and its cross-chain packages from DB
-		if err := l.DaoManager.BSCDao.DeleteBlockAndPackagesAtHeight(latestPolledBlock.Height); err != nil {
-			return true, err
-		}
-		logging.Logger.Infof("deleted block at height=%d from DB due to it is forked", latestPolledBlock.Height)
-		return true, nil
-	}
-	return false, nil
-}
-
 func (l *BSCListener) getCrossChainPackageEventHash() ethcommon.Hash {
 	return ethcommon.HexToHash(l.config.RelayConfig.CrossChainPackageEventHex)
 }
 
 func (l *BSCListener) getCrossChainContractAddress() ethcommon.Address {
 	return ethcommon.HexToAddress(l.config.RelayConfig.CrossChainContractAddr)
+}
+
+func (l *BSCListener) PurgeLoop() {
+	ticker := time.NewTicker(PurgeJobInterval)
+	for range ticker.C {
+		latestBscBlock, err := l.DaoManager.BSCDao.GetLatestBlock()
+		if err != nil {
+			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
+			continue
+		}
+		blockHeightThreshHold := int64(latestBscBlock.Height) - NumOfHistoricalBlocks
+		if blockHeightThreshHold <= 0 {
+			continue
+		}
+		if err = l.DaoManager.BSCDao.DeleteBlocksBelowHeight(blockHeightThreshHold); err != nil {
+			logging.Logger.Errorf("failed to delete Bsc blocks, err=%s", err.Error())
+			continue
+		}
+		exists, err := l.DaoManager.BSCDao.ExistsUnprocessedPackage(blockHeightThreshHold)
+		if err != nil || exists {
+			continue
+		}
+		if err = l.DaoManager.BSCDao.DeletePackagesBelowHeightWithLimit(blockHeightThreshHold, DeletionLimit); err != nil {
+			logging.Logger.Errorf("failed to delete bsc packages, err=%s", err.Error())
+			continue
+		}
+		if err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(blockHeightThreshHold, uint32(votepool.FromBscCrossChainEvent), DeletionLimit); err != nil {
+			logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
+		}
+	}
 }

@@ -12,6 +12,7 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/votepool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
@@ -23,7 +24,6 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/logging"
 	"github.com/bnb-chain/greenfield-relayer/types"
 	gnfdsdktypes "github.com/bnb-chain/greenfield/sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type GreenfieldExecutor struct {
@@ -182,9 +182,9 @@ func (e *GreenfieldExecutor) getNextDeliverySequenceForChannel(channelID types.C
 }
 
 // GetNextSendSequenceForChannelWithRetry gets the next send sequence of a specified channel from Greenfield
-func (e *GreenfieldExecutor) GetNextSendSequenceForChannelWithRetry(channelID types.ChannelId) (sequence uint64, err error) {
+func (e *GreenfieldExecutor) GetNextSendSequenceForChannelWithRetry(destChainID sdk.ChainID, channelID types.ChannelId) (sequence uint64, err error) {
 	return sequence, retry.Do(func() error {
-		sequence, err = e.getNextSendSequenceForChannel(channelID)
+		sequence, err = e.getNextSendSequenceForChannel(destChainID, channelID)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -194,31 +194,34 @@ func (e *GreenfieldExecutor) GetNextSendSequenceForChannelWithRetry(channelID ty
 		}))
 }
 
-func (e *GreenfieldExecutor) getNextSendSequenceForChannel(channelId types.ChannelId) (uint64, error) {
+func (e *GreenfieldExecutor) getNextSendSequenceForChannel(destChainId sdk.ChainID, channelId types.ChannelId) (uint64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
 	return e.GetGnfdClient().GetChannelSendSequence(
 		ctx,
+		destChainId,
 		uint32(channelId),
 	)
 }
 
 // GetNextReceiveOracleSequence gets the next receive Oracle sequence from Greenfield
-func (e *GreenfieldExecutor) GetNextReceiveOracleSequence() (uint64, error) {
+func (e *GreenfieldExecutor) GetNextReceiveOracleSequence(destChainId sdk.ChainID) (uint64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
 	return e.GetGnfdClient().GetChannelReceiveSequence(
 		ctx,
+		destChainId,
 		uint32(relayercommon.OracleChannelId),
 	)
 }
 
 // GetNextReceiveSequenceForChannel gets the sequence specifically for bsc -> gnfd package's channel from Greenfield
-func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(channelId types.ChannelId) (uint64, error) {
+func (e *GreenfieldExecutor) GetNextReceiveSequenceForChannel(destChainId sdk.ChainID, channelId types.ChannelId) (uint64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
 	return e.GetGnfdClient().GetChannelReceiveSequence(
 		ctx,
+		destChainId,
 		uint32(channelId),
 	)
 }

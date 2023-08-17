@@ -57,20 +57,12 @@ func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 
 // SignAndBroadcastVoteLoop signs using the bls private key, and broadcast the vote to votepool
 func (p *BSCVoteProcessor) signAndBroadcast() error {
-	latestHeight, err := p.bscExecutor.GetLatestBlockHeightWithRetry()
-	if err != nil {
-		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-		return err
-	}
 
+	// need to keep track of the height so that make sure that we aggregate packages are from only 1 block.
 	leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
 	if err != nil {
 		logging.Logger.Errorf("failed to get least saved packages' height, error: %s", err.Error())
 		return err
-	}
-
-	if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
-		return nil
 	}
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByHeightAndStatus(db.Saved, leastSavedPkgHeight)
 	if err != nil {
@@ -160,7 +152,7 @@ func (p *BSCVoteProcessor) signAndBroadcast() error {
 				return e
 			}
 			if !exist {
-				e = dao.SaveVote(dbTx, EntityToDto(v, uint8(channelId), seq, encodedPayload))
+				e = dao.SaveVote(dbTx, EntityToDto(v, uint8(channelId), seq, encodedPayload, int64(leastSavedPkgHeight)))
 				if e != nil {
 					return e
 				}
@@ -323,7 +315,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				validVotesCntPerReq--
 				continue
 			}
-			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload)); err != nil {
+			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload, localVote.Height)); err != nil {
 				return err
 			}
 		}
@@ -361,7 +353,7 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmt
 }
 
 func (p *BSCVoteProcessor) isOracleSequenceFilled(seq uint64) (bool, error) {
-	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequenceWithRetry(p.getChainId())
 	if err != nil {
 		return false, err
 	}
@@ -374,4 +366,8 @@ func (p *BSCVoteProcessor) reBroadcastVote(localVote *model.Vote) error {
 		return err
 	}
 	return p.bscExecutor.GreenfieldExecutor.BroadcastVote(v)
+}
+
+func (p *BSCVoteProcessor) getChainId() sdk.ChainID {
+	return sdk.ChainID(p.config.BSCConfig.ChainId)
 }

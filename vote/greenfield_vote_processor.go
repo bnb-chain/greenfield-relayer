@@ -58,20 +58,6 @@ func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
 }
 
 func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
-	latestHeight, err := p.greenfieldExecutor.GetLatestBlockHeight()
-	if err != nil {
-		logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-		return err
-	}
-
-	leastSavedTxHeight, err := p.daoManager.GreenfieldDao.GetLeastSavedTransactionHeight()
-	if err != nil {
-		logging.Logger.Errorf("failed to get least saved tx height, error: %s", err.Error())
-		return err
-	}
-	if leastSavedTxHeight+p.config.GreenfieldConfig.NumberOfBlocksForFinality > latestHeight {
-		return nil
-	}
 	txs, err := p.daoManager.GreenfieldDao.GetTransactionsByStatusWithLimit(db.Saved, p.config.VotePoolConfig.VotesBatchMaxSizePerInterval)
 	if err != nil {
 		logging.Logger.Errorf("failed to get transactions from db, error: %s", err.Error())
@@ -127,7 +113,7 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 				return e
 			}
 			if !exist {
-				if e = dao.SaveVote(dbTx, EntityToDto(v, tx.ChannelId, tx.Sequence, aggregatedPayload)); e != nil {
+				if e = dao.SaveVote(dbTx, EntityToDto(v, tx.ChannelId, tx.Sequence, aggregatedPayload, int64(tx.Height))); e != nil {
 					return e
 				}
 			}
@@ -285,7 +271,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				continue
 			}
 			// a vote result persisted into DB should be valid, unique.
-			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload)); err != nil {
+			if err = p.daoManager.VoteDao.SaveVote(EntityToDto(v, channelId, seq, localVote.ClaimPayload, localVote.Height)); err != nil {
 				return err
 			}
 		}

@@ -10,6 +10,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/votepool"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -316,4 +317,34 @@ func constructRelayTx(event abci.Event, height uint64) (*model.GreenfieldRelayTr
 	relayTx.Height = height
 	relayTx.UpdatedTime = time.Now().Unix()
 	return &relayTx, nil
+}
+
+func (l *GreenfieldListener) PurgeLoop() {
+	ticker := time.NewTicker(PurgeJobInterval)
+	for range ticker.C {
+		latestGnfdBlock, err := l.DaoManager.GreenfieldDao.GetLatestBlock()
+		if err != nil {
+			logging.Logger.Errorf("failed to get latest DB BSC block, err=%s", err.Error())
+			continue
+		}
+		threshHold := int64(latestGnfdBlock.Height) - NumOfHistoricalBlocks
+		if threshHold <= 0 {
+			continue
+		}
+		if err = l.DaoManager.GreenfieldDao.DeleteBlocksBelowHeight(threshHold); err != nil {
+			logging.Logger.Errorf("failed to delete gnfd blocks, err=%s", err.Error())
+			continue
+		}
+		exists, err := l.DaoManager.GreenfieldDao.ExistsUnprocessedTransaction(threshHold)
+		if err != nil || exists {
+			continue
+		}
+		if err = l.DaoManager.GreenfieldDao.DeleteTransactionsBelowHeightWithLimit(threshHold, DeletionLimit); err != nil {
+			logging.Logger.Errorf("failed to delete gnfd transactions, err=%s", err.Error())
+			continue
+		}
+		if err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(threshHold, uint32(votepool.ToBscCrossChainEvent), DeletionLimit); err != nil {
+			logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
+		}
+	}
 }

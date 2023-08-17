@@ -48,7 +48,6 @@ Go version above 1.20
     "bls_private_key": "your_private_key",
     "chain_id": 18,     // greenfield oracle module defines this
     "start_height": 1,
-    "number_of_blocks_for_finality": 0,
     "monitor_channel_list": [1,2,3,4,5,6],
     "gas_limit": 1000,
     "fee_amount": 5000000000000,
@@ -64,7 +63,7 @@ Go version above 1.20
     ],
     "private_key": "your_private_key",
     "gas_limit": 4700000,
-    "gas_price": 20000000000,
+    "gas_price": 10000000000,
     "number_of_blocks_for_finality": 2,
     "start_height": 0,
     "chain_id": 714
@@ -74,8 +73,8 @@ Go version above 1.20
 2. Config crosschain and greenfield light client smart contracts addresses, others can keep default value. 
 ```
 "relay_config": {
-    "bsc_to_greenfield_inturn_relayer_timeout": 90,
-    "greenfield_to_bsc_inturn_relayer_timeout": 45,
+    "bsc_to_greenfield_inturn_relayer_timeout": 40,
+    "greenfield_to_bsc_inturn_relayer_timeout": 30,
     "greenfield_sequence_update_latency": 8,
     "bsc_sequence_update_latency": 12,
     "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
@@ -168,7 +167,7 @@ docker run --name gnfd-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:8
 
 Create schema in MySQL client:
 
-```shell
+```mysql
 CREATE SCHEMA IF NOT EXISTS `greenfield-relayer` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 ```
 

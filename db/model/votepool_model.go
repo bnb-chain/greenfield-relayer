@@ -6,6 +6,7 @@ import (
 
 type Vote struct {
 	Id           int64
+	Height       int64  `gorm:"NOT NULL;index:idx_vote_height"`
 	Signature    string `gorm:"NOT NULL"`
 	EventType    uint32 `gorm:"NOT NULL"`
 	ClaimPayload []byte `gorm:"NOT NULL"`

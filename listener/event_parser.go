@@ -3,6 +3,7 @@ package listener
 import (
 	"encoding/hex"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -14,12 +15,12 @@ import (
 	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
-func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, greenfieldChainId, bscChainId rtypes.ChainId, config *config.RelayConfig) (*model.BscRelayPackage, error) {
+func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, greenfieldChainId, bscChainId sdk.ChainID, config *config.RelayConfig) (*model.BscRelayPackage, error) {
 	ev, err := parseCrossChainPackageEvent(abi, log, config)
 	if err != nil {
 		return nil, err
 	}
-	if rtypes.ChainId(ev.SrcChainId) != bscChainId || rtypes.ChainId(ev.DstChainId) != greenfieldChainId {
+	if sdk.ChainID(ev.SrcChainId) != bscChainId || sdk.ChainID(ev.DstChainId) != greenfieldChainId {
 		return nil, fmt.Errorf("event log's chain id(s) not expected, SrcChainId=%d, DstChainId=%d", ev.SrcChainId, ev.DstChainId)
 	}
 	var p model.BscRelayPackage

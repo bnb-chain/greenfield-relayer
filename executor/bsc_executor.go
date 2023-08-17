@@ -6,37 +6,85 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 	"sync"
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/spf13/viper"
 
 	relayercommon "github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
-	"github.com/bnb-chain/greenfield-relayer/executor/crosschain"
-	"github.com/bnb-chain/greenfield-relayer/executor/greenfieldlightclient"
+	"github.com/bnb-chain/greenfield-relayer/contract/crosschain"
+	"github.com/bnb-chain/greenfield-relayer/contract/greenfieldlightclient"
+	"github.com/bnb-chain/greenfield-relayer/contract/relayerhub"
 	"github.com/bnb-chain/greenfield-relayer/logging"
+	"github.com/bnb-chain/greenfield-relayer/metric"
 	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
 type BSCClient struct {
-	rpcClient             *ethclient.Client
+	rpcClient             *rpc.Client // for apis eth_getFinalizedBlock and eth_getFinalizedHeader usage, supported by BSC
+	ethClient             *ethclient.Client
 	crossChainClient      *crosschain.Crosschain
 	greenfieldLightClient *greenfieldlightclient.Greenfieldlightclient
+	relayerHub            *relayerhub.Relayerhub
 	provider              string
 	height                uint64
 	updatedAt             time.Time
 }
 
+func newBSCClients(config *config.Config) []*BSCClient {
+	bscClients := make([]*BSCClient, 0)
+	for _, provider := range config.BSCConfig.RPCAddrs {
+		rpcClient, err := rpc.DialContext(context.Background(), provider)
+		if err != nil {
+			panic("new rpc client error")
+		}
+		ethClient, err := ethclient.Dial(provider)
+		if err != nil {
+			panic("new eth client error")
+		}
+		greenfieldLightClient, err := greenfieldlightclient.NewGreenfieldlightclient(
+			common.HexToAddress(config.RelayConfig.GreenfieldLightClientContractAddr),
+			ethClient)
+		if err != nil {
+			panic("new crossChain client error")
+		}
+		crossChainClient, err := crosschain.NewCrosschain(
+			common.HexToAddress(config.RelayConfig.CrossChainContractAddr),
+			ethClient)
+		if err != nil {
+			panic("new greenfield light client error")
+		}
+		relayerHub, err := relayerhub.NewRelayerhub(
+			common.HexToAddress(config.RelayConfig.RelayerHubContractAddr),
+			ethClient)
+		if err != nil {
+			panic("new relayer hub error")
+		}
+		bscClients = append(bscClients, &BSCClient{
+			rpcClient:             rpcClient,
+			ethClient:             ethClient,
+			crossChainClient:      crossChainClient,
+			greenfieldLightClient: greenfieldLightClient,
+			relayerHub:            relayerHub,
+			provider:              provider,
+			updatedAt:             time.Now(),
+		})
+	}
+	return bscClients
+}
+
 type BSCExecutor struct {
-	gasPriceMutex      sync.RWMutex
 	mutex              sync.RWMutex
 	GreenfieldExecutor *GreenfieldExecutor
 	clientIdx          int
@@ -46,37 +94,7 @@ type BSCExecutor struct {
 	txSender           common.Address
 	gasPrice           *big.Int
 	relayers           []rtypes.Validator // cached relayers
-}
-
-func initBSCClients(config *config.Config) []*BSCClient {
-	bscClients := make([]*BSCClient, 0)
-
-	for _, provider := range config.BSCConfig.RPCAddrs {
-		rpcClient, err := ethclient.Dial(provider)
-		if err != nil {
-			panic("new eth client error")
-		}
-		greenfieldLightClient, err := greenfieldlightclient.NewGreenfieldlightclient(
-			common.HexToAddress(config.RelayConfig.GreenfieldLightClientContractAddr),
-			rpcClient)
-		if err != nil {
-			panic("new crossChain client error")
-		}
-		crossChainClient, err := crosschain.NewCrosschain(
-			common.HexToAddress(config.RelayConfig.CrossChainContractAddr),
-			rpcClient)
-		if err != nil {
-			panic("new greenfield light client error")
-		}
-		bscClients = append(bscClients, &BSCClient{
-			rpcClient:             rpcClient,
-			crossChainClient:      crossChainClient,
-			greenfieldLightClient: greenfieldLightClient,
-			provider:              provider,
-			updatedAt:             time.Now(),
-		})
-	}
-	return bscClients
+	metricService      *metric.MetricService
 }
 
 func getBscPrivateKey(cfg *config.BSCConfig) string {
@@ -101,7 +119,7 @@ func getBscPrivateKey(cfg *config.BSCConfig) string {
 	return privateKey
 }
 
-func NewBSCExecutor(cfg *config.Config) *BSCExecutor {
+func NewBSCExecutor(cfg *config.Config, metricService *metric.MetricService) *BSCExecutor {
 	privKey := viper.GetString(config.FlagConfigPrivateKey)
 	if privKey == "" {
 		privKey = getBscPrivateKey(&cfg.BSCConfig)
@@ -124,12 +142,13 @@ func NewBSCExecutor(cfg *config.Config) *BSCExecutor {
 		initGasPrice = big.NewInt(int64(cfg.BSCConfig.GasPrice))
 	}
 	return &BSCExecutor{
-		clientIdx:  0,
-		bscClients: initBSCClients(cfg),
-		privateKey: ecdsaPrivKey,
-		txSender:   txSender,
-		config:     cfg,
-		gasPrice:   initGasPrice,
+		clientIdx:     0,
+		bscClients:    newBSCClients(cfg),
+		privateKey:    ecdsaPrivKey,
+		txSender:      txSender,
+		config:        cfg,
+		gasPrice:      initGasPrice,
+		metricService: metricService,
 	}
 }
 
@@ -137,10 +156,16 @@ func (e *BSCExecutor) SetGreenfieldExecutor(ge *GreenfieldExecutor) {
 	e.GreenfieldExecutor = ge
 }
 
-func (e *BSCExecutor) GetRpcClient() *ethclient.Client {
+func (e *BSCExecutor) GetRpcClient() *rpc.Client {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
 	return e.bscClients[e.clientIdx].rpcClient
+}
+
+func (e *BSCExecutor) GetEthClient() *ethclient.Client {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.bscClients[e.clientIdx].ethClient
 }
 
 func (e *BSCExecutor) getCrossChainClient() *crosschain.Crosschain {
@@ -155,6 +180,12 @@ func (e *BSCExecutor) getGreenfieldLightClient() *greenfieldlightclient.Greenfie
 	return e.bscClients[e.clientIdx].greenfieldLightClient
 }
 
+func (e *BSCExecutor) getRelayerHub() *relayerhub.Relayerhub {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
+	return e.bscClients[e.clientIdx].relayerHub
+}
+
 func (e *BSCExecutor) SwitchClient() {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
@@ -165,13 +196,17 @@ func (e *BSCExecutor) SwitchClient() {
 	logging.Logger.Infof("switch to provider: %s", e.config.BSCConfig.RPCAddrs[e.clientIdx])
 }
 
-func (e *BSCExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
-	return e.getLatestBlockHeightWithRetry(e.GetRpcClient())
+func (e *BSCExecutor) GetLatestFinalizedBlockHeightWithRetry() (latestHeight uint64, err error) {
+	return e.getLatestBlockHeightWithRetry(e.GetEthClient(), e.GetRpcClient(), true)
 }
 
-func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (latestHeight uint64, err error) {
+func (e *BSCExecutor) GetLatestBlockHeightWithRetry() (latestHeight uint64, err error) {
+	return e.getLatestBlockHeightWithRetry(e.GetEthClient(), e.GetRpcClient(), false)
+}
+
+func (e *BSCExecutor) getLatestBlockHeightWithRetry(ethClient *ethclient.Client, rpcClient *rpc.Client, finalized bool) (latestHeight uint64, err error) {
 	return latestHeight, retry.Do(func() error {
-		latestHeight, err = e.getLatestBlockHeight(client)
+		latestHeight, err = e.getLatestBlockHeight(ethClient, rpcClient, finalized)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -181,14 +216,17 @@ func (e *BSCExecutor) getLatestBlockHeightWithRetry(client *ethclient.Client) (l
 		}))
 }
 
-func (e *BSCExecutor) getLatestBlockHeight(client *ethclient.Client) (uint64, error) {
+func (e *BSCExecutor) getLatestBlockHeight(client *ethclient.Client, rpcClient *rpc.Client, finalized bool) (uint64, error) {
 	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-	block, err := client.BlockByNumber(ctxWithTimeout, nil)
+	if finalized {
+		return e.getFinalizedBlockHeight(ctxWithTimeout, rpcClient)
+	}
+	header, err := client.HeaderByNumber(ctxWithTimeout, nil)
 	if err != nil {
 		return 0, err
 	}
-	return block.Number().Uint64(), nil
+	return header.Number.Uint64(), nil
 }
 
 func (e *BSCExecutor) UpdateClientLoop() {
@@ -202,7 +240,7 @@ func (e *BSCExecutor) UpdateClientLoop() {
 				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
 					e.config.AlertConfig.TelegramChatId, msg)
 			}
-			height, err := e.getLatestBlockHeight(bscClient.rpcClient)
+			height, err := e.getLatestBlockHeight(bscClient.ethClient, bscClient.rpcClient, true)
 			if err != nil {
 				logging.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue
@@ -231,7 +269,7 @@ func (e *BSCExecutor) UpdateClientLoop() {
 func (e *BSCExecutor) GetBlockHeaderAtHeight(height uint64) (*types.Header, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-	header, err := e.GetRpcClient().HeaderByNumber(ctx, big.NewInt(int64(height)))
+	header, err := e.GetEthClient().HeaderByNumber(ctx, big.NewInt(int64(height)))
 	if err != nil {
 		return nil, err
 	}
@@ -289,9 +327,9 @@ func (e *BSCExecutor) getNextSendOracleSequence() (sequence uint64, err error) {
 }
 
 // GetNextDeliveryOracleSequenceWithRetry gets the next delivery Oracle sequence from Greenfield
-func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry() (sequence uint64, err error) {
+func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry(chainId sdk.ChainID) (sequence uint64, err error) {
 	return sequence, retry.Do(func() error {
-		sequence, err = e.getNextDeliveryOracleSequence()
+		sequence, err = e.getNextDeliveryOracleSequence(chainId)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -301,8 +339,8 @@ func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry() (sequence uint64,
 		}))
 }
 
-func (e *BSCExecutor) getNextDeliveryOracleSequence() (uint64, error) {
-	sequence, err := e.GreenfieldExecutor.GetNextReceiveOracleSequence()
+func (e *BSCExecutor) getNextDeliveryOracleSequence(chainId sdk.ChainID) (uint64, error) {
+	sequence, err := e.GreenfieldExecutor.GetNextReceiveOracleSequence(chainId)
 	if err != nil {
 		return 0, err
 	}
@@ -322,15 +360,13 @@ func (e *BSCExecutor) getTransactor(nonce uint64) (*bind.TransactOpts, error) {
 }
 
 func (e *BSCExecutor) getGasPrice() *big.Int {
-	e.gasPriceMutex.RLock()
-	defer e.gasPriceMutex.RUnlock()
 	return e.gasPrice
 }
 
 func (e *BSCExecutor) SyncTendermintLightBlock(height uint64) (common.Hash, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-	nonce, err := e.GetRpcClient().PendingNonceAt(ctx, e.txSender)
+	nonce, err := e.GetEthClient().PendingNonceAt(ctx, e.txSender)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -380,7 +416,7 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte,
 func (e *BSCExecutor) GetNonce() (uint64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-	return e.GetRpcClient().PendingNonceAt(ctx, e.txSender)
+	return e.GetEthClient().PendingNonceAt(ctx, e.txSender)
 }
 
 func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte, nonce uint64) (common.Hash, error) {
@@ -487,4 +523,85 @@ func (e *BSCExecutor) GetInturnRelayer() (*rtypes.InturnRelayer, error) {
 		Start:        r.Start.Uint64(),
 		End:          r.End.Uint64(),
 	}, nil
+}
+
+func (e *BSCExecutor) getRelayerBalance() (*big.Int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	return e.GetEthClient().BalanceAt(ctx, e.txSender, nil)
+}
+
+func (e *BSCExecutor) claimReward() (common.Hash, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	nonce, err := e.GetEthClient().PendingNonceAt(ctx, e.txSender)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	txOpts, err := e.getTransactor(nonce)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	txResp, err := e.getRelayerHub().ClaimReward(txOpts, e.txSender)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	return txResp.Hash(), nil
+}
+
+func (e *BSCExecutor) getRewardBalance() (*big.Int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	callOpts := &bind.CallOpts{
+		Pending: true,
+		Context: ctx,
+	}
+	return e.getRelayerHub().RewardMap(callOpts, e.txSender)
+}
+
+// ClaimRewardLoop relayer would claim the reward if its balance is below 1BNB and the Reward is over 0.1BNB.
+// if after refilled with the rewards, its balance is still lower than 1BNB, it will keep alerting
+func (e *BSCExecutor) ClaimRewardLoop() {
+	ticker := time.NewTicker(ClaimRewardInterval)
+	for range ticker.C {
+		logging.Logger.Info("starting claiming rewards loop")
+		balance, err := e.getRelayerBalance()
+		if err != nil {
+			logging.Logger.Errorf("failed to get relayer balance err=%s", err.Error())
+			continue
+		}
+		logging.Logger.Infof("current relayer balance is %v", balance)
+
+		// should not claim if balance > 1 BNB
+		if balance.Cmp(BSCBalanceThreshold) > 0 {
+			e.metricService.SetBSCLowBalance(false)
+			continue
+		}
+		rewardBalance, err := e.getRewardBalance()
+		if err != nil {
+			logging.Logger.Errorf("failed to get relayer reward balance err=%s", err.Error())
+			continue
+		}
+		logging.Logger.Infof("current relayer reward balance is %v", balance)
+		if rewardBalance.Cmp(BSCRewardThreshold) <= 0 {
+			e.metricService.SetBSCLowBalance(true)
+			continue
+		}
+		// > 0.1 BNB
+		txHash, err := e.claimReward()
+		if err != nil {
+			logging.Logger.Errorf("failed to claim reward, txHash=%s, err=%s", txHash, err.Error())
+		}
+		logging.Logger.Infof("claimed rewards, txHash is %s", txHash)
+	}
+}
+
+// getFinalizedBlockHeight gets the finalizedBlockHeight, which is the larger one between (fastFinalizedBlockHeight, NumberOfBlocksForFinality from config).
+func (e *BSCExecutor) getFinalizedBlockHeight(ctx context.Context, rpcClient *rpc.Client) (uint64, error) {
+	var head *types.Header
+	err := rpcClient.CallContext(ctx, &head, "eth_getFinalizedHeader", e.config.BSCConfig.NumberOfBlocksForFinality)
+	if err == nil && head == nil {
+		return 0, ethereum.NotFound
+	}
+	return head.Number.Uint64(), nil
 }
