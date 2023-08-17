@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"encoding/hex"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	cbfttypes "github.com/cometbft/cometbft/types"
@@ -24,14 +25,14 @@ func TestGetLatestBlockHeightWithRetry(t *testing.T) {
 
 func TestGetNextReceiveOracleSequence(t *testing.T) {
 	e := GnfdExecutor()
-	oracleSeq, err := e.GetNextReceiveOracleSequence()
+	oracleSeq, err := e.GetNextReceiveOracleSequence(sdk.ChainID(e.config.BSCConfig.ChainId))
 	require.NoError(t, err)
 	t.Log(oracleSeq)
 }
 
 func TestGetNextSendSequenceForChannel(t *testing.T) {
 	e := GnfdExecutor()
-	sendSeq, err := e.GetNextSendSequenceForChannelWithRetry(1)
+	sendSeq, err := e.GetNextSendSequenceForChannelWithRetry(sdk.ChainID(e.config.BSCConfig.ChainId), 1)
 	require.NoError(t, err)
 	t.Log(sendSeq)
 }

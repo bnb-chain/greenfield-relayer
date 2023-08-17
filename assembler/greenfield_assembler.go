@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"sync"
 	"time"
 
@@ -148,7 +149,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 			return nil
 		}
 	} else {
-		endSeq, err := a.greenfieldExecutor.GetNextSendSequenceForChannelWithRetry(channelId)
+		endSeq, err := a.greenfieldExecutor.GetNextSendSequenceForChannelWithRetry(a.getDestChainId(), channelId)
 		if err != nil {
 			return err
 		}
@@ -233,10 +234,14 @@ func (a *GreenfieldAssembler) getMonitorChannels() []uint8 {
 
 func (a *GreenfieldAssembler) updateMetrics(channelId types.ChannelId, nextDeliverySeq uint64) error {
 	a.metricService.SetNextReceiveSequenceForChannel(uint8(channelId), nextDeliverySeq)
-	nextSendSeq, err := a.greenfieldExecutor.GetNextSendSequenceForChannelWithRetry(channelId)
+	nextSendSeq, err := a.greenfieldExecutor.GetNextSendSequenceForChannelWithRetry(a.getDestChainId(), channelId)
 	if err != nil {
 		return err
 	}
 	a.metricService.SetNextSendSequenceForChannel(uint8(channelId), nextSendSeq)
 	return nil
+}
+
+func (a *GreenfieldAssembler) getDestChainId() sdk.ChainID {
+	return sdk.ChainID(a.config.BSCConfig.ChainId)
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 	"sync"
 	"time"
@@ -326,9 +327,9 @@ func (e *BSCExecutor) getNextSendOracleSequence() (sequence uint64, err error) {
 }
 
 // GetNextDeliveryOracleSequenceWithRetry gets the next delivery Oracle sequence from Greenfield
-func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry() (sequence uint64, err error) {
+func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry(chainId sdk.ChainID) (sequence uint64, err error) {
 	return sequence, retry.Do(func() error {
-		sequence, err = e.getNextDeliveryOracleSequence()
+		sequence, err = e.getNextDeliveryOracleSequence(chainId)
 		return err
 	}, relayercommon.RtyAttem,
 		relayercommon.RtyDelay,
@@ -338,8 +339,8 @@ func (e *BSCExecutor) GetNextDeliveryOracleSequenceWithRetry() (sequence uint64,
 		}))
 }
 
-func (e *BSCExecutor) getNextDeliveryOracleSequence() (uint64, error) {
-	sequence, err := e.GreenfieldExecutor.GetNextReceiveOracleSequence()
+func (e *BSCExecutor) getNextDeliveryOracleSequence(chainId sdk.ChainID) (uint64, error) {
+	sequence, err := e.GreenfieldExecutor.GetNextReceiveOracleSequence(chainId)
 	if err != nil {
 		return 0, err
 	}

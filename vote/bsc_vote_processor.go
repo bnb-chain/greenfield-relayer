@@ -353,7 +353,7 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmt
 }
 
 func (p *BSCVoteProcessor) isOracleSequenceFilled(seq uint64) (bool, error) {
-	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequenceWithRetry()
+	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequenceWithRetry(p.getChainId())
 	if err != nil {
 		return false, err
 	}
@@ -366,4 +366,8 @@ func (p *BSCVoteProcessor) reBroadcastVote(localVote *model.Vote) error {
 		return err
 	}
 	return p.bscExecutor.GreenfieldExecutor.BroadcastVote(v)
+}
+
+func (p *BSCVoteProcessor) getChainId() sdk.ChainID {
+	return sdk.ChainID(p.config.BSCConfig.ChainId)
 }
