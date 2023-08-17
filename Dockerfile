@@ -36,7 +36,7 @@ ENV DB_PASS ""
 ENV AWS_REGION ""
 ENV AWS_SECRET_KEY ""
 
-ENV PACKAGES ca-certificates bash curl libstdc++
+ENV PACKAGES ca-certificates libstdc++
 ENV WORKDIR=/app
 
 RUN apk add --no-cache $PACKAGES \
@@ -45,8 +45,6 @@ RUN apk add --no-cache $PACKAGES \
   && adduser -u ${USER_UID} -G ${USER} --shell /sbin/nologin --no-create-home -D ${USER} \
   && addgroup ${USER} tty \
   && sed -i -e "s/bin\/sh/bin\/bash/" /etc/passwd
-
-RUN echo "[ ! -z \"\$TERM\" -a -r /etc/motd ] && cat /etc/motd" >> /etc/bash/bashrc
 
 WORKDIR ${WORKDIR}
 
