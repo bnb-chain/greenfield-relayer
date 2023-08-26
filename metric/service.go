@@ -28,6 +28,8 @@ const (
 	MetricNameNextReceiveSequenceForChannel = "next_receive_seq_for_channel"
 
 	MetricNameBSCLowBalance = "bsc_low_balance"
+
+	MetricNameTxLag = "tx_lag"
 )
 
 type MetricService struct {
@@ -169,6 +171,13 @@ func NewMetricService(config *config.Config) *MetricService {
 	ms[MetricNameBSCLowBalance] = bscLowBalanceMetric
 	prometheus.MustRegister(bscLowBalanceMetric)
 
+	txLagMetric := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameTxLag,
+		Help: "transaction lag over 300s",
+	})
+	ms[MetricNameTxLag] = txLagMetric
+	prometheus.MustRegister(txLagMetric)
+
 	return &MetricService{
 		MetricsMap: ms,
 		cfg:        config,
@@ -257,4 +266,12 @@ func (m *MetricService) SetBSCLowBalance(isLow bool) {
 		flag = 1
 	}
 	m.MetricsMap[MetricNameBSCLowBalance].(prometheus.Gauge).Set(flag)
+}
+
+func (m *MetricService) SetTxLag(isLag bool) {
+	var flag float64
+	if isLag {
+		flag = 1
+	}
+	m.MetricsMap[MetricNameTxLag].(prometheus.Gauge).Set(flag)
 }

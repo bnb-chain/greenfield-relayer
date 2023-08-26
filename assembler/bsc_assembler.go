@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"sync"
 	"time"
 
 	"cosmossdk.io/errors"
@@ -32,6 +33,8 @@ type BSCAssembler struct {
 	inturnRelayerSequenceStatus *types.SequenceStatus
 	relayerNonce                uint64
 	metricService               *metric.MetricService
+	alertSetMutex               sync.RWMutex
+	alertSet                    map[uint64]struct{}
 }
 
 func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor, ms *metric.MetricService) *BSCAssembler {
@@ -43,6 +46,7 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 		blsPubKey:                   greenfieldExecutor.BlsPubKey,
 		inturnRelayerSequenceStatus: &types.SequenceStatus{},
 		metricService:               ms,
+		alertSet:                    make(map[uint64]struct{}, 0),
 	}
 }
 
@@ -138,6 +142,25 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	}
 	logging.Logger.Debugf("start seq and end enq are %d and %d", startSeq, endSequence)
 
+	// if the start seq larger than the largest in the set, then we clear the alert because tx is delivery by itself or other relayers
+	a.alertSetMutex.Lock()
+	if len(a.alertSet) > 0 {
+		// there are remaining alerts, some of them might have been false alerts need to clear.
+		var maxSeqOfAlert uint64
+		for k, _ := range a.alertSet {
+			if k > maxSeqOfAlert {
+				maxSeqOfAlert = k
+			}
+		}
+		if startSeq > maxSeqOfAlert {
+			logging.Logger.Debugf("maxSeqOfAlert is %d", maxSeqOfAlert)
+			a.metricService.SetTxLag(false)
+			a.alertSet = make(map[uint64]struct{}, 0)
+		}
+	}
+	a.alertSetMutex.Unlock()
+
+	now := time.Now().Unix()
 	client := a.greenfieldExecutor.GetGnfdClient()
 	for i := startSeq; i <= uint64(endSequence); i++ {
 		pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(i)
@@ -149,6 +172,12 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		}
 		status := pkgs[0].Status
 		pkgTime := pkgs[0].TxTime
+		if now-pkgTime > common.TxLagAlertThreshHold {
+			a.metricService.SetTxLag(true)
+			a.alertSetMutex.Lock()
+			a.alertSet[i] = struct{}{}
+			a.alertSetMutex.Unlock()
+		}
 
 		if status != db.AllVoted && status != db.Delivered {
 			return fmt.Errorf("packages with oracle sequence %d does not get enough votes yet", i)
