@@ -165,20 +165,18 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 
 	logging.Logger.Debugf("channel %d start seq and end enq are %d and %d", channelId, startSeq, endSequence)
 
-	// if the start seq larger than the largest in the set, then we clear the alert because tx is delivery by itself or other relayers
+	// if the start seq larger than the largest alerts' related tx's seq, then clear all alerts because tx are delivered
 	a.alertSetMutex.Lock()
 	if len(a.alertSet) > 0 {
-		// there are remaining alerts, some of them might have been false alerts need to clear.
-		var maxSeqOfAlert uint64
-		for k, _ := range a.alertSet {
-			if k.seq > maxSeqOfAlert {
-				maxSeqOfAlert = k.seq
+		var maxTxSeqOfAlert uint64
+		for k := range a.alertSet {
+			if k.seq > maxTxSeqOfAlert {
+				maxTxSeqOfAlert = k.seq
 			}
 		}
-		if startSeq > maxSeqOfAlert {
-			logging.Logger.Debugf("maxSeqOfAlert is %d", maxSeqOfAlert)
-			a.metricService.SetTxLag(false)
-			for k, _ := range a.alertSet {
+		if startSeq > maxTxSeqOfAlert {
+			a.metricService.SetHasTxDelay(false)
+			for k := range a.alertSet {
 				if k.channel == channelId {
 					delete(a.alertSet, k)
 				}
@@ -197,8 +195,8 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 			return nil
 		}
 
-		if now-tx.TxTime > common.TxLagAlertThreshHold {
-			a.metricService.SetTxLag(true)
+		if now-tx.TxTime > common.TxDelayAlertThreshHold {
+			a.metricService.SetHasTxDelay(true)
 			key := AlertKey{
 				channel: channelId,
 				seq:     i,

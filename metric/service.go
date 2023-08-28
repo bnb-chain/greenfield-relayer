@@ -29,7 +29,7 @@ const (
 
 	MetricNameBSCLowBalance = "bsc_low_balance"
 
-	MetricNameTxLag = "tx_lag"
+	MetricNameHasTxDelay = "tx_delay"
 )
 
 type MetricService struct {
@@ -171,12 +171,12 @@ func NewMetricService(config *config.Config) *MetricService {
 	ms[MetricNameBSCLowBalance] = bscLowBalanceMetric
 	prometheus.MustRegister(bscLowBalanceMetric)
 
-	txLagMetric := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: MetricNameTxLag,
-		Help: "transaction lag over 300s",
+	hasTxDelayMetric := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: MetricNameHasTxDelay,
+		Help: "transaction delayed over 300s",
 	})
-	ms[MetricNameTxLag] = txLagMetric
-	prometheus.MustRegister(txLagMetric)
+	ms[MetricNameHasTxDelay] = hasTxDelayMetric
+	prometheus.MustRegister(hasTxDelayMetric)
 
 	return &MetricService{
 		MetricsMap: ms,
@@ -268,10 +268,10 @@ func (m *MetricService) SetBSCLowBalance(isLow bool) {
 	m.MetricsMap[MetricNameBSCLowBalance].(prometheus.Gauge).Set(flag)
 }
 
-func (m *MetricService) SetTxLag(isLag bool) {
+func (m *MetricService) SetHasTxDelay(hasDelay bool) {
 	var flag float64
-	if isLag {
+	if hasDelay {
 		flag = 1
 	}
-	m.MetricsMap[MetricNameTxLag].(prometheus.Gauge).Set(flag)
+	m.MetricsMap[MetricNameHasTxDelay].(prometheus.Gauge).Set(flag)
 }

@@ -142,19 +142,16 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	}
 	logging.Logger.Debugf("start seq and end enq are %d and %d", startSeq, endSequence)
 
-	// if the start seq larger than the largest in the set, then we clear the alert because tx is delivery by itself or other relayers
 	a.alertSetMutex.Lock()
 	if len(a.alertSet) > 0 {
-		// there are remaining alerts, some of them might have been false alerts need to clear.
-		var maxSeqOfAlert uint64
-		for k, _ := range a.alertSet {
-			if k > maxSeqOfAlert {
-				maxSeqOfAlert = k
+		var maxTxSeqOfAlert uint64
+		for k := range a.alertSet {
+			if k > maxTxSeqOfAlert {
+				maxTxSeqOfAlert = k
 			}
 		}
-		if startSeq > maxSeqOfAlert {
-			logging.Logger.Debugf("maxSeqOfAlert is %d", maxSeqOfAlert)
-			a.metricService.SetTxLag(false)
+		if startSeq > maxTxSeqOfAlert {
+			a.metricService.SetHasTxDelay(false)
 			a.alertSet = make(map[uint64]struct{}, 0)
 		}
 	}
@@ -172,8 +169,8 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		}
 		status := pkgs[0].Status
 		pkgTime := pkgs[0].TxTime
-		if now-pkgTime > common.TxLagAlertThreshHold {
-			a.metricService.SetTxLag(true)
+		if now-pkgTime > common.TxDelayAlertThreshHold {
+			a.metricService.SetHasTxDelay(true)
 			a.alertSetMutex.Lock()
 			a.alertSet[i] = struct{}{}
 			a.alertSetMutex.Unlock()

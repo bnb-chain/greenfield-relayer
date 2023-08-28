@@ -23,5 +23,5 @@ const (
 	ErrorRetryInterval = 1 * time.Second
 	AssembleInterval   = 500 * time.Millisecond
 
-	TxLagAlertThreshHold = 300 // in second
+	TxDelayAlertThreshHold = 300 // in second
 )
