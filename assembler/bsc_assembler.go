@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"sync"
 	"time"
 
 	"cosmossdk.io/errors"
@@ -33,7 +32,6 @@ type BSCAssembler struct {
 	inturnRelayerSequenceStatus *types.SequenceStatus
 	relayerNonce                uint64
 	metricService               *metric.MetricService
-	alertSetMutex               sync.RWMutex
 	alertSet                    map[uint64]struct{}
 }
 
@@ -142,7 +140,6 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	}
 	logging.Logger.Debugf("start seq and end enq are %d and %d", startSeq, endSequence)
 
-	a.alertSetMutex.Lock()
 	if len(a.alertSet) > 0 {
 		var maxTxSeqOfAlert uint64
 		for k := range a.alertSet {
@@ -155,9 +152,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 			a.alertSet = make(map[uint64]struct{}, 0)
 		}
 	}
-	a.alertSetMutex.Unlock()
 
-	now := time.Now().Unix()
 	client := a.greenfieldExecutor.GetGnfdClient()
 	for i := startSeq; i <= uint64(endSequence); i++ {
 		pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(i)
@@ -169,11 +164,9 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		}
 		status := pkgs[0].Status
 		pkgTime := pkgs[0].TxTime
-		if now-pkgTime > common.TxDelayAlertThreshHold {
+		if time.Since(time.Unix(pkgTime, 0)).Seconds() > common.TxDelayAlertThreshHold {
 			a.metricService.SetHasTxDelay(true)
-			a.alertSetMutex.Lock()
 			a.alertSet[i] = struct{}{}
-			a.alertSetMutex.Unlock()
 		}
 
 		if status != db.AllVoted && status != db.Delivered {

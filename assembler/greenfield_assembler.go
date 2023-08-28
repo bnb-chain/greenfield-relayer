@@ -184,8 +184,6 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		}
 	}
 	a.alertSetMutex.Unlock()
-
-	now := time.Now().Unix()
 	for i := startSeq; i <= uint64(endSequence); i++ {
 		tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequence(channelId, i)
 		if err != nil {
@@ -195,7 +193,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 			return nil
 		}
 
-		if now-tx.TxTime > common.TxDelayAlertThreshHold {
+		if time.Since(time.Unix(tx.TxTime, 0)).Seconds() > common.TxDelayAlertThreshHold {
 			a.metricService.SetHasTxDelay(true)
 			key := AlertKey{
 				channel: channelId,
