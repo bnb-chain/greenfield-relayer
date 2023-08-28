@@ -22,4 +22,6 @@ const (
 	ListenerPauseTime  = 2 * time.Second
 	ErrorRetryInterval = 1 * time.Second
 	AssembleInterval   = 500 * time.Millisecond
+
+	TxDelayAlertThreshHold = 300 // in second
 )
