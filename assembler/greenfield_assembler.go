@@ -21,6 +21,11 @@ import (
 	"github.com/bnb-chain/greenfield-relayer/vote"
 )
 
+type AlertKey struct {
+	channel types.ChannelId
+	seq     uint64
+}
+
 type GreenfieldAssembler struct {
 	mutex                          sync.RWMutex
 	config                         *config.Config
@@ -31,6 +36,8 @@ type GreenfieldAssembler struct {
 	inturnRelayerSequenceStatusMap map[types.ChannelId]*types.SequenceStatus // flag for in-turn relayer that if it has requested the sequence from chain during its interval
 	relayerNonceStatus             *types.NonceStatus
 	metricService                  *metric.MetricService
+	alertSetMutex                  sync.RWMutex
+	alertSet                       map[AlertKey]struct{}
 }
 
 func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExecutor, dao *dao.DaoManager, bscExecutor *executor.BSCExecutor,
@@ -41,7 +48,6 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 	for _, c := range channels {
 		inturnRelayerSequenceStatusMap[types.ChannelId(c)] = &types.SequenceStatus{}
 	}
-
 	return &GreenfieldAssembler{
 		config:                         cfg,
 		greenfieldExecutor:             executor,
@@ -51,6 +57,7 @@ func NewGreenfieldAssembler(cfg *config.Config, executor *executor.GreenfieldExe
 		inturnRelayerSequenceStatusMap: inturnRelayerSequenceStatusMap,
 		relayerNonceStatus:             &types.NonceStatus{},
 		metricService:                  ms,
+		alertSet:                       make(map[AlertKey]struct{}, 0),
 	}
 }
 
@@ -158,22 +165,51 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 
 	logging.Logger.Debugf("channel %d start seq and end enq are %d and %d", channelId, startSeq, endSequence)
 
+	// if the start seq larger than the largest alerts' related tx's seq, then clear all alerts because tx are delivered
+	a.alertSetMutex.Lock()
+	if len(a.alertSet) > 0 {
+		var maxTxSeqOfAlert uint64
+		for k := range a.alertSet {
+			if k.seq > maxTxSeqOfAlert {
+				maxTxSeqOfAlert = k.seq
+			}
+		}
+		if startSeq > maxTxSeqOfAlert {
+			a.metricService.SetHasTxDelay(false)
+			for k := range a.alertSet {
+				if k.channel == channelId {
+					delete(a.alertSet, k)
+				}
+			}
+		}
+	}
+	a.alertSetMutex.Unlock()
 	for i := startSeq; i <= uint64(endSequence); i++ {
 		tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequence(channelId, i)
 		if err != nil {
 			return err
 		}
-
 		if (*tx == model.GreenfieldRelayTransaction{}) {
 			return nil
 		}
+
+		if time.Since(time.Unix(tx.TxTime, 0)).Seconds() > common.TxDelayAlertThreshHold {
+			a.metricService.SetHasTxDelay(true)
+			key := AlertKey{
+				channel: channelId,
+				seq:     i,
+			}
+			a.alertSetMutex.Lock()
+			a.alertSet[key] = struct{}{}
+			a.alertSetMutex.Unlock()
+		}
+
 		if tx.Status != db.AllVoted && tx.Status != db.Delivered {
 			return fmt.Errorf("tx with channel id %d and sequence %d does not get enough votes yet", tx.ChannelId, tx.Sequence)
 		}
 		if !isInturnRelyer && time.Now().Unix() < tx.TxTime+a.config.RelayConfig.GreenfieldToBSCInturnRelayerTimeout {
 			return nil
 		}
-
 		if err := a.processTx(tx, a.relayerNonceStatus.Nonce, isInturnRelyer); err != nil {
 			return err
 		}

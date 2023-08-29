@@ -32,6 +32,7 @@ type BSCAssembler struct {
 	inturnRelayerSequenceStatus *types.SequenceStatus
 	relayerNonce                uint64
 	metricService               *metric.MetricService
+	alertSet                    map[uint64]struct{}
 }
 
 func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *dao.DaoManager, greenfieldExecutor *executor.GreenfieldExecutor, ms *metric.MetricService) *BSCAssembler {
@@ -43,6 +44,7 @@ func NewBSCAssembler(cfg *config.Config, executor *executor.BSCExecutor, dao *da
 		blsPubKey:                   greenfieldExecutor.BlsPubKey,
 		inturnRelayerSequenceStatus: &types.SequenceStatus{},
 		metricService:               ms,
+		alertSet:                    make(map[uint64]struct{}, 0),
 	}
 }
 
@@ -138,6 +140,19 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	}
 	logging.Logger.Debugf("start seq and end enq are %d and %d", startSeq, endSequence)
 
+	if len(a.alertSet) > 0 {
+		var maxTxSeqOfAlert uint64
+		for k := range a.alertSet {
+			if k > maxTxSeqOfAlert {
+				maxTxSeqOfAlert = k
+			}
+		}
+		if startSeq > maxTxSeqOfAlert {
+			a.metricService.SetHasTxDelay(false)
+			a.alertSet = make(map[uint64]struct{}, 0)
+		}
+	}
+
 	client := a.greenfieldExecutor.GetGnfdClient()
 	for i := startSeq; i <= uint64(endSequence); i++ {
 		pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(i)
@@ -149,6 +164,10 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		}
 		status := pkgs[0].Status
 		pkgTime := pkgs[0].TxTime
+		if time.Since(time.Unix(pkgTime, 0)).Seconds() > common.TxDelayAlertThreshHold {
+			a.metricService.SetHasTxDelay(true)
+			a.alertSet[i] = struct{}{}
+		}
 
 		if status != db.AllVoted && status != db.Delivered {
 			return fmt.Errorf("packages with oracle sequence %d does not get enough votes yet", i)
