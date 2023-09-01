@@ -599,8 +599,10 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 // getFinalizedBlockHeight gets the finalizedBlockHeight, which is the larger one between (fastFinalizedBlockHeight, NumberOfBlocksForFinality from config).
 func (e *BSCExecutor) getFinalizedBlockHeight(ctx context.Context, rpcClient *rpc.Client) (uint64, error) {
 	var head *types.Header
-	err := rpcClient.CallContext(ctx, &head, "eth_getFinalizedHeader", e.config.BSCConfig.NumberOfBlocksForFinality)
-	if err == nil && head == nil {
+	if err := rpcClient.CallContext(ctx, &head, "eth_getFinalizedHeader", e.config.BSCConfig.NumberOfBlocksForFinality); err != nil {
+		return 0, err
+	}
+	if head == nil || head.Number == nil {
 		return 0, ethereum.NotFound
 	}
 	return head.Number.Uint64(), nil
