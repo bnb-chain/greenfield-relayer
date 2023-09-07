@@ -29,6 +29,9 @@ func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Ac
 		clients = append(clients, &GreenfieldClient{
 			Client: sdkClient,
 		})
+		if len(clients) == 0 {
+			panic("no Greenfield client available")
+		}
 	}
 	return GnfdCompositeClients{
 		clients: clients,
