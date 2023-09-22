@@ -10,7 +10,7 @@ import (
 )
 
 type GreenfieldClient struct {
-	sdkclient.Client
+	sdkclient.IClient
 	Height int64
 }
 
@@ -27,7 +27,7 @@ func NewGnfdCompositClients(rpcAddrs []string, chainId string, account *types.Ac
 			continue
 		}
 		clients = append(clients, &GreenfieldClient{
-			Client: sdkClient,
+			IClient: sdkClient,
 		})
 		if len(clients) == 0 {
 			panic("no Greenfield client available")
@@ -67,7 +67,9 @@ func (gc *GnfdCompositeClients) GetClient() *GreenfieldClient {
 
 func getClientBlockHeight(clientChan chan *GreenfieldClient, wg *sync.WaitGroup, client *GreenfieldClient) {
 	defer wg.Done()
-	status, err := client.GetStatus(context.Background())
+	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	status, err := client.GetStatus(ctxWithTimeout)
 	if err != nil {
 		return
 	}
