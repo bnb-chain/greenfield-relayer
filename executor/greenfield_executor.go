@@ -327,6 +327,10 @@ func (e *GreenfieldExecutor) ClaimPackages(client *GreenfieldClient, payloadBts 
 		return "", sdkErrors.ErrWrongSequence
 	}
 
+	if txRes.Codespace == sdkErrors.RootCodespace && txRes.Code == sdkErrors.ErrTxInMempoolCache.ABCICode() {
+		return "", sdkErrors.ErrTxInMempoolCache
+	}
+
 	if txRes.Code != 0 {
 		return "", fmt.Errorf("claim error, code=%d, log=%s", txRes.Code, txRes.RawLog)
 	}
