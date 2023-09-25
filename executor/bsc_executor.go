@@ -579,6 +579,7 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 		}
 		rewardBalance, err := e.getRewardBalance()
 		if err != nil {
+			e.metricService.SetBSCLowBalance(true)
 			logging.Logger.Errorf("failed to get relayer reward balance err=%s", err.Error())
 			continue
 		}
