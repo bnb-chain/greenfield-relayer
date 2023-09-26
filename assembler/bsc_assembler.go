@@ -53,7 +53,7 @@ func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.
 	ticker := time.NewTicker(common.AssembleInterval)
 	for range ticker.C {
 		if err := a.process(channelId); err != nil {
-			logging.Logger.Errorf("encounter error when relaying packages, err=%s ", err.Error())
+			logging.Logger.Errorf("encounter error, err=%s ", err.Error())
 		}
 	}
 }
@@ -61,14 +61,13 @@ func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.
 func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	inturnRelayer, err := a.greenfieldExecutor.GetInturnRelayer()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get inturn relayer, err=%s", err.Error())
 	}
 	inturnRelayerPubkey, err := hex.DecodeString(inturnRelayer.BlsPubKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to decode inturn relayer bls pub key, err=%s", err.Error())
 	}
 	isInturnRelyer := bytes.Equal(a.blsPubKey, inturnRelayerPubkey)
-
 	a.metricService.SetGnfdInturnRelayerMetrics(isInturnRelyer, inturnRelayer.RelayInterval.Start, inturnRelayer.RelayInterval.End)
 
 	var (
@@ -90,11 +89,11 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 			}
 			inTurnRelayerStartSeq, err := a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry(a.getChainId())
 			if err != nil {
-				return err
+				return fmt.Errorf("faield to get next delivery oracle sequence, err=%s", err.Error())
 			}
 			nonce, err := a.greenfieldExecutor.GetNonce()
 			if err != nil {
-				return err
+				return fmt.Errorf("faield to get nonce, err=%s", err.Error())
 			}
 			a.relayerNonce = nonce
 			a.inturnRelayerSequenceStatus.HasRetrieved = true
@@ -107,11 +106,11 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		time.Sleep(time.Duration(a.config.RelayConfig.GreenfieldSequenceUpdateLatency) * time.Second)
 		startSeq, err = a.bscExecutor.GetNextDeliveryOracleSequenceWithRetry(a.getChainId())
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get next delivery oracle sequence, err=%s", err.Error())
 		}
 		startNonce, err := a.greenfieldExecutor.GetNonce()
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get nonce, err=%s", err.Error())
 		}
 		a.relayerNonce = startNonce
 	}
@@ -122,7 +121,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	if isInturnRelyer {
 		endSequence, err = a.daoManager.BSCDao.GetLatestOracleSequenceByStatus(db.AllVoted)
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get latest oracle sequence from DB, err=%s", err.Error())
 		}
 		if endSequence == -1 {
 			return nil
@@ -130,7 +129,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	} else {
 		endSeq, err := a.bscExecutor.GetNextSendSequenceForChannelWithRetry()
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get next send sequence, err=%s", err.Error())
 		}
 		endSequence = int64(endSeq)
 	}
@@ -153,7 +152,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 	for i := startSeq; i <= uint64(endSequence); i++ {
 		pkgs, err := a.daoManager.BSCDao.GetPackagesByOracleSequence(i)
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get packages by oracle sequence %d from DB, err=%s", i, err.Error())
 		}
 		if len(pkgs) == 0 {
 			return nil
@@ -166,7 +165,7 @@ func (a *BSCAssembler) process(channelId types.ChannelId) error {
 		}
 
 		if status != db.AllVoted && status != db.Delivered {
-			return fmt.Errorf("packages with oracle sequence %d does not get enough votes yet", i)
+			return fmt.Errorf("packages with oracle sequence %d do not get enough votes yet", i)
 		}
 
 		// non-inturn relayer can not relay tx within the timeout of in-turn relayer
@@ -204,22 +203,21 @@ func (a *BSCAssembler) processPkgs(client *executor.GreenfieldClient, pkgs []*mo
 	// Get votes result for a packages, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(channelId, sequence)
 	if err != nil {
-		logging.Logger.Errorf("failed to get votes result for packages for channel %d and sequence %d", channelId, sequence)
-		return err
+		return fmt.Errorf("failed to get votes result for packages for channel %d and sequence %d", channelId, sequence)
 	}
 	validators, err := a.greenfieldExecutor.QueryCachedLatestValidators()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to query cached validators, err=%s", err.Error())
 	}
 
 	aggregatedSignature, valBitSet, err := vote.AggregateSignatureAndValidatorBitSet(votes, validators)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to aggregate signature, err=%s", err.Error())
 	}
 
 	txHash, err := a.greenfieldExecutor.ClaimPackages(client, votes[0].ClaimPayload, aggregatedSignature, valBitSet.Bytes(), pkgs[0].TxTime, sequence, nonce)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to claim packages, txHash=%s, err=%s", txHash, err.Error())
 	}
 
 	logging.Logger.Infof("claimed transaction with oracle_sequence=%d, txHash=%s", sequence, txHash)
@@ -231,14 +229,12 @@ func (a *BSCAssembler) processPkgs(client *executor.GreenfieldClient, pkgs []*mo
 
 	if !isInturnRelyer {
 		if err = a.daoManager.BSCDao.UpdateBatchPackagesClaimedTxHash(pkgIds, txHash); err != nil {
-			return err
+			return fmt.Errorf("failed to update batch packages and claimedTxHash, err=%s", err.Error())
 		}
 		return nil
 	}
-
 	if err = a.daoManager.BSCDao.UpdateBatchPackagesStatusAndClaimedTxHash(pkgIds, db.Delivered, txHash); err != nil {
-		logging.Logger.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
-		return err
+		return fmt.Errorf("failed to update packages to 'Delivered', error=%s", err.Error())
 	}
 	a.inturnRelayerSequenceStatus.NextDeliverySeq = sequence + 1
 	return nil
