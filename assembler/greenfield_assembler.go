@@ -100,7 +100,7 @@ func (a *GreenfieldAssembler) assembleTransactionAndSendForChannel(channelId typ
 	defer wg.Done()
 	err := a.process(channelId, inturnRelayer, isInturnRelyer)
 	if err != nil {
-		logging.Logger.Errorf("encounter err in assembleTransactionAndSendForChannel, err=%s", err.Error())
+		logging.Logger.Errorf("encounter error, err=%s", err.Error())
 	}
 }
 
@@ -122,7 +122,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 			}
 			inTurnRelayerStartSeq, err := a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 			if err != nil {
-				return err
+				return fmt.Errorf("faield to get next delivery sequence for channel %d, err=%s", channelId, err.Error())
 			}
 			a.mutex.Lock()
 			a.inturnRelayerSequenceStatusMap[channelId].HasRetrieved = true
@@ -138,7 +138,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 		var err error
 		startSeq, err = a.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(channelId)
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get next delivery sequence for channel %d, err=%s", channelId, err.Error())
 		}
 	}
 
@@ -150,7 +150,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 	if isInturnRelyer {
 		endSequence, err = a.daoManager.GreenfieldDao.GetLatestSequenceByChannelIdAndStatus(channelId, db.AllVoted)
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get latest sequence from DB, err=%s", err.Error())
 		}
 		if endSequence == -1 {
 			return nil
@@ -158,7 +158,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 	} else {
 		endSeq, err := a.greenfieldExecutor.GetNextSendSequenceForChannelWithRetry(a.getDestChainId(), channelId)
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get next send sequence, err=%s", err.Error())
 		}
 		endSequence = int64(endSeq)
 	}
@@ -187,7 +187,7 @@ func (a *GreenfieldAssembler) process(channelId types.ChannelId, inturnRelayer *
 	for i := startSeq; i <= uint64(endSequence); i++ {
 		tx, err := a.daoManager.GreenfieldDao.GetTransactionByChannelIdAndSequence(channelId, i)
 		if err != nil {
-			return err
+			return fmt.Errorf("faield to get transaction by cahnnel id %d and sequence %d from DB, err=%s", channelId, i, err.Error())
 		}
 		if (*tx == model.GreenfieldRelayTransaction{}) {
 			return nil
@@ -225,25 +225,24 @@ func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, no
 	// Get votes result for a tx, which are already validated and qualified to aggregate sig
 	votes, err := a.daoManager.VoteDao.GetVotesByChannelIdAndSequence(tx.ChannelId, tx.Sequence)
 	if err != nil {
-		logging.Logger.Errorf("failed to get votes for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
-		return err
+		return fmt.Errorf("failed to get votes for event with channel id %d and sequence %d", tx.ChannelId, tx.Sequence)
 	}
 
 	validators, err := a.bscExecutor.QueryCachedLatestValidators()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to query cached validators, err=%s", err.Error())
 	}
 	aggregatedSignature, valBitSet, err := vote.AggregateSignatureAndValidatorBitSet(votes, validators)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to aggregate signature, err=%s", err.Error())
 	}
 
 	txHash, err := a.bscExecutor.CallBuildInSystemContract(aggregatedSignature, util.BitSetToBigInt(valBitSet), votes[0].ClaimPayload, nonce)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to submit tx to BSC, txHash=%s, err=%s", txHash, err.Error())
 	}
 
-	logging.Logger.Infof("relayed transaction with channel id %d and sequence %d, get txHash %s", tx.ChannelId, tx.Sequence, txHash)
+	logging.Logger.Infof("relayed transaction with channel id %d and sequence %d, txHash=%s", tx.ChannelId, tx.Sequence, txHash)
 	a.metricService.SetGnfdProcessedBlockHeight(tx.Height)
 
 	// update next delivery sequence in DB for inturn relayer, for non-inturn relayer, there is enough time for
@@ -252,11 +251,11 @@ func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, no
 		if err = a.daoManager.GreenfieldDao.UpdateTransactionClaimedTxHash(tx.Id, txHash.String()); err != nil {
 			return err
 		}
-		return nil
+		return fmt.Errorf("failed to update transaciton status, err=%s", err.Error())
 	}
 
 	if err = a.daoManager.GreenfieldDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String()); err != nil {
-		return err
+		return fmt.Errorf("failed to update transaciton status, err=%s", err.Error())
 	}
 	a.mutex.Lock()
 	a.inturnRelayerSequenceStatusMap[types.ChannelId(tx.ChannelId)].NextDeliverySeq = tx.Sequence + 1

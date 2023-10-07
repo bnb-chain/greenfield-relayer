@@ -115,9 +115,6 @@ type RelayConfig struct {
 	GreenfieldToBSCInturnRelayerTimeout int64  `json:"greenfield_to_bsc_inturn_relayer_timeout"` // in second
 	GreenfieldSequenceUpdateLatency     int64  `json:"greenfield_sequence_update_latency"`       // in second
 	BSCSequenceUpdateLatency            int64  `json:"bsc_sequence_update_latency"`              // in second
-	GreenfieldEventTypeCrossChain       string `json:"greenfield_event_type_cross_chain"`
-	BSCCrossChainPackageEventName       string `json:"bsc_cross_chain_package_event_name"`
-	CrossChainPackageEventHex           string `json:"cross_chain_package_event_hex"`
 	CrossChainContractAddr              string `json:"cross_chain_contract_addr"`
 	GreenfieldLightClientContractAddr   string `json:"greenfield_light_client_contract_addr"`
 	RelayerHubContractAddr              string `json:"relayer_hub_contract_addr"`

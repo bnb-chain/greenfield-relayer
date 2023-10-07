@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -57,17 +56,15 @@ func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 
 // SignAndBroadcastVoteLoop signs using the bls private key, and broadcast the vote to votepool
 func (p *BSCVoteProcessor) signAndBroadcast() error {
-
 	// need to keep track of the height so that make sure that we aggregate packages are from only 1 block.
 	leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
 	if err != nil {
-		logging.Logger.Errorf("failed to get least saved packages' height, error: %s", err.Error())
-		return err
+		return fmt.Errorf("failed to get least saved packages' height, error: %s", err.Error())
+
 	}
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByHeightAndStatus(db.Saved, leastSavedPkgHeight)
 	if err != nil {
-		logging.Logger.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
-		return err
+		return fmt.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
 	}
 
 	if len(pkgs) == 0 {
@@ -225,7 +222,7 @@ func (p *BSCVoteProcessor) collectVoteForPackages(pkgsForSeq []*model.BscRelayPa
 		logging.Logger.Infof("oracle sequence %d has already been filled", seq)
 		return
 	}
-	if err := p.prepareEnoughValidVotesForPackages(common.OracleChannelId, seq, pkgIds); err != nil {
+	if err = p.prepareEnoughValidVotesForPackages(common.OracleChannelId, seq, pkgIds); err != nil {
 		errChan <- err
 		return
 	}
@@ -272,19 +269,18 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 	for range ticker.C {
 		triedTimes++
 		if triedTimes > QueryVotepoolMaxRetryTimes {
-			return errors.New("exceed max retry")
+			return fmt.Errorf("exceed max retry=%d", QueryVotepoolMaxRetryTimes)
 		}
 		queriedVotes, err := p.bscExecutor.GreenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
 		if err != nil {
-			logging.Logger.Errorf("encounter error when query votes.")
-			return err
+			return fmt.Errorf("failed to query votes. eventHash=%s", hex.EncodeToString(localVote.EventHash))
 		}
 
 		validVotesCntPerReq := len(queriedVotes)
 
 		if validVotesCntPerReq == 0 {
-			if err := p.reBroadcastVote(localVote); err != nil {
-				return err
+			if err = p.reBroadcastVote(localVote); err != nil {
+				return fmt.Errorf("failed to broadcast vote, err=%s", err.Error())
 			}
 			continue
 		}
@@ -296,7 +292,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 				continue
 			}
 
-			if err := VerifySignature(v, localVote.EventHash[:]); err != nil {
+			if err = VerifySignature(v, localVote.EventHash[:]); err != nil {
 				validVotesCntPerReq--
 				continue
 			}
@@ -326,8 +322,8 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 			return nil
 		}
 		if !isLocalVoteIncluded {
-			if err := p.reBroadcastVote(localVote); err != nil {
-				return err
+			if err = p.reBroadcastVote(localVote); err != nil {
+				return fmt.Errorf("failed to broadcast vote, err=%s", err.Error())
 			}
 		}
 		continue
@@ -355,7 +351,7 @@ func (p *BSCVoteProcessor) isVotePubKeyValid(v *votepool.Vote, validators []*tmt
 func (p *BSCVoteProcessor) isOracleSequenceFilled(seq uint64) (bool, error) {
 	nextDeliverySeqOnGreenfield, err := p.bscExecutor.GetNextDeliveryOracleSequenceWithRetry(p.getChainId())
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to get next delivery oracleSequence, err=%s", err.Error())
 	}
 	return seq < nextDeliverySeqOnGreenfield, nil
 }

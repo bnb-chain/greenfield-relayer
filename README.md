@@ -77,9 +77,6 @@ Go version above 1.20
     "greenfield_to_bsc_inturn_relayer_timeout": 30,
     "greenfield_sequence_update_latency": 8,
     "bsc_sequence_update_latency": 12,
-    "greenfield_event_type_cross_chain": "cosmos.crosschain.v1.EventCrossChain",
-    "bsc_cross_chain_package_event_name": "CrossChainPackage",
-    "cross_chain_package_event_hex": "0x64998dc5a229e7324e622192f111c691edccc3534bbea4b2bd90fbaec936845a",
     "cross_chain_contract_addr": "0xd2253A26e6d5b729dDBf4bCce5A78F93C725b455",
     "greenfield_light_client_contract_addr": "0x349a42f907c7562B3aaD4431780E4596bC2a053f"
   }

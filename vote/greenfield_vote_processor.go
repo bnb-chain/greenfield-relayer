@@ -154,7 +154,7 @@ func (p *GreenfieldVoteProcessor) collectVotes() error {
 	}()
 	for {
 		select {
-		case err := <-errCh:
+		case err = <-errCh:
 			return err
 		case <-waitCh:
 			return nil
@@ -225,18 +225,17 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 	for range ticker.C {
 		triedTimes++
 		if triedTimes > QueryVotepoolMaxRetryTimes {
-			return errors.New("exceed max retry")
+			return fmt.Errorf("exceed max retry=%d", QueryVotepoolMaxRetryTimes)
 		}
 
-		logging.Logger.Debugf("query vote for c %d and s %d", channelId, seq)
 		queriedVotes, err := p.greenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to query votes. eventHash=%s", hex.EncodeToString(localVote.EventHash))
 		}
 		validVotesCountPerReq := len(queriedVotes)
 		if validVotesCountPerReq == 0 {
 			if err := p.reBroadcastVote(localVote); err != nil {
-				return err
+				return fmt.Errorf("failed to broadcast vote, err=%s", err.Error())
 			}
 			continue
 		}
@@ -249,7 +248,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 				continue
 			}
 
-			if err := VerifySignature(v, localVote.EventHash); err != nil {
+			if err = VerifySignature(v, localVote.EventHash); err != nil {
 				validVotesCountPerReq--
 				continue
 			}
@@ -283,8 +282,8 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 		}
 
 		if !isLocalVoteIncluded {
-			if err := p.reBroadcastVote(localVote); err != nil {
-				return err
+			if err = p.reBroadcastVote(localVote); err != nil {
+				return fmt.Errorf("failed to broadcast vote, err=%s", err.Error())
 			}
 		}
 		continue
@@ -328,16 +327,14 @@ func (p *GreenfieldVoteProcessor) aggregatePayloadForTx(tx *model.GreenfieldRela
 	// relayerfee big.Int
 	relayerFeeBts, err := p.txFeeToBytes(tx.RelayerFee)
 	if err != nil {
-		logging.Logger.Errorf("failed to convert tx relayerFee %s from string to big.Int", tx.RelayerFee)
-		return nil, err
+		return nil, fmt.Errorf("failed to convert tx relayerFee %s from string to big.Int", tx.RelayerFee)
 	}
 	aggregatedPayload = append(aggregatedPayload, relayerFeeBts...)
 
 	if tx.PackageType == uint32(sdk.SynCrossChainPackageType) {
 		ackRelayerFeeBts, err := p.txFeeToBytes(tx.AckRelayerFee)
 		if err != nil {
-			logging.Logger.Errorf("failed to convert tx ackRelayerFee %s from string to big.Int", tx.AckRelayerFee)
-			return nil, err
+			return nil, fmt.Errorf("failed to convert tx ackRelayerFee %s from string to big.Int", tx.AckRelayerFee)
 		}
 		aggregatedPayload = append(aggregatedPayload, ackRelayerFeeBts...)
 	}
@@ -358,7 +355,7 @@ func (p *GreenfieldVoteProcessor) txFeeToBytes(txFee string) ([]byte, error) {
 func (p *GreenfieldVoteProcessor) isTxSequenceFilled(tx *model.GreenfieldRelayTransaction) (bool, error) {
 	nextDeliverySequence, err := p.greenfieldExecutor.GetNextDeliverySequenceForChannelWithRetry(types.ChannelId(tx.ChannelId))
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to get next delivery sequence, err=%s", err.Error())
 	}
 	return tx.Sequence < nextDeliverySequence, nil
 }

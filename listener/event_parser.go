@@ -9,14 +9,13 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/bnb-chain/greenfield-relayer/config"
 	"github.com/bnb-chain/greenfield-relayer/db"
 	"github.com/bnb-chain/greenfield-relayer/db/model"
 	rtypes "github.com/bnb-chain/greenfield-relayer/types"
 )
 
-func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, greenfieldChainId, bscChainId sdk.ChainID, config *config.RelayConfig) (*model.BscRelayPackage, error) {
-	ev, err := parseCrossChainPackageEvent(abi, log, config)
+func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, greenfieldChainId, bscChainId sdk.ChainID) (*model.BscRelayPackage, error) {
+	ev, err := parseCrossChainPackageEvent(abi, log)
 	if err != nil {
 		return nil, err
 	}
@@ -37,10 +36,10 @@ func ParseRelayPackage(abi *abi.ABI, log *types.Log, timestamp uint64, greenfiel
 	return &p, nil
 }
 
-func parseCrossChainPackageEvent(abi *abi.ABI, log *types.Log, config *config.RelayConfig) (*rtypes.CrossChainPackageEvent, error) {
+func parseCrossChainPackageEvent(abi *abi.ABI, log *types.Log) (*rtypes.CrossChainPackageEvent, error) {
 	var ev rtypes.CrossChainPackageEvent
 
-	err := abi.UnpackIntoInterface(&ev, config.BSCCrossChainPackageEventName, log.Data)
+	err := abi.UnpackIntoInterface(&ev, BSCCrossChainPackageEventName, log.Data)
 	if err != nil {
 		return nil, err
 	}
