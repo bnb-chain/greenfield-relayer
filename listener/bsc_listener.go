@@ -49,8 +49,8 @@ func NewBSCListener(cfg *config.Config, bscExecutor *executor.BSCExecutor, gnfdE
 
 func (l *BSCListener) StartLoop() {
 	for {
-		err := l.poll()
-		if err != nil {
+		if err := l.poll(); err != nil {
+			logging.Logger.Errorf("encounter err, err=%s", err.Error())
 			time.Sleep(common.ErrorRetryInterval)
 			continue
 		}
@@ -60,8 +60,7 @@ func (l *BSCListener) StartLoop() {
 func (l *BSCListener) poll() error {
 	latestPolledBlock, err := l.getLatestPolledBlock()
 	if err != nil {
-		logging.Logger.Errorf("failed to get latest polled block from db, error: %s", err.Error())
-		return err
+		return fmt.Errorf("failed to get latest polled block from db, error: %s", err.Error())
 	}
 	nextHeight := l.config.BSCConfig.StartHeight
 	if (*latestPolledBlock != model.BscBlock{}) {
@@ -69,10 +68,9 @@ func (l *BSCListener) poll() error {
 		if nextHeight <= latestPolledBlockHeight {
 			nextHeight = latestPolledBlockHeight + 1
 		}
-
 		latestBlockHeight, err := l.bscExecutor.GetLatestFinalizedBlockHeightWithRetry()
 		if err != nil {
-			logging.Logger.Errorf("failed to get latest blockHeight, error: %s", err.Error())
+			logging.Logger.Errorf("failed to get latest finalized blockHeight, error: %s", err.Error())
 			return err
 		}
 		if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
@@ -81,7 +79,6 @@ func (l *BSCListener) poll() error {
 		}
 	}
 	if err = l.monitorCrossChainPkgAt(nextHeight); err != nil {
-		logging.Logger.Errorf("encounter error when monitor cross-chain packages at blockHeight=%d, err=%s", nextHeight, err.Error())
 		return err
 	}
 	return nil
@@ -94,7 +91,7 @@ func (l *BSCListener) getLatestPolledBlock() (*model.BscBlock, error) {
 func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64) error {
 	nextHeightBlockHeader, err := l.bscExecutor.GetBlockHeaderAtHeight(nextHeight)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get latest block header, error: %s", err.Error())
 	}
 	if nextHeightBlockHeader == nil {
 		logging.Logger.Infof("BSC Block header at height %d not found", nextHeight)
@@ -112,7 +109,6 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64) error {
 			&log, nextHeightBlockHeader.Time,
 			sdk.ChainID(l.config.GreenfieldConfig.ChainId),
 			sdk.ChainID(l.config.BSCConfig.ChainId),
-			&l.config.RelayConfig,
 		)
 		if err != nil {
 			logging.Logger.Errorf("failed to parse event log, txHash=%s, err=%s", log.TxHash, err.Error())
@@ -125,14 +121,14 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64) error {
 		relayPkgs = append(relayPkgs, relayPkg)
 	}
 
-	if err := l.DaoManager.BSCDao.SaveBlockAndBatchPackages(
+	if err = l.DaoManager.BSCDao.SaveBlockAndBatchPackages(
 		&model.BscBlock{
 			BlockHash:  nextHeightBlockHeader.Hash().String(),
 			ParentHash: nextHeightBlockHeader.ParentHash.String(),
 			Height:     nextHeight,
 			BlockTime:  int64(nextHeightBlockHeader.Time),
 		}, relayPkgs); err != nil {
-		return err
+		return fmt.Errorf("failed to persist block and tx to DB, err=%s", err.Error())
 	}
 	l.monitorService.SetBSCSavedBlockHeight(nextHeight)
 	return nil
@@ -147,13 +143,13 @@ func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log
 		Addresses: []ethcommon.Address{l.getCrossChainContractAddress()},
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query cross chain logs, err=%s", err.Error())
 	}
 	return logs, nil
 }
 
 func (l *BSCListener) getCrossChainPackageEventHash() ethcommon.Hash {
-	return ethcommon.HexToHash(l.config.RelayConfig.CrossChainPackageEventHex)
+	return ethcommon.HexToHash(CrossChainPackageEventHex)
 }
 
 func (l *BSCListener) getCrossChainContractAddress() ethcommon.Address {
