@@ -27,7 +27,7 @@ const (
 	MetricNameNextSendSequenceForChannel    = "next_send_seq_for_channel"
 	MetricNameNextReceiveSequenceForChannel = "next_receive_seq_for_channel"
 
-	MetricNameBSCLowBalance = "bsc_low_balance"
+	MetricNameBSCBalance = "bsc_balance"
 
 	MetricNameHasTxDelay = "tx_delay"
 )
@@ -165,10 +165,10 @@ func NewMetricService(config *config.Config) *MetricService {
 	}
 
 	bscLowBalanceMetric := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: MetricNameBSCLowBalance,
-		Help: "BSC relayer balance is lower than 1BNB, and not enoght reward(<0.1BNB)",
+		Name: MetricNameBSCBalance,
+		Help: "BSC relayer balance",
 	})
-	ms[MetricNameBSCLowBalance] = bscLowBalanceMetric
+	ms[MetricNameBSCBalance] = bscLowBalanceMetric
 	prometheus.MustRegister(bscLowBalanceMetric)
 
 	hasTxDelayMetric := prometheus.NewGauge(prometheus.GaugeOpts{
@@ -260,12 +260,8 @@ func (m *MetricService) SetNextReceiveSequenceForChannel(channel uint8, seq uint
 	m.MetricsMap[fmt.Sprintf("%s_%d", MetricNameNextReceiveSequenceForChannel, channel)].(prometheus.Gauge).Set(float64(seq))
 }
 
-func (m *MetricService) SetBSCLowBalance(isLow bool) {
-	var flag float64
-	if isLow {
-		flag = 1
-	}
-	m.MetricsMap[MetricNameBSCLowBalance].(prometheus.Gauge).Set(flag)
+func (m *MetricService) SetBSCBalance(balance float64) {
+	m.MetricsMap[MetricNameBSCBalance].(prometheus.Gauge).Set(balance)
 }
 
 func (m *MetricService) SetHasTxDelay(hasDelay bool) {
