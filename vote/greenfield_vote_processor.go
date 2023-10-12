@@ -60,8 +60,7 @@ func (p *GreenfieldVoteProcessor) SignAndBroadcastLoop() {
 func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 	txs, err := p.daoManager.GreenfieldDao.GetTransactionsByStatusWithLimit(db.Saved, p.config.VotePoolConfig.VotesBatchMaxSizePerInterval)
 	if err != nil {
-		logging.Logger.Errorf("failed to get transactions from db, error: %s", err.Error())
-		return err
+		return fmt.Errorf("failed to get transactions from db, error: %s", err.Error())
 	}
 	if len(txs) == 0 {
 		return nil
@@ -97,7 +96,6 @@ func (p *GreenfieldVoteProcessor) signAndBroadcast() error {
 			if err != nil {
 				return fmt.Errorf("failed to submit vote for event with channel id %d and sequence %d, err=%s", tx.ChannelId, tx.Sequence, err.Error())
 			}
-
 			return nil
 		}, retry.Context(context.Background()), rcommon.RtyAttem, rcommon.RtyDelay, rcommon.RtyErr); err != nil {
 			return err
