@@ -571,21 +571,20 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 			continue
 		}
 		logging.Logger.Infof("current relayer balance is %v", balance)
+		balance.Div(balance, BSCBalanceThreshold)
+		e.metricService.SetBSCBalance(float64(balance.Int64()))
 
 		// should not claim if balance > 1 BNB
 		if balance.Cmp(BSCBalanceThreshold) > 0 {
-			e.metricService.SetBSCLowBalance(false)
 			continue
 		}
 		rewardBalance, err := e.getRewardBalance()
 		if err != nil {
-			e.metricService.SetBSCLowBalance(true)
 			logging.Logger.Errorf("failed to get relayer reward balance err=%s", err.Error())
 			continue
 		}
 		logging.Logger.Infof("current relayer reward balance is %v", balance)
 		if rewardBalance.Cmp(BSCRewardThreshold) <= 0 {
-			e.metricService.SetBSCLowBalance(true)
 			continue
 		}
 		// > 0.1 BNB

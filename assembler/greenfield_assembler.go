@@ -249,9 +249,8 @@ func (a *GreenfieldAssembler) processTx(tx *model.GreenfieldRelayTransaction, no
 	// sequence update, so they can track next start seq from chain
 	if !isInturnRelyer {
 		if err = a.daoManager.GreenfieldDao.UpdateTransactionClaimedTxHash(tx.Id, txHash.String()); err != nil {
-			return err
+			return fmt.Errorf("failed to update transaciton status, err=%s", err.Error())
 		}
-		return fmt.Errorf("failed to update transaciton status, err=%s", err.Error())
 	}
 
 	if err = a.daoManager.GreenfieldDao.UpdateTransactionStatusAndClaimedTxHash(tx.Id, db.Delivered, txHash.String()); err != nil {
