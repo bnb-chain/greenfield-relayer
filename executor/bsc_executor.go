@@ -355,12 +355,8 @@ func (e *BSCExecutor) getTransactor(nonce uint64) (*bind.TransactOpts, error) {
 	txOpts.Nonce = big.NewInt(int64(nonce))
 	txOpts.Value = big.NewInt(0)
 	txOpts.GasLimit = e.config.BSCConfig.GasLimit
-	txOpts.GasPrice = e.getGasPrice()
+	txOpts.GasPrice = e.gasPrice
 	return txOpts, nil
-}
-
-func (e *BSCExecutor) getGasPrice() *big.Int {
-	return e.gasPrice
 }
 
 func (e *BSCExecutor) SyncTendermintLightBlock(height uint64) (common.Hash, error) {
@@ -461,11 +457,7 @@ func (e *BSCExecutor) QueryCachedLatestValidators() ([]rtypes.Validator, error) 
 	if len(e.relayers) != 0 {
 		return e.relayers, nil
 	}
-	relayers, err := e.QueryLatestValidators()
-	if err != nil {
-		return nil, err
-	}
-	return relayers, nil
+	return e.QueryLatestValidators()
 }
 
 func (e *BSCExecutor) UpdateCachedLatestValidatorsLoop() {

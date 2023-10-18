@@ -70,6 +70,7 @@ func (cfg *GreenfieldConfig) Validate() {
 }
 
 type BSCConfig struct {
+	OpBNB                     bool     `json:"op_bnb"`
 	KeyType                   string   `json:"key_type"`
 	AWSRegion                 string   `json:"aws_region"`
 	AWSSecretName             string   `json:"aws_secret_name"`
@@ -108,6 +109,10 @@ func (cfg *BSCConfig) Validate() {
 	if cfg.NumberOfBlocksForFinality < 2 || cfg.NumberOfBlocksForFinality > 21 {
 		panic("NumberOfBlocksForFinality should be [2, 21]")
 	}
+}
+
+func (cfg *BSCConfig) IsOpCrossChain() bool {
+	return cfg.OpBNB
 }
 
 type RelayConfig struct {

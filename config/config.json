@@ -18,6 +18,7 @@
     "use_websocket": true
   },
   "bsc_config": {
+    "op_bnb": false,
     "key_type": "local_private_key",
     "aws_region": "",
     "aws_secret_name": "",
