@@ -19,7 +19,7 @@ const (
 	OracleChannelId              types.ChannelId = 0
 	SleepTimeAfterSyncLightBlock                 = 15 * time.Second
 
-	ListenerPauseTime  = 2 * time.Second
+	ListenerPauseTime  = 3 * time.Second
 	ErrorRetryInterval = 1 * time.Second
 	AssembleInterval   = 500 * time.Millisecond
 
