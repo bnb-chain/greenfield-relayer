@@ -416,7 +416,7 @@ func (e *BSCExecutor) QueryLatestTendermintHeaderWithRetry() (lightBlock []byte,
 func (e *BSCExecutor) GetNonce() (uint64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-	return e.GetEthClient().PendingNonceAt(ctx, e.txSender)
+	return e.GetEthClient().NonceAt(ctx, e.txSender, nil)
 }
 
 func (e *BSCExecutor) CallBuildInSystemContract(blsSignature []byte, validatorSet *big.Int, msgBytes []byte, nonce uint64) (common.Hash, error) {
