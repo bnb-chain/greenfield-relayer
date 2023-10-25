@@ -167,8 +167,8 @@ func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log
 
 func (l *BSCListener) isForkedBlockAndDelete(latestPolledBlock *model.BscBlock, nextHeight uint64, parentHash ethcommon.Hash) (bool, error) {
 	if latestPolledBlock.Height != 0 && latestPolledBlock.Height+1 == nextHeight && parentHash.String() != latestPolledBlock.BlockHash {
-		// delete latestPolledBlock and its cross-chain packages from DB
-		if err := l.DaoManager.BSCDao.DeleteBlockAndPackagesAtHeight(latestPolledBlock.Height); err != nil {
+		// delete latestPolledBlock and its cross-chain packages and votes for these packages from DB.
+		if err := l.DaoManager.BSCDao.DeleteBlockAndPackagesAndVotesAtHeight(latestPolledBlock.Height); err != nil {
 			return true, err
 		}
 		logging.Logger.Infof("deleted block at height=%d from DB due to there is a fork", latestPolledBlock.Height)
