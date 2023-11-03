@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/aws/aws-sdk-go v1.40.45
-	github.com/bnb-chain/greenfield v1.0.0
+	github.com/bnb-chain/greenfield v1.0.2-0.20231102075513-12abbd906b00
 	github.com/bnb-chain/greenfield-go-sdk v1.0.0
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cosmos/cosmos-sdk v0.47.3
@@ -174,11 +174,11 @@ require (
 replace (
 	cosmossdk.io/api => github.com/bnb-chain/greenfield-cosmos-sdk/api v0.0.0-20230816082903-b48770f5e210
 	cosmossdk.io/math => github.com/bnb-chain/greenfield-cosmos-sdk/math v0.0.0-20230816082903-b48770f5e210
-	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v1.0.0
+	github.com/cometbft/cometbft => github.com/bnb-chain/greenfield-cometbft v0.0.0-20231030090949-99ef7dbd1e62
 	github.com/cometbft/cometbft-db => github.com/bnb-chain/greenfield-cometbft-db v0.8.1-alpha.1
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	github.com/consensys/gnark-crypto => github.com/consensys/gnark-crypto v0.7.0
-	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v1.0.0
+	github.com/cosmos/cosmos-sdk => github.com/bnb-chain/greenfield-cosmos-sdk v1.0.2-0.20231102075210-cfdba889e18c
 	github.com/cosmos/iavl => github.com/bnb-chain/greenfield-iavl v0.20.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )

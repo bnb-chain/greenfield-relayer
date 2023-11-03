@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
@@ -59,7 +60,11 @@ func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.
 }
 
 func (a *BSCAssembler) process(channelId types.ChannelId) error {
-	inturnRelayer, err := a.greenfieldExecutor.GetInturnRelayer()
+	claimSrcChain := oracletypes.CLAIM_SRC_CHAIN_BSC
+	if a.config.BSCConfig.IsOpCrossChain() {
+		claimSrcChain = oracletypes.CLAIM_SRC_CHAIN_OP_BNB
+	}
+	inturnRelayer, err := a.greenfieldExecutor.GetInturnRelayer(claimSrcChain)
 	if err != nil {
 		return fmt.Errorf("failed to get inturn relayer, err=%s", err.Error())
 	}
