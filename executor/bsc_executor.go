@@ -563,7 +563,8 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 			continue
 		}
 		logging.Logger.Infof("current relayer balance is %v", balance)
-		balance.Div(balance, BSCBalanceThreshold)
+		balance.Div(balance, BNBDecimal)
+
 		e.metricService.SetBSCBalance(float64(balance.Int64()))
 
 		// should not claim if balance > 1 BNB
