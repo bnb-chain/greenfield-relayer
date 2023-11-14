@@ -240,7 +240,15 @@ func (e *BSCExecutor) UpdateClientLoop() {
 				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
 					e.config.AlertConfig.TelegramChatId, msg)
 			}
-			height, err := e.getLatestBlockHeight(bscClient.ethClient, bscClient.rpcClient, true)
+			var (
+				height uint64
+				err    error
+			)
+			if e.config.BSCConfig.IsOpCrossChain() {
+				height, err = e.GetLatestBlockHeightWithRetry()
+			} else {
+				height, err = e.GetLatestFinalizedBlockHeightWithRetry()
+			}
 			if err != nil {
 				logging.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue
@@ -248,7 +256,6 @@ func (e *BSCExecutor) UpdateClientLoop() {
 			bscClient.height = height
 			bscClient.updatedAt = time.Now()
 		}
-
 		highestHeight := uint64(0)
 		highestIdx := 0
 		for idx := 0; idx < len(e.bscClients); idx++ {
