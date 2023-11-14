@@ -2,6 +2,7 @@ package dao
 
 import (
 	"database/sql"
+	"github.com/cometbft/cometbft/votepool"
 	"time"
 
 	"gorm.io/gorm"
@@ -142,13 +143,17 @@ func (d *BSCDao) SaveBatchPackages(pkgs []*model.BscRelayPackage) error {
 	})
 }
 
-func (d *BSCDao) DeleteBlockAndPackagesAtHeight(height uint64) error {
+func (d *BSCDao) DeleteBlockAndPackagesAndVotesAtHeight(height uint64) error {
 	return d.DB.Transaction(func(dbTx *gorm.DB) error {
 		err := dbTx.Where("height = ?", height).Delete(model.BscBlock{}).Error
 		if err != nil {
 			return err
 		}
 		err = dbTx.Where("height = ?", height).Delete(model.BscRelayPackage{}).Error
+		if err != nil {
+			return err
+		}
+		err = dbTx.Where("height = ? and event_type = ?", height, votepool.FromOpCrossChainEvent).Delete(model.Vote{}).Error
 		if err != nil {
 			return err
 		}

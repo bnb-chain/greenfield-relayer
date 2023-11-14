@@ -34,16 +34,24 @@ type GreenfieldVoteProcessor struct {
 	signer             *VoteSigner
 	greenfieldExecutor *executor.GreenfieldExecutor
 	blsPublicKey       []byte
+	eventType          votepool.EventType
 }
 
 func NewGreenfieldVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner,
 	greenfieldExecutor *executor.GreenfieldExecutor) *GreenfieldVoteProcessor {
+	var eventType votepool.EventType
+	if cfg.BSCConfig.IsOpCrossChain() {
+		eventType = votepool.ToOpCrossChainEvent
+	} else {
+		eventType = votepool.ToBscCrossChainEvent
+	}
 	return &GreenfieldVoteProcessor{
 		config:             cfg,
 		daoManager:         dao,
 		signer:             signer,
 		greenfieldExecutor: greenfieldExecutor,
 		blsPublicKey:       greenfieldExecutor.BlsPubKey,
+		eventType:          eventType,
 	}
 }
 
@@ -219,14 +227,12 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 	channelId := localVote.ChannelId
 	seq := localVote.Sequence
 	ticker := time.NewTicker(VotePoolQueryRetryInterval)
-
 	for range ticker.C {
 		triedTimes++
 		if triedTimes > QueryVotepoolMaxRetryTimes {
 			return fmt.Errorf("exceed max retry=%d", QueryVotepoolMaxRetryTimes)
 		}
-
-		queriedVotes, err := p.greenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.ToBscCrossChainEvent)
+		queriedVotes, err := p.greenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, p.eventType)
 		if err != nil {
 			return fmt.Errorf("failed to query votes. eventHash=%s", hex.EncodeToString(localVote.EventHash))
 		}
@@ -291,7 +297,7 @@ func (p *GreenfieldVoteProcessor) queryMoreThanTwoThirdVotesForTx(localVote *mod
 
 func (p *GreenfieldVoteProcessor) constructVoteAndSign(aggregatedPayload []byte) *votepool.Vote {
 	var v votepool.Vote
-	v.EventType = votepool.ToBscCrossChainEvent
+	v.EventType = p.eventType
 	v.EventHash = p.getEventHash(aggregatedPayload)
 	p.signer.SignVote(&v)
 	return &v

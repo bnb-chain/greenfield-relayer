@@ -33,15 +33,23 @@ type BSCVoteProcessor struct {
 	signer       *VoteSigner
 	bscExecutor  *executor.BSCExecutor
 	blsPublicKey []byte
+	eventType    votepool.EventType
 }
 
 func NewBSCVoteProcessor(cfg *config.Config, dao *dao.DaoManager, signer *VoteSigner, bscExecutor *executor.BSCExecutor) *BSCVoteProcessor {
+	var eventType votepool.EventType
+	if cfg.BSCConfig.IsOpCrossChain() {
+		eventType = votepool.FromOpCrossChainEvent
+	} else {
+		eventType = votepool.FromBscCrossChainEvent
+	}
 	return &BSCVoteProcessor{
 		config:       cfg,
 		daoManager:   dao,
 		signer:       signer,
 		bscExecutor:  bscExecutor,
 		blsPublicKey: bscExecutor.GreenfieldExecutor.BlsPubKey,
+		eventType:    eventType,
 	}
 }
 
@@ -56,12 +64,28 @@ func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 
 // SignAndBroadcastVoteLoop signs using the bls private key, and broadcast the vote to votepool
 func (p *BSCVoteProcessor) signAndBroadcast() error {
+	var (
+		latestHeight uint64
+		err          error
+	)
+	if p.isOpCrossChain() {
+		latestHeight, err = p.bscExecutor.GetLatestBlockHeightWithRetry()
+		if err != nil {
+			logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
+			return err
+		}
+	}
 	// need to keep track of the height so that make sure that we aggregate packages are from only 1 block.
 	leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get least saved packages' height, error: %s", err.Error())
-
 	}
+	if p.isOpCrossChain() {
+		if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
+			return nil
+		}
+	}
+
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByHeightAndStatus(db.Saved, leastSavedPkgHeight)
 	if err != nil {
 		return fmt.Errorf("failed to get packages at height %d from db, error: %s", leastSavedPkgHeight, err.Error())
@@ -271,7 +295,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 		if triedTimes > QueryVotepoolMaxRetryTimes {
 			return fmt.Errorf("exceed max retry=%d", QueryVotepoolMaxRetryTimes)
 		}
-		queriedVotes, err := p.bscExecutor.GreenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, votepool.FromBscCrossChainEvent)
+		queriedVotes, err := p.bscExecutor.GreenfieldExecutor.QueryVotesByEventHashAndType(localVote.EventHash, p.eventType)
 		if err != nil {
 			return fmt.Errorf("failed to query votes. eventHash=%s", hex.EncodeToString(localVote.EventHash))
 		}
@@ -333,7 +357,7 @@ func (p *BSCVoteProcessor) queryMoreThanTwoThirdValidVotes(localVote *model.Vote
 
 func (p *BSCVoteProcessor) constructSignedVote(eventHash []byte) *votepool.Vote {
 	var v votepool.Vote
-	v.EventType = votepool.FromBscCrossChainEvent
+	v.EventType = p.eventType
 	v.EventHash = eventHash
 	p.signer.SignVote(&v)
 	return &v
@@ -366,4 +390,8 @@ func (p *BSCVoteProcessor) reBroadcastVote(localVote *model.Vote) error {
 
 func (p *BSCVoteProcessor) getChainId() sdk.ChainID {
 	return sdk.ChainID(p.config.BSCConfig.ChainId)
+}
+
+func (p *BSCVoteProcessor) isOpCrossChain() bool {
+	return p.config.BSCConfig.IsOpCrossChain()
 }

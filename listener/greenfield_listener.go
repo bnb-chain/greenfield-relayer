@@ -122,6 +122,9 @@ func (l *GreenfieldListener) monitorTxEvents(block *tmtypes.Block, txRes []*abci
 					errChan <- err
 					return
 				}
+				if relayTx.DestChainId != l.destChainId() {
+					break
+				}
 				relayTx.TxHash = hex.EncodeToString(block.Txs[idx].Hash())
 				txChan <- relayTx
 			}
@@ -137,6 +140,9 @@ func (l *GreenfieldListener) monitorEndBlockEvents(height uint64, endBlockEvents
 			if err != nil {
 				errChan <- err
 				return
+			}
+			if relayTx.DestChainId != l.destChainId() {
+				break
 			}
 			txChan <- relayTx
 		}
@@ -222,7 +228,7 @@ func (l *GreenfieldListener) calNextHeight() (uint64, error) {
 		return 0, fmt.Errorf("failed to get latest block height, error: %s", err.Error())
 	}
 	// pauses relayer for a bit since it already caught the newest block
-	if int64(nextHeight) == int64(latestBlockHeight) {
+	if int64(nextHeight) >= int64(latestBlockHeight) {
 		time.Sleep(common.ListenerPauseTime)
 		return nextHeight, nil
 	}
@@ -340,8 +346,18 @@ func (l *GreenfieldListener) PurgeLoop() {
 			logging.Logger.Errorf("failed to delete gnfd transactions, err=%s", err.Error())
 			continue
 		}
-		if err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(threshHold, uint32(votepool.ToBscCrossChainEvent), DeletionLimit); err != nil {
+		var eventType votepool.EventType
+		if l.config.BSCConfig.IsOpCrossChain() {
+			eventType = votepool.ToOpCrossChainEvent
+		} else {
+			eventType = votepool.ToBscCrossChainEvent
+		}
+		if err = l.DaoManager.VoteDao.DeleteVotesBelowHeightWithLimit(threshHold, uint32(eventType), DeletionLimit); err != nil {
 			logging.Logger.Errorf("failed to delete votes, err=%s", err.Error())
 		}
 	}
+}
+
+func (l *GreenfieldListener) destChainId() uint32 {
+	return uint32(l.config.BSCConfig.ChainId)
 }

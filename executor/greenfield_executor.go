@@ -337,10 +337,12 @@ func (e *GreenfieldExecutor) ClaimPackages(client *GreenfieldClient, payloadBts 
 	return txRes.TxHash, nil
 }
 
-func (e *GreenfieldExecutor) GetInturnRelayer() (*oracletypes.QueryInturnRelayerResponse, error) {
+func (e *GreenfieldExecutor) GetInturnRelayer(srcChain oracletypes.ClaimSrcChain) (*oracletypes.QueryInturnRelayerResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
-	return e.GetGnfdClient().GetInturnRelayer(ctx, &oracletypes.QueryInturnRelayerRequest{})
+	return e.GetGnfdClient().GetInturnRelayer(ctx, &oracletypes.QueryInturnRelayerRequest{
+		ClaimSrcChain: srcChain,
+	})
 }
 
 func (e *GreenfieldExecutor) QueryVotesByEventHashAndType(eventHash []byte, eventType votepool.EventType) ([]*votepool.Vote, error) {

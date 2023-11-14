@@ -240,7 +240,15 @@ func (e *BSCExecutor) UpdateClientLoop() {
 				config.SendTelegramMessage(e.config.AlertConfig.Identity, e.config.AlertConfig.TelegramBotId,
 					e.config.AlertConfig.TelegramChatId, msg)
 			}
-			height, err := e.getLatestBlockHeight(bscClient.ethClient, bscClient.rpcClient, true)
+			var (
+				height uint64
+				err    error
+			)
+			if e.config.BSCConfig.IsOpCrossChain() {
+				height, err = e.GetLatestBlockHeightWithRetry()
+			} else {
+				height, err = e.GetLatestFinalizedBlockHeightWithRetry()
+			}
 			if err != nil {
 				logging.Logger.Errorf("get latest block height error, err=%s", err.Error())
 				continue
@@ -248,7 +256,6 @@ func (e *BSCExecutor) UpdateClientLoop() {
 			bscClient.height = height
 			bscClient.updatedAt = time.Now()
 		}
-
 		highestHeight := uint64(0)
 		highestIdx := 0
 		for idx := 0; idx < len(e.bscClients); idx++ {
@@ -355,12 +362,8 @@ func (e *BSCExecutor) getTransactor(nonce uint64) (*bind.TransactOpts, error) {
 	txOpts.Nonce = big.NewInt(int64(nonce))
 	txOpts.Value = big.NewInt(0)
 	txOpts.GasLimit = e.config.BSCConfig.GasLimit
-	txOpts.GasPrice = e.getGasPrice()
+	txOpts.GasPrice = e.gasPrice
 	return txOpts, nil
-}
-
-func (e *BSCExecutor) getGasPrice() *big.Int {
-	return e.gasPrice
 }
 
 func (e *BSCExecutor) SyncTendermintLightBlock(height uint64) (common.Hash, error) {
@@ -461,11 +464,7 @@ func (e *BSCExecutor) QueryCachedLatestValidators() ([]rtypes.Validator, error) 
 	if len(e.relayers) != 0 {
 		return e.relayers, nil
 	}
-	relayers, err := e.QueryLatestValidators()
-	if err != nil {
-		return nil, err
-	}
-	return relayers, nil
+	return e.QueryLatestValidators()
 }
 
 func (e *BSCExecutor) UpdateCachedLatestValidatorsLoop() {
@@ -571,7 +570,8 @@ func (e *BSCExecutor) ClaimRewardLoop() {
 			continue
 		}
 		logging.Logger.Infof("current relayer balance is %v", balance)
-		balance.Div(balance, BSCBalanceThreshold)
+		balance.Div(balance, BNBDecimal)
+
 		e.metricService.SetBSCBalance(float64(balance.Int64()))
 
 		// should not claim if balance > 1 BNB
