@@ -92,7 +92,6 @@ type BSCExecutor struct {
 	config             *config.Config
 	privateKey         *ecdsa.PrivateKey
 	txSender           common.Address
-	gasPrice           *big.Int
 	relayers           []rtypes.Validator // cached relayers
 	metricService      *metric.MetricService
 }
@@ -135,19 +134,12 @@ func NewBSCExecutor(cfg *config.Config, metricService *metric.MetricService) *BS
 		panic("get public key error")
 	}
 	txSender := crypto.PubkeyToAddress(*publicKeyECDSA)
-	var initGasPrice *big.Int
-	if cfg.BSCConfig.GasPrice == 0 {
-		initGasPrice = big.NewInt(DefaultGasPrice)
-	} else {
-		initGasPrice = big.NewInt(int64(cfg.BSCConfig.GasPrice))
-	}
 	return &BSCExecutor{
 		clientIdx:     0,
 		bscClients:    newBSCClients(cfg),
 		privateKey:    ecdsaPrivKey,
 		txSender:      txSender,
 		config:        cfg,
-		gasPrice:      initGasPrice,
 		metricService: metricService,
 	}
 }
@@ -359,10 +351,14 @@ func (e *BSCExecutor) getTransactor(nonce uint64) (*bind.TransactOpts, error) {
 	if err != nil {
 		return nil, err
 	}
+	gasPrice, err := e.getGasPrice()
+	if err != nil {
+		return nil, err
+	}
 	txOpts.Nonce = big.NewInt(int64(nonce))
 	txOpts.Value = big.NewInt(0)
 	txOpts.GasLimit = e.config.BSCConfig.GasLimit
-	txOpts.GasPrice = e.gasPrice
+	txOpts.GasPrice = big.NewInt(gasPrice.Int64() + 1)
 	return txOpts, nil
 }
 
@@ -606,4 +602,22 @@ func (e *BSCExecutor) getFinalizedBlockHeight(ctx context.Context, rpcClient *rp
 		return 0, ethereum.NotFound
 	}
 	return head.Number.Uint64(), nil
+}
+
+func (e *BSCExecutor) getGasPrice() (*big.Int, error) {
+	var (
+		gasPrice *big.Int
+		err      error
+	)
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	if e.config.BSCConfig.GasPrice == 0 {
+		gasPrice, err = e.GetEthClient().SuggestGasPrice(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		gasPrice = big.NewInt(int64(e.config.BSCConfig.GasPrice))
+	}
+	return gasPrice, nil
 }
