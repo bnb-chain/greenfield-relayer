@@ -19,4 +19,5 @@ const (
 
 	ConfigType     = "CONFIG_TYPE"
 	ConfigFilePath = "CONFIG_FILE_PATH"
+	ConfigDBPass   = "DB_PASS"
 )
