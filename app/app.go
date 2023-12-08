@@ -34,7 +34,10 @@ func NewApp(cfg *config.Config) *App {
 	username := cfg.DBConfig.Username
 	password := viper.GetString(config.FlagConfigDbPass)
 	if password == "" {
-		password = getDBPass(&cfg.DBConfig)
+		password = os.Getenv(config.ConfigDBPass)
+		if password == "" {
+			password = getDBPass(&cfg.DBConfig)
+		}
 	}
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer

@@ -237,9 +237,9 @@ func (e *BSCExecutor) UpdateClientLoop() {
 				err    error
 			)
 			if e.config.BSCConfig.IsOpCrossChain() {
-				height, err = e.GetLatestBlockHeightWithRetry()
+				height, err = e.getLatestBlockHeightWithRetry(bscClient.ethClient, bscClient.rpcClient, false)
 			} else {
-				height, err = e.GetLatestFinalizedBlockHeightWithRetry()
+				height, err = e.getLatestBlockHeightWithRetry(bscClient.ethClient, bscClient.rpcClient, true)
 			}
 			if err != nil {
 				logging.Logger.Errorf("get latest block height error, err=%s", err.Error())
