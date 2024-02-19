@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
@@ -56,8 +55,6 @@ func NewApp(cfg *config.Config) *App {
 		url := cfg.DBConfig.Url
 		dbPath := fmt.Sprintf("%s:%s@%s", username, password, url)
 		dialector = mysql.Open(dbPath)
-	} else if cfg.DBConfig.Dialect == config.DBDialectSqlite3 {
-		dialector = sqlite.Open(cfg.DBConfig.Url)
 	} else {
 		panic(fmt.Sprintf("unexpected DB dialect %s", cfg.DBConfig.Dialect))
 	}
