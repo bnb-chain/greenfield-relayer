@@ -30,7 +30,13 @@ type App struct {
 }
 
 func NewApp(cfg *config.Config) *App {
-	username := cfg.DBConfig.Username
+	username := viper.GetString(config.FlagConfigDbUsername)
+	if username == "" {
+		username = os.Getenv(config.ConfigDBUserName)
+		if username == "" {
+			username = cfg.DBConfig.Username
+		}
+	}
 	password := viper.GetString(config.FlagConfigDbPass)
 	if password == "" {
 		password = os.Getenv(config.ConfigDBPass)

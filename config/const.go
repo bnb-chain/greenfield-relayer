@@ -8,6 +8,7 @@ const (
 	FlagConfigPrivateKey    = "private-key"
 	FlagConfigBlsPrivateKey = "bls-private-key"
 	FlagConfigDbPass        = "db-pass"
+	FlagConfigDbUsername    = "db-username"
 
 	DBDialectMysql   = "mysql"
 	DBDialectSqlite3 = "sqlite3"
@@ -17,7 +18,8 @@ const (
 	KeyTypeLocalPrivateKey = "local_private_key"
 	KeyTypeAWSPrivateKey   = "aws_private_key"
 
-	ConfigType     = "CONFIG_TYPE"
-	ConfigFilePath = "CONFIG_FILE_PATH"
-	ConfigDBPass   = "DB_PASS"
+	ConfigType       = "CONFIG_TYPE"
+	ConfigFilePath   = "CONFIG_FILE_PATH"
+	ConfigDBPass     = "DB_PASSWORD"
+	ConfigDBUserName = "DB_USERNAME"
 )

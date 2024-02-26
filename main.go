@@ -19,6 +19,7 @@ func initFlags() {
 	flag.String(config.FlagConfigPrivateKey, "", "relayer private key")
 	flag.String(config.FlagConfigBlsPrivateKey, "", "relayer bls private key")
 	flag.String(config.FlagConfigDbPass, "", "relayer db password")
+	flag.String(config.FlagConfigDbUsername, "", "relayer db username")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
