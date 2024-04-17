@@ -3,9 +3,11 @@ package listener
 import (
 	"context"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"math/big"
 	"strings"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cometbft/cometbft/votepool"
 	"github.com/ethereum/go-ethereum"
@@ -116,7 +118,7 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 		}
 	}
 
-	logs, err := l.queryCrossChainLogs(nextHeightBlockHeader.Hash())
+	logs, err := l.queryCrossChainLogs(nextHeight)
 	if err != nil {
 		return fmt.Errorf("failed to get logs from block at height=%d, err=%s", nextHeight, err.Error())
 	}
@@ -151,11 +153,12 @@ func (l *BSCListener) monitorCrossChainPkgAt(nextHeight uint64, latestPolledBloc
 	return nil
 }
 
-func (l *BSCListener) queryCrossChainLogs(blockHash ethcommon.Hash) ([]types.Log, error) {
+func (l *BSCListener) queryCrossChainLogs(height uint64) ([]types.Log, error) {
 	client := l.bscExecutor.GetEthClient()
 	topics := [][]ethcommon.Hash{{l.getCrossChainPackageEventHash()}}
 	logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
-		BlockHash: &blockHash,
+		FromBlock: big.NewInt(int64(height)),
+		ToBlock:   big.NewInt(int64(height)),
 		Topics:    topics,
 		Addresses: []ethcommon.Address{l.getCrossChainContractAddress()},
 	})
