@@ -14,6 +14,10 @@ const (
 	RelayerBytesLength             = 48
 	UpdateCachedValidatorsInterval = 1 * time.Minute
 	ClaimRewardInterval            = 1 * time.Minute
+	MaxTxSizeForFixGasLimit        = 32768 // 32kb
+	EstimatedTxExtraMetaSize       = 1024  // in bytes
+	GnfdGasPrice                   = int64(5000000000)
+	GasLimitRatio                  = int64(10)
 )
 
 var (

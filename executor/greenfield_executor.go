@@ -298,27 +298,32 @@ func (e *GreenfieldExecutor) GetNonceOnNextBlock() (uint64, error) {
 }
 
 func (e *GreenfieldExecutor) ClaimPackages(client *GreenfieldClient, payloadBts []byte, aggregatedSig []byte, voteAddressSet []uint64, claimTs int64, oracleSeq uint64, nonce uint64) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
-	defer cancel()
-	txRes, err := client.Claims(ctx,
+	msg := oracletypes.NewMsgClaim(
+		e.address,
 		e.getSrcChainId(),
 		e.getDestChainId(),
 		oracleSeq,
 		uint64(claimTs),
 		payloadBts,
 		voteAddressSet,
-		aggregatedSig,
-		gnfdsdktypes.TxOption{
-			NoSimulate: true,
-			GasLimit:   uint64(e.config.GreenfieldConfig.GasLimit),
-			FeeAmount:  sdk.NewCoins(sdk.NewCoin(gnfdsdktypes.Denom, sdk.NewInt(e.config.GreenfieldConfig.FeeAmount))),
-			Nonce:      nonce,
-		},
-	)
+		aggregatedSig)
+	gasLimit, feeAmount, err := e.getGasLimitAndFeeAmount(msg)
 	if err != nil {
 		return "", err
 	}
-
+	txOpt := gnfdsdktypes.TxOption{
+		NoSimulate: true,
+		GasLimit:   uint64(gasLimit),
+		FeeAmount:  sdk.NewCoins(sdk.NewCoin(gnfdsdktypes.Denom, sdk.NewInt(feeAmount))),
+		Nonce:      nonce,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+	defer cancel()
+	resp, err := client.BroadcastTx(ctx, []sdk.Msg{msg}, &txOpt)
+	if err != nil {
+		return "", err
+	}
+	txRes := resp.TxResponse
 	if txRes.Codespace == oracletypes.ModuleName && txRes.Code == oracletypes.ErrInvalidReceiveSequence.ABCICode() {
 		return "", oracletypes.ErrInvalidReceiveSequence
 	}
@@ -367,4 +372,17 @@ func (e *GreenfieldExecutor) getDestChainId() uint32 {
 
 func (e *GreenfieldExecutor) getSrcChainId() uint32 {
 	return uint32(e.config.BSCConfig.ChainId)
+}
+
+func (e *GreenfieldExecutor) getGasLimitAndFeeAmount(msg *oracletypes.MsgClaim) (gasLimit int64, feeAmount int64, err error) {
+	bz, err := msg.Marshal()
+	if err != nil {
+		return
+	}
+	if len(bz)+EstimatedTxExtraMetaSize >= MaxTxSizeForFixGasLimit {
+		gasLimit = GasLimitRatio * int64(len(bz)+EstimatedTxExtraMetaSize)
+		feeAmount = gasLimit * GnfdGasPrice
+		return
+	}
+	return e.config.GreenfieldConfig.GasLimit, e.config.GreenfieldConfig.FeeAmount, nil
 }

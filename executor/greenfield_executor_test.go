@@ -3,9 +3,10 @@ package executor
 import (
 	"context"
 	"encoding/hex"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
-	"testing"
 
 	cbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
