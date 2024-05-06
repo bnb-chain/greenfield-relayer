@@ -184,7 +184,7 @@ func (l *GreenfieldListener) monitorValidatorsHelper(block *tmtypes.Block) error
 		return err
 	}
 
-	curValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(lightClientLatestHeight)
+	curValidators, err := l.greenfieldExecutor.QueryValidatorsAtHeight(nextHeight - 1)
 	if err != nil {
 		return err
 	}
