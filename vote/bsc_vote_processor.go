@@ -9,13 +9,14 @@ import (
 	"sync"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/avast/retry-go/v4"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/votepool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	"github.com/ethereum/go-ethereum/rlp"
-	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -64,26 +65,10 @@ func (p *BSCVoteProcessor) SignAndBroadcastVoteLoop() {
 
 // SignAndBroadcastVoteLoop signs using the bls private key, and broadcast the vote to votepool
 func (p *BSCVoteProcessor) signAndBroadcast() error {
-	var (
-		latestHeight uint64
-		err          error
-	)
-	if p.isOpCrossChain() {
-		latestHeight, err = p.bscExecutor.GetLatestBlockHeightWithRetry()
-		if err != nil {
-			logging.Logger.Errorf("failed to get latest block height, error: %s", err.Error())
-			return err
-		}
-	}
 	// need to keep track of the height so that make sure that we aggregate packages are from only 1 block.
 	leastSavedPkgHeight, err := p.daoManager.BSCDao.GetLeastSavedPackagesHeight()
 	if err != nil {
 		return fmt.Errorf("failed to get least saved packages' height, error: %s", err.Error())
-	}
-	if p.isOpCrossChain() {
-		if leastSavedPkgHeight+p.config.BSCConfig.NumberOfBlocksForFinality > latestHeight {
-			return nil
-		}
 	}
 
 	pkgs, err := p.daoManager.BSCDao.GetPackagesByHeightAndStatus(db.Saved, leastSavedPkgHeight)
@@ -390,8 +375,4 @@ func (p *BSCVoteProcessor) reBroadcastVote(localVote *model.Vote) error {
 
 func (p *BSCVoteProcessor) getChainId() sdk.ChainID {
 	return sdk.ChainID(p.config.BSCConfig.ChainId)
-}
-
-func (p *BSCVoteProcessor) isOpCrossChain() bool {
-	return p.config.BSCConfig.IsOpCrossChain()
 }

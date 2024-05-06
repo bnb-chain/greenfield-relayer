@@ -6,10 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 	"sync"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum"
@@ -212,6 +213,13 @@ func (e *BSCExecutor) getLatestBlockHeight(client *ethclient.Client, rpcClient *
 	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), RPCTimeout)
 	defer cancel()
 	if finalized {
+		if e.config.BSCConfig.IsOpCrossChain() {
+			header, err := client.HeaderByNumber(ctxWithTimeout, big.NewInt(int64(rpc.FinalizedBlockNumber)))
+			if err != nil {
+				return 0, err
+			}
+			return header.Number.Uint64(), nil
+		}
 		return e.getFinalizedBlockHeight(ctxWithTimeout, rpcClient)
 	}
 	header, err := client.HeaderByNumber(ctxWithTimeout, nil)
