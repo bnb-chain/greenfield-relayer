@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -40,4 +41,13 @@ func Uint64ToBytes(num uint64) []byte {
 	bt := make([]byte, 8)
 	binary.BigEndian.PutUint64(bt, num)
 	return bt
+}
+
+func StrToBigInt(str string) (*big.Int, error) {
+	var r big.Int
+	num, ok := r.SetString(str, 10)
+	if !ok {
+		return &big.Int{}, fmt.Errorf("convetion failed, %s", str)
+	}
+	return num, nil
 }

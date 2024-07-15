@@ -386,3 +386,17 @@ func (e *GreenfieldExecutor) getGasLimitAndFeeAmount(msg *oracletypes.MsgClaim) 
 	}
 	return e.config.GreenfieldConfig.GasLimit, e.config.GreenfieldConfig.FeeAmount, nil
 }
+
+func (e *GreenfieldExecutor) GetCrossTxPack(destChainID sdk.ChainID, channelID types.ChannelId, sequence uint64) (pack []byte, err error) {
+	return pack, retry.Do(func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), RPCTimeout)
+		defer cancel()
+		pack, err = e.GetGnfdClient().GetCrossChainPackage(ctx, destChainID, uint32(channelID), sequence)
+		return err
+	}, relayercommon.RtyAttem,
+		relayercommon.RtyDelay,
+		relayercommon.RtyErr,
+		retry.OnRetry(func(n uint, err error) {
+			logging.Logger.Errorf("failed to query crosschain tx for channel %d, seq %d, attempt: %d times, max_attempts: %d", channelID, n+1, relayercommon.RtyAttNum)
+		}))
+}

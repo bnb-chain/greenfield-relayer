@@ -8,10 +8,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bnb-chain/greenfield-relayer/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/votepool"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
@@ -84,11 +86,23 @@ func (l *GreenfieldListener) poll() error {
 		case tx := <-relayTxCh:
 			txs = append(txs, tx)
 		case <-waitCh:
+			// validate tx against Chain
+			for _, tx := range txs {
+				onchainPack, err := l.greenfieldExecutor.GetCrossTxPack(sdk.ChainID(tx.DestChainId), types.ChannelId(tx.ChannelId), tx.Sequence)
+				if err != nil {
+					return fmt.Errorf("failed to get on chain tx, err=%s", err.Error())
+				}
+				if err := l.validateTx(onchainPack, tx); err != nil {
+					return fmt.Errorf("failed to validate tx, err=%s", err.Error())
+				}
+			}
+
 			b := &model.GreenfieldBlock{
 				Chain:     block.ChainID,
 				Height:    uint64(block.Height),
 				BlockTime: block.Time.Unix(),
 			}
+
 			if err := l.DaoManager.GreenfieldDao.SaveBlockAndBatchTransactions(b, txs); err != nil {
 				return fmt.Errorf("failed to persist block and tx to DB, err=%s", err.Error())
 			}
@@ -96,6 +110,40 @@ func (l *GreenfieldListener) poll() error {
 			return nil
 		}
 	}
+}
+
+func (l *GreenfieldListener) validateTx(expectedPack []byte, tx *model.GreenfieldRelayTransaction) error {
+	relayerFee, err := util.StrToBigInt(tx.RelayerFee)
+	if err != nil {
+		return err
+	}
+	ackRelayerFee, err := util.StrToBigInt(tx.AckRelayerFee)
+	if err != nil {
+		return err
+	}
+	// package
+	packBz := make([]byte, 0)
+
+	// package header
+	packageHeader := sdk.EncodePackageHeader(sdk.PackageHeader{
+		PackageType:   sdk.CrossChainPackageType(tx.PackageType),
+		Timestamp:     uint64(tx.TxTime),
+		RelayerFee:    relayerFee,
+		AckRelayerFee: ackRelayerFee,
+	})
+	packBz = append(packBz, packageHeader...)
+
+	// package payload
+	payloadBz, err := hex.DecodeString(tx.PayLoad)
+	if err != nil {
+		return err
+	}
+	packBz = append(packBz, payloadBz...)
+
+	if !bytes.Equal(expectedPack, packBz) {
+		return fmt.Errorf("package not match")
+	}
+	return nil
 }
 
 func (l *GreenfieldListener) getLatestPolledBlock() (*model.GreenfieldBlock, error) {
