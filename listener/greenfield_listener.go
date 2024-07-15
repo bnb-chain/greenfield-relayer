@@ -93,7 +93,7 @@ func (l *GreenfieldListener) poll() error {
 					return fmt.Errorf("failed to get on chain tx, err=%s", err.Error())
 				}
 				if err := l.validateTx(onchainPack, tx); err != nil {
-					return fmt.Errorf("failed to validate tx, err=%s", err.Error())
+					panic(fmt.Sprintf("failed to validate tx, err=%s", err.Error()))
 				}
 			}
 
