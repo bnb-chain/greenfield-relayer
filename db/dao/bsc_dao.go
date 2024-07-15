@@ -2,9 +2,9 @@ package dao
 
 import (
 	"database/sql"
-	"github.com/cometbft/cometbft/votepool"
 	"time"
 
+	"github.com/cometbft/cometbft/votepool"
 	"gorm.io/gorm"
 
 	"github.com/bnb-chain/greenfield-relayer/db"

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
-	"time"
 
 	"github.com/bnb-chain/greenfield-relayer/common"
 	"github.com/bnb-chain/greenfield-relayer/config"
