@@ -10,7 +10,7 @@ const (
 	FallBehindThreshold            = 5
 	SleepSecondForUpdateClient     = 10
 	DataSeedDenyServiceThreshold   = 60
-	RPCTimeout                     = 3 * time.Second
+	RPCTimeout                     = 10 * time.Second
 	RelayerBytesLength             = 48
 	UpdateCachedValidatorsInterval = 1 * time.Minute
 	ClaimRewardInterval            = 1 * time.Minute
