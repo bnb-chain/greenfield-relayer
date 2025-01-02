@@ -1,7 +1,7 @@
-FROM balenalib/amd64-debian-golang:latest as builder
+FROM golang:1.22-alpine as builder
 
 # Set up apk dependencies
-ENV PACKAGES libc6-dev make git  bash build-essential curl
+ENV PACKAGES make git libc-dev bash gcc linux-headers eudev-dev curl ca-certificates build-base
 
 # Set working directory for the build
 WORKDIR /opt/app
@@ -10,7 +10,7 @@ WORKDIR /opt/app
 COPY . .
 
 # Install minimum necessary dependencies, remove packages
-RUN apt-get -y update && apt-get -y install $PACKAGES
+RUN apk add --no-cache $PACKAGES
 
 # For Private REPO
 ARG GH_TOKEN=""

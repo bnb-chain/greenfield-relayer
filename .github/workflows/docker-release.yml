@@ -28,13 +28,6 @@ jobs:
           --label "org.opencontainers.image.licenses=AGPL-3.0" \
           -f ./Dockerfile -t "${IMAGE_NAME}"
 
-          docker build . \
-          --label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
-          --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
-          --label "org.opencontainers.image.version=$(git describe --tags --abbrev=0)" \
-          --label "org.opencontainers.image.licenses=AGPL-3.0" \
-          -f ./Dockerfile.distroless -t "${IMAGE_NAME}:distroless"
-
       - name: Login to GHCR
         uses: docker/login-action@v2
         with:
@@ -54,8 +47,5 @@ jobs:
           echo VERSION=$VERSION
           docker tag $IMAGE_NAME $IMAGE_NAME:$VERSION
           docker tag $IMAGE_NAME $IMAGE_NAME:latest
-          docker tag ${IMAGE_NAME}:distroless $IMAGE_NAME:$VERSION-distroless
           docker push $IMAGE_NAME:$VERSION
           docker push $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:$VERSION-distroless
-          

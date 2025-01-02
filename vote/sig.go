@@ -8,7 +8,7 @@ import (
 	"github.com/cometbft/cometbft/votepool"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	"github.com/prysmaticlabs/prysm/crypto/bls"
+	"github.com/prysmaticlabs/prysm/v5/crypto/bls"
 	"github.com/willf/bitset"
 
 	"github.com/bnb-chain/greenfield-relayer/db/model"
