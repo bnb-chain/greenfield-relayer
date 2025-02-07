@@ -6,7 +6,8 @@ IMAGE_NAME=ghcr.io/bnb-chain/greenfield-relayer
 
 ldflags = -X $(REPO)/version.AppVersion=$(VERSION) \
           -X $(REPO)/version.GitCommit=$(GIT_COMMIT) \
-          -X $(REPO)/version.GitCommitDate=$(GIT_COMMIT_DATE)
+          -X $(REPO)/version.GitCommitDate=$(GIT_COMMIT_DATE) \
+          -extldflags -static
 
 build:
 ifeq ($(OS),Windows_NT)

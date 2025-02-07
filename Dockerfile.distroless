@@ -19,8 +19,7 @@ RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://
 
 RUN make build
 
-
-FROM gcr.io/distroless/cc-debian11:latest
+FROM gcr.io/distroless/static-debian12
 
 ENV GREENFIELD_RELAYER_HOME /opt/app
 ENV CONFIG_FILE_PATH $GREENFIELD_RELAYER_HOME/config/config.json
@@ -34,7 +33,7 @@ ENV AWS_SECRET_KEY ""
 
 ENV WORKDIR=/app
 WORKDIR ${WORKDIR}
-COPY --from=builder /opt/app/build/greenfield-relayer ${WORKDIR}
+COPY --from=builder /opt/app/build/greenfield-relayer ${WORKDIR}/
 
 # Run the app
 ENTRYPOINT ["/app/greenfield-relayer"]
