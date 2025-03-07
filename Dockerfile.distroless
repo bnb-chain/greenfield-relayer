@@ -1,7 +1,7 @@
-FROM balenalib/amd64-debian-golang:latest as builder
+FROM golang:1.22-alpine as builder
 
 # Set up apk dependencies
-ENV PACKAGES libc6-dev make git  bash build-essential curl
+ENV PACKAGES make git libc-dev bash gcc linux-headers eudev-dev curl ca-certificates build-base
 
 # Set working directory for the build
 WORKDIR /opt/app
@@ -10,7 +10,7 @@ WORKDIR /opt/app
 COPY . .
 
 # Install minimum necessary dependencies, remove packages
-RUN apt-get -y update && apt-get -y install $PACKAGES
+RUN apk add --no-cache $PACKAGES
 
 # For Private REPO
 ARG GH_TOKEN=""
@@ -19,8 +19,7 @@ RUN git config --global url."https://${GH_TOKEN}@github.com".insteadOf "https://
 
 RUN make build
 
-
-FROM gcr.io/distroless/cc-debian11:latest
+FROM gcr.io/distroless/static-debian12
 
 ENV GREENFIELD_RELAYER_HOME /opt/app
 ENV CONFIG_FILE_PATH $GREENFIELD_RELAYER_HOME/config/config.json
@@ -34,7 +33,7 @@ ENV AWS_SECRET_KEY ""
 
 ENV WORKDIR=/app
 WORKDIR ${WORKDIR}
-COPY --from=builder /opt/app/build/greenfield-relayer ${WORKDIR}
+COPY --from=builder /opt/app/build/greenfield-relayer ${WORKDIR}/
 
 # Run the app
 ENTRYPOINT ["/app/greenfield-relayer"]

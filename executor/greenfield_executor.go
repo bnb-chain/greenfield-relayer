@@ -15,7 +15,7 @@ import (
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	oracletypes "github.com/cosmos/cosmos-sdk/x/oracle/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/prysmaticlabs/prysm/crypto/bls/blst"
+	"github.com/prysmaticlabs/prysm/v5/crypto/bls/blst"
 	"github.com/spf13/viper"
 
 	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
