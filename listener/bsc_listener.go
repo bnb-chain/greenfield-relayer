@@ -81,7 +81,7 @@ func (l *BSCListener) poll() error {
 			return err
 		}
 		if int64(latestPolledBlockHeight) >= int64(latestBlockHeight)-1 {
-			time.Sleep(common.ListenerPauseTime)
+			time.Sleep(common.ListenerPauseTimeBSC)
 			return nil
 		}
 	}

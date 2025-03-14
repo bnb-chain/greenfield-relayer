@@ -19,9 +19,11 @@ const (
 	OracleChannelId              types.ChannelId = 0
 	SleepTimeAfterSyncLightBlock                 = 15 * time.Second
 
-	ListenerPauseTime  = 3 * time.Second
-	ErrorRetryInterval = 1 * time.Second
-	AssembleInterval   = 500 * time.Millisecond
+	ListenerPauseTime    = 3 * time.Second
+	ListenerPauseTimeBSC = 750 * time.Millisecond
+	ErrorRetryInterval   = 1 * time.Second
+	AssembleInterval     = 500 * time.Millisecond
+	AssembleIntervalBSC  = 200 * time.Millisecond
 
 	TxDelayAlertThreshHold = 300 // in second
 )
