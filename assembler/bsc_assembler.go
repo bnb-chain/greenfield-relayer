@@ -52,7 +52,7 @@ func (a *BSCAssembler) AssemblePackagesAndClaimLoop() {
 }
 
 func (a *BSCAssembler) assemblePackagesAndClaimForOracleChannel(channelId types.ChannelId) {
-	ticker := time.NewTicker(common.AssembleInterval)
+	ticker := time.NewTicker(common.AssembleIntervalBSC)
 	for range ticker.C {
 		if err := a.process(channelId); err != nil {
 			logging.Logger.Errorf("encounter error, err=%s ", err.Error())
